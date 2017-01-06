@@ -1,0 +1,121 @@
+\documentclass[titlepage]{scrartcl}
+\usepackage{enumitem}
+\usepackage[british]{babel}
+\usepackage[style=apa, backend=biber]{biblatex}
+\DeclareLanguageMapping{british}{british-apa}
+\usepackage{url}
+\usepackage{float}
+\usepackage[labelformat=empty]{caption}
+\restylefloat{table}
+\usepackage{perpage}
+\MakePerPage{footnote}
+\usepackage{abstract}
+\usepackage{graphicx}
+% Create hyperlinks in bibliography
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{blindtext}
+\setkomafont{disposition}{\normalfont\bfseries}
+
+\graphicspath{{./resources/}}
+\addbibresource{~/Documents/library.bib}
+
+\newsavebox{\abstractbox}
+\renewenvironment{abstract}
+  {\begin{lrbox}{0}\begin{minipage}{\textwidth}
+   \begin{center}\normalfont\sectfont\abstractname\end{center}\quotation}
+  {\endquotation\end{minipage}\end{lrbox}%
+   \global\setbox\abstractbox=\box0 }
+
+\usepackage{etoolbox}
+\makeatletter
+\expandafter\patchcmd\csname\string\maketitle\endcsname
+  {\vskip\z@\@plus3fill}
+  {\vskip\z@\@plus2fill\box\abstractbox\vskip\z@\@plus1fill}
+  {}{}
+\makeatother
+
+\DeclareCiteCommand{\citeyearpar}
+    {}
+    {\mkbibparens{\bibhyperref{\printdate}}}
+    {\multicitedelim}
+    {}
+
+% MATLAB Code block stuff...
+\usepackage{color}
+\usepackage{listings}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+
+\lstset{language=Matlab,
+   keywords={break,case,catch,continue,else,elseif,end,for,function,
+      global,if,otherwise,persistent,return,switch,try,while},
+   basicstyle=\ttfamily,
+   keywordstyle=\color{blue},
+   commentstyle=\color{gray},
+   stringstyle=\color{dkgreen},
+   numbers=left,
+   numberstyle=\tiny\color{gray},
+   stepnumber=1,
+   numbersep=10pt,
+   backgroundcolor=\color{white},
+   tabsize=4,
+   showspaces=false,
+   showstringspaces=false}
+
+\begin{document}
+\title{ECS750P --- Final Project}
+\subtitle{\LARGE{Extraction and Analysis of RRi from PCG Signals for the
+Classification of Heart Abnormalities}}
+\author{Sam Perry --- EC16039}
+
+\maketitle
+
+\section{Literature Review}
+There are currently a wide variety of methods employed for the analysis and
+classification of PCG signals. Current research focuses on a number of areas,
+the most relevant of which are:
+\begin{itemize}
+    \item Algorithms for the segmentation of PCG data, aiming to extract the
+        structure of the signal over time. This is a key stage in the analysis
+        of PCG signals as relationships between the fundamental heart sounds
+        (FHSs) form the basis for much of the further analysis performed on PCG
+        data. A number of methods exist for the extraction of FHSs. Some rely on direct extraction of
+        peaks in the time domain to determine the structure of a
+        signal. These methods perform various transformation in order to
+        accentuate the transient events.~\parencite{Groch1992, Liang1997}. However, these methods
+        tend to suffer significantly from background noise and so perform
+        poorly in sub-optimal conditions.\\
+        Other methods rely on spectral representations to
+        assist in the splitting of the FHSs, in particular using wavelet
+        decomposition  ~\parencite{}. Machine learning
+        algorithms have also been widely employed, such as k Nearest
+        Neighbour~\parencite{} and Neural Networks~\parencite{} for
+        predictions. Particular success has been observed in Springer's use of
+        logistic regression and Hidden semi-Markov models~\citeyearpar{Springer2016}
+    \item Methods for the extraction of statistical features from PCG data in
+        order to create robust, meaningful representations of the data.
+    \item Classification of signals for diagnostic purposes. The aim being to
+        distinguish healthy signals from those with certain heart
+        conditions/abnormality. Machine learning techniques are commonly used
+        in order to distinguish between signals automatically, based on prior
+        feature extraction. 
+        it is noted in  that there is a lack of research into other machine
+        learning techniques such as bayesian classification and
+        SVMs~\citeyearpar{}.
+\end{itemize}
+
+
+
+        
+A variety of machine learning techniques trained on these extracted
+features. From this, a great deal of progress has been made in classifying a
+variety of cardiac abnormalities such as. 
+
+\printbibliography{}
+
+\end{document}

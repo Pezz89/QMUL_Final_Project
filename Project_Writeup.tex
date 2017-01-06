@@ -69,7 +69,7 @@
 
 \begin{document}
 \title{ECS750P --- Final Project}
-\subtitle{\LARGE{Extraction and Analysis of RRi from PCG Signals for the
+\subtitle{\LARGE{Extraction and Analysis of RR Intervals from PCG Signals for the
 Classification of Heart Abnormalities}}
 \author{Sam Perry --- EC16039}
 
@@ -84,21 +84,27 @@ the most relevant of which are:
         structure of the signal over time. This is a key stage in the analysis
         of PCG signals as relationships between the fundamental heart sounds
         (FHSs) form the basis for much of the further analysis performed on PCG
-        data. A number of methods exist for the extraction of FHSs. Some rely on direct extraction of
-        peaks in the time domain to determine the structure of a
-        signal. These methods perform various transformation in order to
-        accentuate the transient events.~\parencite{Groch1992, Liang1997}. However, these methods
+        data. A number of methods exist for the extraction of FHSs. Some rely
+        on direct extraction of peaks in the time domain to determine the
+        structure of a signal. These methods perform various transformation in
+        order to accentuate the transient events with the intention of
+        isolating them~\parencite{Groch1992, Liang1997}. However, these methods
         tend to suffer significantly from background noise and so perform
         poorly in sub-optimal conditions.\\
-        Other methods rely on spectral representations to
-        assist in the splitting of the FHSs, in particular using wavelet
-        decomposition  ~\parencite{}. Machine learning
-        algorithms have also been widely employed, such as k Nearest
-        Neighbour~\parencite{} and Neural Networks~\parencite{} for
-        predictions. Particular success has been observed in Springer's use of
-        logistic regression and Hidden semi-Markov models~\citeyearpar{Springer2016}
-    \item Methods for the extraction of statistical features from PCG data in
-        order to create robust, meaningful representations of the data.
+        Other methods rely on spectral representations to assist in the
+        splitting of the FHSs, in particular using wavelet
+        decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
+        the separation of components based on their frequency content in
+        addition to temporal characteristics.\\
+        In addition,  Machine learning algorithms have been employed, such as k
+        Nearest Neighbour~\parencite{Gupta2007} and Neural
+        Networks~\parencite{Oskiper2002} to improve segment classification.
+        More recently, particular success has been observed in Springer's use
+        of logistic regression and Hidden semi-Markov
+        models~\citeyearpar{Springer2016}.
+    \item A plethora of methods exist for the extraction of statistical
+        features from PCG data. These features are used for the creation of
+        robust, meaningful representations of the data.
     \item Classification of signals for diagnostic purposes. The aim being to
         distinguish healthy signals from those with certain heart
         conditions/abnormality. Machine learning techniques are commonly used
@@ -116,6 +122,7 @@ A variety of machine learning techniques trained on these extracted
 features. From this, a great deal of progress has been made in classifying a
 variety of cardiac abnormalities such as. 
 
+\pagebreak{}
 \printbibliography{}
 
 \end{document}

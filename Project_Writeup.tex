@@ -69,14 +69,14 @@
 
 \begin{document}
 \title{ECS750P --- Final Project}
-\subtitle{\LARGE{Extraction and Analysis of RR Intervals from PCG Signals for the
-Classification of Heart Abnormalities}}
+\subtitle{\LARGE{Extraction and Analysis of Statistical Features from PCG
+Signals for the Classification of Heart Abnormalities}}
 \author{Sam Perry --- EC16039}
 
 \maketitle
 
 \section{Literature Review}
-There are currently a wide variety of methods employed for the analysis and
+There are currently a wide variety of methods are employed for the analysis and
 classification of PCG signals. Current research focuses on a number of areas,
 the most relevant of which are:
 \begin{itemize}
@@ -95,16 +95,61 @@ the most relevant of which are:
         splitting of the FHSs, in particular using wavelet
         decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
         the separation of components based on their frequency content in
-        addition to temporal characteristics.\\
+        place of or addition to their temporal characteristics.\\
         In addition,  Machine learning algorithms have been employed, such as k
         Nearest Neighbour~\parencite{Gupta2007} and Neural
         Networks~\parencite{Oskiper2002} to improve segment classification.
         More recently, particular success has been observed in Springer's use
         of logistic regression and Hidden semi-Markov
         models~\citeyearpar{Springer2016}.
-    \item A plethora of methods exist for the extraction of statistical
+    \item Signal Pre-processing?
+        Removal of ectopic beats in RR estimation~\parencite{Dash2009}
+
+    \item A wide variety of methods exist for the extraction of statistical
         features from PCG data. These features are used for the creation of
-        robust, meaningful representations of the data.
+        robust, meaningful representations of the data.\\
+        The use of spectral representations for PCG data are prominent in the
+        literature. The ability to separate activity across the frequency
+        spectrum reveals patterns that may not be attainable by analysing the
+        time domain signal alone.\\
+        Due to the need for low frequency analysis and the high noise levels
+        found in PCG signals, it has been found that the traditional FFT
+        method for extracting spectral information may not be
+        suitable~\parencite{Akay1990}. For this reason, parametric methods for
+        spectral estimation have been a popular choice for extraction of such information. 
+        Methods such as AR, ARMA, AR-HOS and MUSIC have been shown to provide spectral
+        representations suitable for analysis and classification of heart
+        sound~\parencite{Ergen2001, Schmidt2015}.\\
+        Other methods such as Wavelet Decomposition and MFCCs have also been
+        successfully  employed for extracting spectral data for purposes such
+        as heart valve disease identification and heart murmur
+        detection~\parencite{Quiceno-Manrique2010a, Maglogiannis2009}.\\
+        
+        In addition to direct analysis on the signal, the ability to segment
+        and extract RR values from the signal allows for their statistical
+        analysis, both in the time and frequency domain, for use as features.\\
+        Dash et al. use a number of time-based statistical analysis on the RR
+        time series for the detection of atrial fibrilation. Statistical
+        analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
+        used as feature vectors for classification of
+        signals~\parencite{Dash2009}.  A similar approach is used by Yaghouby
+        et al. for the generalized classification of heart abnormality. Here,
+        other features such as HR Mean, Standard deviation, pNN50 and
+        Triangular Index are used for classification with promising
+        results~\parencite{Yaghouby2009}.
+
+        Frequency domain analysis of RR values can also be considered by
+        calculating the PSD of the RR values via similar methods for spectral
+        analysis as with the direct signal.
+
+        RR Frequency Domain Features
+        
+        RR Time-frequency domain features VFCDM~\parencite{Dash2009}
+        RR Non-linear features
+        ~\parencite{Yaghouby2009}
+
+        
+
     \item Classification of signals for diagnostic purposes. The aim being to
         distinguish healthy signals from those with certain heart
         conditions/abnormality. Machine learning techniques are commonly used

@@ -95,7 +95,7 @@ the most relevant of which are:
         splitting of the FHSs, in particular using wavelet
         decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
         the separation of components based on their frequency content in
-        place of or addition to their temporal characteristics.\\
+        place of, or in addition to their temporal characteristics.\\
         In addition,  Machine learning algorithms have been employed, such as k
         Nearest Neighbour~\parencite{Gupta2007} and Neural
         Networks~\parencite{Oskiper2002} to improve segment classification.
@@ -128,44 +128,34 @@ the most relevant of which are:
         In addition to direct analysis on the signal, the ability to segment
         and extract RR values from the signal allows for their statistical
         analysis, both in the time and frequency domain, for use as features.\\
-        Dash et al. use a number of time-based statistical analysis on the RR
+        Dash et al.\ use a number of time-based statistical analysis on the RR
         time series for the detection of atrial fibrilation. Statistical
         analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
         used as feature vectors for classification of
-        signals~\parencite{Dash2009}.  A similar approach is used by Yaghouby
-        et al. for the generalized classification of heart abnormality. Here,
-        other features such as HR Mean, Standard deviation, pNN50 and
-        Triangular Index are used for classification with promising
-        results~\parencite{Yaghouby2009}.
-
-        Frequency domain analysis of RR values can also be considered by
-        calculating the PSD of the RR values via similar methods for spectral
-        analysis as with the direct signal.
-
-        RR Frequency Domain Features
-        
-        RR Time-frequency domain features VFCDM~\parencite{Dash2009}
-        RR Non-linear features
-        ~\parencite{Yaghouby2009}
-
-        
+        signals~\citeyearpar{Dash2009}.  A similar approach is used by Yaghouby
+        et al.\ for the generalized classification of heart abnormality. Here,
+        a selection of linear and non-linear features are used for
+        classification with promising results~\citeyearpar{Yaghouby2009}.\\
+        Frequency domain analysis of RR values are also used by calculating the
+        PSD of the RR values via  approaches such as VFCDM.\ This form of
+        approach allows for higher resolution time-frequency representations of
+        the RR data than approach such as the FFT or wavelet transform~\parencite{Wang2006}.
+        From a spectral representations such as this, Yaghouby et al.\
+        demonstrate the use of such descriptors for the discrimination between
+        sympathetic and parasympathetic contents of the signal, not directly
+        detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
+        Further in depth analysis of statistical features for HRV can be found
+        in~\parencite{Electrophysiology1996}
 
     \item Classification of signals for diagnostic purposes. The aim being to
         distinguish healthy signals from those with certain heart
         conditions/abnormality. Machine learning techniques are commonly used
         in order to distinguish between signals automatically, based on prior
-        feature extraction. 
+        feature extraction.\
         it is noted in  that there is a lack of research into other machine
         learning techniques such as bayesian classification and
         SVMs~\citeyearpar{}.
 \end{itemize}
-
-
-
-        
-A variety of machine learning techniques trained on these extracted
-features. From this, a great deal of progress has been made in classifying a
-variety of cardiac abnormalities such as. 
 
 \pagebreak{}
 \printbibliography{}

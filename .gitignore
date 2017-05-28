@@ -32,6 +32,10 @@ bin/
 
 # Log files
 *.log
+*.pyc
 
 external/
 CMakeFiles/
+training_dataset/
+validation_dataset/
+Resources/

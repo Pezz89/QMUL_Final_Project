@@ -5,6 +5,8 @@ import argparse
 import sys
 import os
 import loggerops
+import logging
+from subprocess import Popen, PIPE
 
 modpath = sys.argv[0]
 modpath = os.path.splitext(modpath)[0]+'.log'
@@ -31,7 +33,11 @@ def parse_arguments():
     # Get directory of test database
     parser.add_argument(
         dest="test_dir", type=extant_file,
-        help="input file with two matrices", metavar="FILE"
+        help="Directory of test data to train the system", metavar="TESTDIR"
+    )
+    parser.add_argument(
+        dest="output_dir", type=extant_file,
+        help="Directory to store output analyses", metavar="OUTDIR"
     )
 
     parser.add_argument(
@@ -55,12 +61,23 @@ def parse_arguments():
 def main():
     # Process commandline arguments
     args = parse_arguments()
+
+    global logger
     logger = loggerops.create_logger(
         logger_streamlevel=args.verbose,
         log_filename=modpath,
         logger_filelevel=args.verbose
     )
-    logger.debug("test")
+
+    runSpringerSegmentation(args.test_dir, args.output_dir)
+
+def runSpringerSegmentation(dataset_dir, output_dir):
+    cmd = ['matlab', '-nosplash', '-nodesktop', '-r', 'try addpath(\'./SpringerExtraction\'); main(\'{0}\', \'{1}\'); catch err; disp(err); disp(err.message); disp(err.stack); end; quit'.format(dataset_dir, output_dir)]
+
+    logger.debug("Running external matlab command:\n" + ' '.join(cmd))
+
+    process = Popen(cmd, stdout=sys.stdout, stderr=sys.stderr).wait()
+    stdout, stderr = process.communicate()
 
 if __name__ == "__main__":
     main()

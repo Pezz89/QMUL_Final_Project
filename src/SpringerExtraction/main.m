@@ -1,7 +1,11 @@
 function main(dataset_dir, output_dir)
     % Find all PCG recordings in the validation dataset
-    command = ['find ' , dataset_dir , ' -name "*.wav"'];
+    command = ['find "' , dataset_dir , '" -name "*.wav"'];
     [status,list]=system(command);
+    if status
+        keyboard
+        error(['`Find` command failed:', list])
+    end
     PCG_Files = strread(list, '%s', 'delimiter', sprintf('\n'));
     %% Load the trained parameter matrices for Springer's HSMM model.
     % The parameters were trained using 409 heart sounds from MIT heart
@@ -42,7 +46,8 @@ function main(dataset_dir, output_dir)
         csvdata = [changeIndx, segVals];
         [~, basename, ~] = fileparts(PCGPath);
         csvpath = fullfile(output_dir, strcat(basename, '_segs.csv'));
-        csvwrite(csvpath, csvdata);
+        dlmwrite (csvpath, [Fs1, springer_options.audio_Fs, heartRate])
+        dlmwrite (csvpath, csvdata, '-append')
     end
 end
 

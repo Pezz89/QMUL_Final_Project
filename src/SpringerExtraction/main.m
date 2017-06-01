@@ -25,13 +25,7 @@ function main(dataset_dir, output_dir)
 
         % Running runSpringerSegmentationAlgorithm.m to obtain the
         % assigned_states
-        [segmentations] = runSpringerSegmentationAlgorithm(PCG_resampled, springer_options.audio_Fs, Springer_B_matrix, Springer_pi_vector, Springer_total_obs_distribution, false); % obtain the locations for S1, systole, s2 and diastole
-
-        % Remove systole and diastole segmentations as these will not be
-        % created in the real-time implementation
-        segmentations(segmentations == 4) = 3;
-        segmentations(segmentations == 2) = 1;
-        segmentations(segmentations == 3) = 2;
+        [segmentations, heartRate] = runSpringerSegmentationAlgorithm(PCG_resampled, springer_options.audio_Fs, Springer_B_matrix, Springer_pi_vector, Springer_total_obs_distribution, false); % obtain the locations for S1, systole, s2 and diastole
 
         % Plot segmentation against resampled PCG data
         % plot(PCG_resampled);

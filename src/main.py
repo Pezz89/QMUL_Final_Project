@@ -4,9 +4,14 @@ import numpy as np
 import argparse
 import sys
 import os
+import glob
 import loggerops
 import logging
+import pathops
 from subprocess import Popen, PIPE
+from generateFeatures import generateFeatures
+
+import pdb
 
 modpath = sys.argv[0]
 modpath = os.path.splitext(modpath)[0]+'.log'
@@ -35,9 +40,17 @@ def parse_arguments():
         dest="test_dir", type=extant_file,
         help="Directory of test data to train the system", metavar="TESTDIR"
     )
+
+    # Get directory for storing output analyses
     parser.add_argument(
         dest="output_dir", type=extant_file,
         help="Directory to store output analyses", metavar="OUTDIR"
+    )
+
+    parser.add_argument(
+        "--segment",
+        action="store_true",
+        help="Run Matlab segmentation script to create segmentation analysis"
     )
 
     parser.add_argument(
@@ -69,15 +82,56 @@ def main():
         logger_filelevel=args.verbose
     )
 
-    runSpringerSegmentation(args.test_dir, args.output_dir)
+    if args.segment:
+        logger.info("Running MATLAB segmentation...")
+        runSpringerSegmentation(args.test_dir, args.output_dir)
+    dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
+    generateFeatures(dataFilepaths, args.output_dir)
 
-def runSpringerSegmentation(dataset_dir, output_dir):
-    cmd = ['matlab', '-nosplash', '-nodesktop', '-r', 'try addpath(\'./SpringerExtraction\'); main(\'{0}\', \'{1}\'); catch err; disp(err); disp(err.message); disp(err.stack); end; quit'.format(dataset_dir, output_dir)]
+def getFilepaths(audioLocation, segmentsLocation):
+    # Find all segmentation files
+    segLocs = sorted(glob.glob(os.path.join(segmentsLocation, 'seg/*.csv')))
+    # Find all source PCG audio files
+    audioLocs = sorted(glob.glob(os.path.join(audioLocation, '**/*.wav')))
+
+    # Create a list of tuples with filepaths for audio files and segmentation
+    # files
+    filepaths = []
+    for segLoc in segLocs:
+        segName = os.path.splitext(os.path.basename(segLoc))[0][:-5]
+        for ind, audioLoc in enumerate(audioLocs):
+            if os.path.splitext(os.path.basename(audioLoc))[0] == segName:
+                filepaths.append({'name': segName, 'audio':audioLoc, 'seg':segLoc})
+                del audioLocs[ind]
+                break
+    return filepaths
+
+def runSpringerSegmentation(dataset_dir, output_root_dir):
+    # Run matlab springer segmentation code to generate S1, S2, Systole and
+    # Diastole segmentations
+    output_dir = os.path.join(output_root_dir, "seg")
+    pathops.dir_must_exist(output_dir)
+    # Build command for calling the matlab segmentation script to output
+    # segments from the input dataset to a seg subdirectory of the output
+    # directory.
+    cmd = [
+        'matlab',
+        '-nosplash',
+        '-nodesktop',
+        '-r',
+        'try addpath(\'./SpringerExtraction\');'
+        'main(\'{0}\', \'{1}\');'
+        'catch err;'
+        'disp(err);'
+        'disp(err.message);'
+        'disp(err.stack);'
+        'end;'
+        'quit'.format(dataset_dir, output_dir)
+    ]
 
     logger.debug("Running external matlab command:\n" + ' '.join(cmd))
 
-    process = Popen(cmd, stdout=sys.stdout, stderr=sys.stderr).wait()
-    stdout, stderr = process.communicate()
+    Popen(cmd, stdout=sys.stdout, stderr=sys.stderr).wait()
 
 if __name__ == "__main__":
     main()

@@ -39,3 +39,5 @@ CMakeFiles/
 training_dataset/
 validation_dataset/
 Resources/
+.python-version
+out/

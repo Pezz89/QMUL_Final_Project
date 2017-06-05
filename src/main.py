@@ -4,7 +4,6 @@ import numpy as np
 import argparse
 import sys
 import os
-import glob
 import loggerops
 import logging
 import pathops
@@ -90,9 +89,19 @@ def main():
 
 def getFilepaths(audioLocation, segmentsLocation):
     # Find all segmentation files
-    segLocs = sorted(glob.glob(os.path.join(segmentsLocation, 'seg/*.csv')))
+    segLocs = []
+    for root, dirs, files in os.walk(segmentsLocation):
+        for file in files:
+            if file.endswith('.csv'):
+                segLocs.append(os.path.join(root, file))
+    segLocs = sorted(segLocs)
     # Find all source PCG audio files
-    audioLocs = sorted(glob.glob(os.path.join(audioLocation, '**/*.wav')))
+    audioLocs = []
+    for root, dirs, files in os.walk(audioLocation):
+        for file in files:
+            if file.endswith('.wav'):
+                audioLocs.append(os.path.join(root, file))
+    audioLocs = sorted(audioLocs)
 
     # Create a list of tuples with filepaths for audio files and segmentation
     # files

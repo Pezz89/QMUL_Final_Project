@@ -1,16 +1,30 @@
 import numpy as np
-import glob
+import pandas
 import pdb
 
+def parse_segmentation_file(segPath):
+    '''
+    Returns a dictionary with elements for each header value in csv file and a
+    data element for segmentation values, stored ina numpy array
+    '''
+    with open(segPath, 'r') as csvfile:
+        originalSR, downsampledSR, heartRate = np.genfromtxt(csvfile, delimiter=",", max_rows=1, dtype=float, unpack=True)
+        csvData = np.genfromtxt(csvfile, delimiter=",",  dtype=int)
+        return {
+            "originalSR": originalSR,
+            "downsampledSR": downsampledSR,
+            "data": csvData
+        }
+
+
 def calculateFeatures(name, audioPath, segPath):
-    csv = np.genfromtxt(segPath, delimiter=",", skip_header=1, dtype=int)
+    segmentation = parse_segmentation_file(segPath)
     pdb.set_trace()
 
 def generateFeatures(dataFilepaths, output_dir):
     '''
     Processes filepath dictionary to generate a set of features for each file
     '''
-    pdb.set_trace()
     for pcgData in dataFilepaths:
         calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg'])
 

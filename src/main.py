@@ -132,6 +132,9 @@ def runSpringerSegmentation(dataset_dir, output_root_dir):
     logger.debug("Running external matlab command:\n" + ' '.join(cmd))
 
     Popen(cmd, stdout=sys.stdout, stderr=sys.stderr).wait()
+    # Hack to make sure matlab instances are killed at end of script...
+    cmd = ["pkill", "MATLAB"]
+    Popen(cmd, stdout=sys.stdout, stderr=sys.stderr).wait()
 
 if __name__ == "__main__":
     main()

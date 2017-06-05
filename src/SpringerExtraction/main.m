@@ -35,6 +35,7 @@ function main(dataset_dir, output_dir)
         % plot(PCG_resampled);
         % hold on;
         % plot(segmentations);
+        keyboard
 
         % Find changes in beat type classification
         changeIndx = find(abs(diff(segmentations)))+1;

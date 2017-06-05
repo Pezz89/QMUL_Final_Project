@@ -1,10 +1,12 @@
 import numpy as np
-import glob
 import pdb
 
 def calculateFeatures(name, audioPath, segPath):
+    csv = np.genfromtxt(segPath, delimiter=",", max_rows=1, dtype=float)
+    pdb.set_trace()
     csv = np.genfromtxt(segPath, delimiter=",", skip_header=1, dtype=int)
     pdb.set_trace()
+
 
 def generateFeatures(dataFilepaths, output_dir):
     '''

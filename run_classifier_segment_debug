@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd ./src/
+./main.py ../build_dataset ../out_debug -vvvvv --segment

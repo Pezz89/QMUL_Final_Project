@@ -35,7 +35,6 @@ function main(dataset_dir, output_dir)
         % plot(PCG_resampled);
         % hold on;
         % plot(segmentations);
-        keyboard
 
         % Find changes in beat type classification
         changeIndx = find(abs(diff(segmentations)))+1;
@@ -77,7 +76,6 @@ function main(dataset_dir, output_dir)
         indx2(end-rem+1:end) = [];
         A                    = reshape(indx2,4,length(indx2)/4)';
 
-        keyboard
         % Save data to CSV files
         csvdata = [changeIndx, segVals];
         [~, basename, ~] = fileparts(PCGPath);

@@ -1,9 +1,12 @@
 from __future__ import division
 import numpy as np
-import pandas
 import pysndfile
 import matplotlib.pyplot as plt
 import pdb
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 def parse_segmentation_file(segPath):
     '''
@@ -21,6 +24,7 @@ def parse_segmentation_file(segPath):
 
 
 def calculateFeatures(name, audioPath, segPath):
+    logger.debug("Calculating features for: {0}".format(audioPath))
     segmentation = parse_segmentation_file(segPath)
     # Get audio data from PCG file
     audioFile = pysndfile.PySndfile(audioPath, 'r')
@@ -39,22 +43,23 @@ def calculateFeatures(name, audioPath, segPath):
     '''
     # Calculate basic features. This code was adapted directly from the
     # Physionet challenge 2016 example entry: https://www.physionet.org/challenge/2016/sample2016.zip
-    m_RR        = np.round(np.mean(np.diff(segs[:,0])))             # mean value of RR intervals
-    sd_RR       = np.round(np.std(np.diff(segs[:,0])))              # standard deviation (SD) value of RR intervals
-    mean_IntS1  = np.round(np.mean(segs[:,1]-segs[:,0]))            # mean value of S1 intervals
-    sd_IntS1    = np.round(np.std(segs[:,1]-segs[:,0]))             # SD value of S1 intervals
-    mean_IntS2  = np.round(np.mean(segs[:,3]-segs[:,2]))            # mean value of S2 intervals
-    sd_IntS2    = np.round(np.std(segs[:,3]-segs[:,2]))             # SD value of S2 intervals
-    mean_IntSys = np.round(np.mean(segs[:,2]-segs[:,1]))            # mean value of systole intervals
-    sd_IntSys   = np.round(np.std(segs[:,2]-segs[:,1]))             # SD value of systole intervals
-    mean_IntDia = np.round(np.mean(segs[1:,0]-segs[0:-2,3]))        # mean value of diastole intervals
-    sd_IntDia   = np.round(np.std(segs[1:,0]-segs[0:-2,3]))         # SD value of diastole intervals
+    m_RR        = np.round(np.mean(np.diff(segs[:,0])))                     # mean value of RR intervals
+    sd_RR       = np.round(np.std(np.diff(segs[:,0])))                      # standard deviation (SD) value of RR intervals
+    mean_IntS1  = np.round(np.mean(segs[:,1]-segs[:,0]))                    # mean value of S1 intervals
+    sd_IntS1    = np.round(np.std(segs[:,1]-segs[:,0]))                     # SD value of S1 intervals
+    mean_IntS2  = np.round(np.mean(segs[:,3]-segs[:,2]))                    # mean value of S2 intervals
+    sd_IntS2    = np.round(np.std(segs[:,3]-segs[:,2]))                     # SD value of S2 intervals
+    mean_IntSys = np.round(np.mean(segs[:,2]-segs[:,1]))                    # mean value of systole intervals
+    sd_IntSys   = np.round(np.std(segs[:,2]-segs[:,1]))                     # SD value of systole intervals
 
+    mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
+    mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
 
 def generateFeatures(dataFilepaths, output_dir):
     '''
     Processes filepath dictionary to generate a set of features for each file
     '''
+
     for pcgData in dataFilepaths:
         calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg'])
 

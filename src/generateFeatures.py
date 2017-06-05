@@ -3,7 +3,8 @@ import glob
 import pdb
 
 def calculateFeatures(name, audioPath, segPath):
-    csv = np.genfromtxt(segPath, delimiter=",", dtype=int)
+    csv = np.genfromtxt(segPath, delimiter=",", skip_header=1, dtype=int)
+    pdb.set_trace()
 
 def generateFeatures(dataFilepaths, output_dir):
     '''

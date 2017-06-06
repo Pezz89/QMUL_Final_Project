@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import pdb
 import logging
 from multiprocessing import Pool, cpu_count
-from scipy.stats import skew
+from scipy.stats import skew, tvar
+import collections
 
 
 logger = logging.getLogger(__name__)
@@ -61,16 +62,9 @@ def calculateFeatures(name, audioPath, segPath):
     # If the signal exceeds 60 heart cycles, analyse only the first 60
     maxCycles = 60 if segs.shape[0]-1 > 60 else segs.shape[0]-1
 
-    # Allocate memory for segment specific features
-    s1ZeroX = np.empty(maxCycles)
-    sysZeroX = np.empty(maxCycles)
-    s2ZeroX = np.empty(maxCycles)
-    diaZeroX = np.empty(maxCycles)
-
-    s1RMS = np.empty(maxCycles)
-    sysRMS = np.empty(maxCycles)
-    s2RMS = np.empty(maxCycles)
-    diaRMS = np.empty(maxCycles)
+    # Automatically allocate memory for segment specific features as they are
+    # created
+    perSegFeatures = collections.defaultdict(lambda: np.empty(maxCycles))
 
     i = 0
     while i < maxCycles:
@@ -81,45 +75,50 @@ def calculateFeatures(name, audioPath, segPath):
         dia = audioData[segs[i,3]:segs[i+1,0]]
 
         # Zero-crossing
-        s1ZeroX[i] = np.sum(np.abs(np.diff(s1)>0))/s1.size
-        sysZeroX[i] = np.sum(np.abs(np.diff(sys)>0))/sys.size
-        s2ZeroX[i] = np.sum(np.abs(np.diff(s2)>0))/s2.size
-        diaZeroX[i] = np.sum(np.abs(np.diff(dia)>0))/dia.size
+        perSegFeatures['s1ZeroX'][i] = np.sum(np.abs(np.diff(s1)>0))/s1.size
+        perSegFeatures['sysZeroX'][i] = np.sum(np.abs(np.diff(sys)>0))/sys.size
+        perSegFeatures['s2ZeroX'][i] = np.sum(np.abs(np.diff(s2)>0))/s2.size
+        perSegFeatures['diaZeroX'][i] = np.sum(np.abs(np.diff(dia)>0))/dia.size
 
         # RMS
-        s1RMS[i] = np.sqrt(np.mean(s1**2))
-        sysRMS[i] = np.sqrt(np.mean(sys**2))
-        s2RMS[i] = np.sqrt(np.mean(s2**2))
-        diaRMS[i] = np.sqrt(np.mean(dia**2))
+        perSegFeatures['s1RMS'][i] = np.sqrt(np.mean(s1**2))
+        perSegFeatures['sysRMS'][i] = np.sqrt(np.mean(sys**2))
+        perSegFeatures['s2RMS'][i] = np.sqrt(np.mean(s2**2))
+        perSegFeatures['diaRMS'][i] = np.sqrt(np.mean(dia**2))
 
         # Shannon Energy (Directly on PCG signal)
-        s1SEngy = (s1**2)*np.log(s1**2)
-        sysSEngy = (sys**2)*np.log(sys**2)
-        s2SEngy = (s2**2)*np.log(s2**2)
-        diaSEngy = (dia**2)*np.log(dia**2)
+        perSegFeatures['s1SEngy'][i] = (-1/s1.size) * np.sum((s1**2)*np.log(s1**2))
+        perSegFeatures['sysSEngy'][i] = (-1/s1.size) * np.sum((sys**2)*np.log(sys**2))
+        perSegFeatures['s2SEngy'][i] = (-1/s1.size) * np.sum((s2**2)*np.log(s2**2))
+        perSegFeatures['diaSEngy'][i] = (-1/s1.size) * np.sum((dia**2)*np.log(dia**2))
 
         # Time duration
-        s1Dur = s1.size
-        sysDur = sys.size
-        s2Dur = s2.size
-        diaDur = dia.size
+        perSegFeatures['s1Dur'][i] = s1.size
+        perSegFeatures['sysDur'][i] = sys.size
+        perSegFeatures['s2Dur'][i] = s2.size
+        perSegFeatures['diaDur'][i] = dia.size
 
         # Skewness
-        s1Skew = skew(s1)
-        sysSkew = skew(sys)
-        s2Skew = skew(s2)
-        diaSkew = skew(dia)
+        perSegFeatures['s1Skew'][i] = skew(s1)
+        perSegFeatures['sysSkew'][i] = skew(sys)
+        perSegFeatures['s2Skew'][i] = skew(s2)
+        perSegFeatures['diaSkew'][i] = skew(dia)
 
         # Variance
+        perSegFeatures['s1Var'][i] = tvar(s1)
+        perSegFeatures['sysVar'][i] = tvar(sys)
+        perSegFeatures['s2Var'][i] = tvar(s2)
+        perSegFeatures['diaVar'][i] = tvar(dia)
+
         # Spectral Spread
         # Spectral Flatness
         # Spectral Centroid
         i += 1
 
-    avrS1ZeroX = np.nanmean(s1ZeroX)
-    avrSys1ZeroX = np.nanmean(sysZeroX)
-    avrS2ZeroX = np.nanmean(s2ZeroX)
-    avrDiaZeroX = np.nanmean(diaZeroX)
+    avrS1ZeroX = np.nanmean(perSegFeatures['s1ZeroX'])
+    avrSys1ZeroX = np.nanmean(perSegFeatures['sysZeroX'])
+    avrS2ZeroX = np.nanmean(perSegFeatures['s2ZeroX'])
+    avrDiaZeroX = np.nanmean(perSegFeatures['diaZeroX'])
 
     return 0
 

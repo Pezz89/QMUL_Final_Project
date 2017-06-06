@@ -4,6 +4,8 @@ import pysndfile
 import matplotlib.pyplot as plt
 import pdb
 import logging
+from multiprocessing import Pool, cpu_count
+from scipy.stats import skew
 
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,7 @@ def calculateFeatures(name, audioPath, segPath):
     # Get audio data from PCG file
     audioFile = pysndfile.PySndfile(audioPath, 'r')
     audioData = audioFile.read_frames()
+    # TODO: Apply downsampling here...
     segData = segmentation['data']
 
     # Organise segments into a 4*N array, where each column represents the S1,
@@ -55,12 +58,90 @@ def calculateFeatures(name, audioPath, segPath):
     mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
     mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
 
-def generateFeatures(dataFilepaths, output_dir):
+    # If the signal exceeds 60 heart cycles, analyse only the first 60
+    maxCycles = 60 if segs.shape[0]-1 > 60 else segs.shape[0]-1
+
+    # Allocate memory for segment specific features
+    s1ZeroX = np.empty(maxCycles)
+    sysZeroX = np.empty(maxCycles)
+    s2ZeroX = np.empty(maxCycles)
+    diaZeroX = np.empty(maxCycles)
+
+    s1RMS = np.empty(maxCycles)
+    sysRMS = np.empty(maxCycles)
+    s2RMS = np.empty(maxCycles)
+    diaRMS = np.empty(maxCycles)
+
+    i = 0
+    while i < maxCycles:
+        # Get audio signal for each segment
+        s1 = audioData[segs[i,0]:segs[i,1]]
+        sys = audioData[segs[i,1]:segs[i,2]]
+        s2 = audioData[segs[i,2]:segs[i,3]]
+        dia = audioData[segs[i,3]:segs[i+1,0]]
+
+        # Zero-crossing
+        s1ZeroX[i] = np.sum(np.abs(np.diff(s1)>0))/s1.size
+        sysZeroX[i] = np.sum(np.abs(np.diff(sys)>0))/sys.size
+        s2ZeroX[i] = np.sum(np.abs(np.diff(s2)>0))/s2.size
+        diaZeroX[i] = np.sum(np.abs(np.diff(dia)>0))/dia.size
+
+        # RMS
+        s1RMS[i] = np.sqrt(np.mean(s1**2))
+        sysRMS[i] = np.sqrt(np.mean(sys**2))
+        s2RMS[i] = np.sqrt(np.mean(s2**2))
+        diaRMS[i] = np.sqrt(np.mean(dia**2))
+
+        # Shannon Energy (Directly on PCG signal)
+        s1SEngy = (s1**2)*np.log(s1**2)
+        sysSEngy = (sys**2)*np.log(sys**2)
+        s2SEngy = (s2**2)*np.log(s2**2)
+        diaSEngy = (dia**2)*np.log(dia**2)
+
+        # Time duration
+        s1Dur = s1.size
+        sysDur = sys.size
+        s2Dur = s2.size
+        diaDur = dia.size
+
+        # Skewness
+        s1Skew = skew(s1)
+        sysSkew = skew(sys)
+        s2Skew = skew(s2)
+        diaSkew = skew(dia)
+
+        # Variance
+        # Spectral Spread
+        # Spectral Flatness
+        # Spectral Centroid
+        i += 1
+
+    avrS1ZeroX = np.nanmean(s1ZeroX)
+    avrSys1ZeroX = np.nanmean(sysZeroX)
+    avrS2ZeroX = np.nanmean(s2ZeroX)
+    avrDiaZeroX = np.nanmean(diaZeroX)
+
+    return 0
+
+def calculateFeatures_helper(args):
+    '''
+    Helper function to allow for parallelization of feature extraction
+    '''
+    return calculateFeatures(*args)
+
+def generateFeatures(dataFilepaths, output_dir, parallelize=False):
     '''
     Processes filepath dictionary to generate a set of features for each file
     '''
-
-    for pcgData in dataFilepaths:
-        calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg'])
+    if parallelize:
+        args = []
+        pool = Pool(cpu_count())
+        for pcgData in dataFilepaths:
+            args.append((pcgData['name'],pcgData['audio'],pcgData['seg']))
+        result = pool.map(calculateFeatures_helper, args)
+        print result
+    else:
+        for pcgData in dataFilepaths:
+            calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg'])
 
 

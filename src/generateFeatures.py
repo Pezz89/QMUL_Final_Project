@@ -6,6 +6,7 @@ import pdb
 import logging
 from multiprocessing import Pool, cpu_count
 from scipy.stats import skew, tvar, kurtosis
+from scipy.signal import decimate
 import collections
 
 
@@ -32,7 +33,13 @@ def calculateFeatures(name, audioPath, segPath):
     # Get audio data from PCG file
     audioFile = pysndfile.PySndfile(audioPath, 'r')
     audioData = audioFile.read_frames()
+    audioSamplerate = audioFile.samplerate()
     # TODO: Apply downsampling here...
+    resampleRatio = segmentation['originalSR'] / segmentation['downsampledSR']
+    if resampleRatio % 1.0:
+        raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
+    audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
+    audioSamplerate // resampleRatio
     segData = segmentation['data']
 
     # Organise segments into a 4*N array, where each column represents the S1,
@@ -108,7 +115,7 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Skew'][i] = skew(s2)
         perSegFeatures['diaSkew'][i] = skew(dia)
 
-        # Skewness
+        # Kurtosis
         perSegFeatures['s1Kurt'][i] = kurtosis(s1)
         perSegFeatures['sysKurt'][i] = kurtosis(sys)
         perSegFeatures['s2Kurt'][i] = kurtosis(s2)
@@ -123,11 +130,30 @@ def calculateFeatures(name, audioPath, segPath):
         # =====================================================================
         # Frequency-domain Features
         # =====================================================================
-        '''
-        s1FFTLength = 2**nextpow2(s1.size)
-        s1FFT= np.fft.fft(s1,s1FFTLength)/LS1;
-        f1=Fs1/2*linspace(0,1,NFFT1/2+1);
-        '''
+
+        # Calculate closest power of 2 to the segment size to use as FFT size
+        s1FFTLength = nextpow2(s1.size)
+        s1FFT= (np.fft.fft(s1,s1FFTLength)/s1.size)[:s1FFTLength//2];
+        # Calculate center frequency of each bin
+        fS1=audioSamplerate/2*np.linspace(0,1,s1FFTLength/2);
+
+        sysFFTLength = nextpow2(sys.size)
+        sysFFT= (np.fft.fft(sys,sysFFTLength)/sys.size)[:sysFFTLength//2];
+        # Calculate center frequency of each bin
+        fSys=audioSamplerate/2*np.linspace(0,1,sysFFTLength/2);
+
+        s2FFTLength = nextpow2(s2.size)
+        s2FFT= (np.fft.fft(s2,s2FFTLength)/s2.size)[:s2FFTLength//2];
+        # Calculate center frequency of each bin
+        fS2=audioSamplerate/2*np.linspace(0,1,s2FFTLength/2);
+
+        diaFFTLength = nextpow2(dia.size)
+        diaFFT= (np.fft.fft(dia,diaFFTLength)/dia.size)[:diaFFTLength//2];
+        # Calculate center frequency of each bin
+        fDia=audioSamplerate/2*np.linspace(0,1,diaFFTLength/2);
+
+        pdb.set_trace()
+
         # Spectral Spread
         # Spectral Flatness
         # Spectral Centroid

@@ -152,7 +152,12 @@ def calculateFeatures(name, audioPath, segPath):
         # Calculate center frequency of each bin
         fDia=audioSamplerate/2*np.linspace(0,1,diaFFTLength/2);
 
-        pdb.set_trace()
+        # Spectral Flatness
+        perSegFeatures['s1Flat'][i] = np.mean(s1FFT)/(np.e**np.mean(np.log(s1FFT)))
+        perSegFeatures['sysFlat'][i] = np.mean(sysFFT)/(np.e**np.mean(np.log(sysFFT)))
+        perSegFeatures['s2Flat'][i] = np.mean(s2FFT)/(np.e**np.mean(np.log(s2FFT)))
+        perSegFeatures['diaFlat'][i] = np.mean(diaFFT)/(np.e**np.mean(np.log(diaFFT)))
+
 
         # Spectral Spread
         # Spectral Flatness

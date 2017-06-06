@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pdb
 import logging
 from multiprocessing import Pool, cpu_count
-from scipy.stats import skew, tvar
+from scipy.stats import skew, tvar, kurtosis
 import collections
 
 
@@ -74,6 +74,10 @@ def calculateFeatures(name, audioPath, segPath):
         s2 = audioData[segs[i,2]:segs[i,3]]
         dia = audioData[segs[i,3]:segs[i+1,0]]
 
+        # =====================================================================
+        # Time-domain Features
+        # =====================================================================
+
         # Zero-crossing
         perSegFeatures['s1ZeroX'][i] = np.sum(np.abs(np.diff(s1)>0))/s1.size
         perSegFeatures['sysZeroX'][i] = np.sum(np.abs(np.diff(sys)>0))/sys.size
@@ -104,12 +108,26 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Skew'][i] = skew(s2)
         perSegFeatures['diaSkew'][i] = skew(dia)
 
+        # Skewness
+        perSegFeatures['s1Kurt'][i] = kurtosis(s1)
+        perSegFeatures['sysKurt'][i] = kurtosis(sys)
+        perSegFeatures['s2Kurt'][i] = kurtosis(s2)
+        perSegFeatures['diaKurt'][i] = kurtosis(dia)
+
         # Variance
         perSegFeatures['s1Var'][i] = tvar(s1)
         perSegFeatures['sysVar'][i] = tvar(sys)
         perSegFeatures['s2Var'][i] = tvar(s2)
         perSegFeatures['diaVar'][i] = tvar(dia)
 
+        # =====================================================================
+        # Frequency-domain Features
+        # =====================================================================
+        '''
+        s1FFTLength = 2**nextpow2(s1.size)
+        s1FFT= np.fft.fft(s1,s1FFTLength)/LS1;
+        f1=Fs1/2*linspace(0,1,NFFT1/2+1);
+        '''
         # Spectral Spread
         # Spectral Flatness
         # Spectral Centroid
@@ -122,16 +140,24 @@ def calculateFeatures(name, audioPath, segPath):
 
     return 0
 
+'''
+Find 2^n that is equal to or greater than.
+'''
+def nextpow2(i):
+    n = 1
+    while n < i: n *= 2
+    return n
+
+'''
+Helper function to allow for parallelization of feature extraction
+'''
 def calculateFeatures_helper(args):
-    '''
-    Helper function to allow for parallelization of feature extraction
-    '''
     return calculateFeatures(*args)
 
+'''
+Processes filepath dictionary to generate a set of features for each file
+'''
 def generateFeatures(dataFilepaths, output_dir, parallelize=False):
-    '''
-    Processes filepath dictionary to generate a set of features for each file
-    '''
     if parallelize:
         args = []
         pool = Pool(cpu_count())

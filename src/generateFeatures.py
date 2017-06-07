@@ -4,7 +4,7 @@ import pysndfile
 import matplotlib.pyplot as plt
 import pdb
 import logging
-from multiprocessing import Pool, cpu_count
+from pathos.multiprocessing import Pool, cpu_count
 from scipy.stats import skew, tvar, kurtosis
 from scipy.signal import decimate
 import collections
@@ -52,6 +52,11 @@ def calculateFeatures(name, audioPath, segPath):
     plt.step(segData[:, 0]*int(segmentation['originalSR']/segmentation['downsampledSR']), segData[:, 1])
     plt.show()
     '''
+
+    # =========================================================================
+    # Global Features - Calculated over entire signal
+    # =========================================================================
+
     # Calculate basic features. This code was adapted directly from the
     # Physionet challenge 2016 example entry: https://www.physionet.org/challenge/2016/sample2016.zip
     m_RR        = np.round(np.mean(np.diff(segs[:,0])))                     # mean value of RR intervals
@@ -65,6 +70,10 @@ def calculateFeatures(name, audioPath, segPath):
 
     mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
     mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
+
+    # =========================================================================
+    # Local Features - Calculated per segment
+    # =========================================================================
 
     # If the signal exceeds 60 heart cycles, analyse only the first 60
     maxCycles = 60 if segs.shape[0]-1 > 60 else segs.shape[0]-1
@@ -97,11 +106,11 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2RMS'][i] = np.sqrt(np.mean(s2**2))
         perSegFeatures['diaRMS'][i] = np.sqrt(np.mean(dia**2))
 
-        # Shannon Energy (Directly on PCG signal)
-        perSegFeatures['s1SEngy'][i] = (-1/s1.size) * np.sum((s1**2)*np.log(s1**2))
-        perSegFeatures['sysSEngy'][i] = (-1/s1.size) * np.sum((sys**2)*np.log(sys**2))
-        perSegFeatures['s2SEngy'][i] = (-1/s1.size) * np.sum((s2**2)*np.log(s2**2))
-        perSegFeatures['diaSEngy'][i] = (-1/s1.size) * np.sum((dia**2)*np.log(dia**2))
+        # Shannon Energy
+        perSegFeatures['s1ShanEngy'][i] = (-1/s1.size) * np.sum((s1**2)*np.log(s1**2))
+        perSegFeatures['sysShanEngy'][i] = (-1/s1.size) * np.sum((sys**2)*np.log(sys**2))
+        perSegFeatures['s2ShanEngy'][i] = (-1/s1.size) * np.sum((s2**2)*np.log(s2**2))
+        perSegFeatures['diaShanEngy'][i] = (-1/s1.size) * np.sum((dia**2)*np.log(dia**2))
 
         # Time duration
         perSegFeatures['s1Dur'][i] = s1.size
@@ -163,18 +172,39 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Flat'][i] = np.mean(s2Mag)/(np.e**np.mean(np.log(s2Mag)))
         perSegFeatures['diaFlat'][i] = np.mean(diaMag)/(np.e**np.mean(np.log(diaMag)))
 
-
         # Spectral Centroid
+        perSegFeatures['s1Cent'][i] = np.sum(s1Mag*fS1) / np.sum(s1Mag)
+        perSegFeatures['sysCent'][i] = np.sum(sysMag*fSys) / np.sum(sysMag)
+        perSegFeatures['s2Cent'][i] = np.sum(s2Mag*fS2) / np.sum(s2Mag)
+        perSegFeatures['diaCent'][i] = np.sum(diaMag*fDia) / np.sum(diaMag)
+
         # Spectral Spread
-        # Spectral Flatness
+        perSegFeatures['s1Spread'][i] = spectralspread(s1Mag, fS1, perSegFeatures['s1Cent'][i])
+        perSegFeatures['sysSpread'][i] = spectralspread(sysMag, fSys, perSegFeatures['sysCent'][i])
+        perSegFeatures['s2Spread'][i] = spectralspread(s2Mag, fS2, perSegFeatures['s2Cent'][i])
+        perSegFeatures['diaSpread'][i] = spectralspread(diaMag, fDia, perSegFeatures['diaCent'][i])
+
         i += 1
 
-    avrS1ZeroX = np.nanmean(perSegFeatures['s1ZeroX'])
-    avrSys1ZeroX = np.nanmean(perSegFeatures['sysZeroX'])
-    avrS2ZeroX = np.nanmean(perSegFeatures['s2ZeroX'])
-    avrDiaZeroX = np.nanmean(perSegFeatures['diaZeroX'])
+    features = collections.defaultdict(lambda: None)
 
-    return 0
+    for key in perSegFeatures.keys():
+        features[key] = np.nanmean(perSegFeatures[key])
+    pdb.set_trace()
+
+    return features
+
+
+'''
+Calculate the spectral spread of a magnitude spectrum, given it's spectral
+ceontroid
+'''
+def spectralspread(mag, freqs, centroid):
+    a = (freqs-centroid)**2
+    mag_sqrd = mag**2
+    # Calculate the weighted mean
+    return np.sqrt(np.sum(a*mag_sqrd) / np.sum(mag_sqrd))
+
 
 '''
 Find 2^n that is equal to or greater than.
@@ -184,11 +214,13 @@ def nextpow2(i):
     while n < i: n *= 2
     return n
 
+
 '''
 Helper function to allow for parallelization of feature extraction
 '''
 def calculateFeatures_helper(args):
     return calculateFeatures(*args)
+
 
 '''
 Processes filepath dictionary to generate a set of features for each file

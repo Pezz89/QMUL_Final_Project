@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 cd ./src/
-./main.py ../training_dataset ../out -vvvvv
+./main.py ../training_dataset ../out -vvvvv -p

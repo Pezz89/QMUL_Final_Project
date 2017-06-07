@@ -8,6 +8,7 @@ from pathos.multiprocessing import Pool, cpu_count
 from scipy.stats import skew, tvar, kurtosis
 from scipy.signal import decimate
 import collections
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -23,12 +24,13 @@ def parse_segmentation_file(segPath):
         return {
             "originalSR": originalSR,
             "downsampledSR": downsampledSR,
-            "data": csvData
+            "data": csvData,
+            "heartRate": heartRate
         }
 
 
 def calculateFeatures(name, audioPath, segPath):
-    logger.debug("Calculating features for: {0}".format(audioPath))
+    logger.debug("Calculating features for: {0}".format(os.path.relpath(audioPath)))
     segmentation = parse_segmentation_file(segPath)
     # Get audio data from PCG file
     audioFile = pysndfile.PySndfile(audioPath, 'r')
@@ -57,19 +59,24 @@ def calculateFeatures(name, audioPath, segPath):
     # Global Features - Calculated over entire signal
     # =========================================================================
 
+    features = collections.defaultdict(lambda: None)
+
+    # Get heart rate feature calculated during segmentation
+    features['heartRate'] = segmentation['heartRate']
+
     # Calculate basic features. This code was adapted directly from the
     # Physionet challenge 2016 example entry: https://www.physionet.org/challenge/2016/sample2016.zip
-    m_RR        = np.round(np.mean(np.diff(segs[:,0])))                     # mean value of RR intervals
-    sd_RR       = np.round(np.std(np.diff(segs[:,0])))                      # standard deviation (SD) value of RR intervals
-    mean_IntS1  = np.round(np.mean(segs[:,1]-segs[:,0]))                    # mean value of S1 intervals
-    sd_IntS1    = np.round(np.std(segs[:,1]-segs[:,0]))                     # SD value of S1 intervals
-    mean_IntS2  = np.round(np.mean(segs[:,3]-segs[:,2]))                    # mean value of S2 intervals
-    sd_IntS2    = np.round(np.std(segs[:,3]-segs[:,2]))                     # SD value of S2 intervals
-    mean_IntSys = np.round(np.mean(segs[:,2]-segs[:,1]))                    # mean value of systole intervals
-    sd_IntSys   = np.round(np.std(segs[:,2]-segs[:,1]))                     # SD value of systole intervals
+    features['m_RR']        = np.round(np.mean(np.diff(segs[:,0])))                     # mean value of RR intervals
+    features['sd_RR']       = np.round(np.std(np.diff(segs[:,0])))                      # standard deviation (SD) value of RR intervals
+    features['mean_IntS1']  = np.round(np.mean(segs[:,1]-segs[:,0]))                    # mean value of S1 intervals
+    features['sd_IntS1']    = np.round(np.std(segs[:,1]-segs[:,0]))                     # SD value of S1 intervals
+    features['mean_IntS2']  = np.round(np.mean(segs[:,3]-segs[:,2]))                    # mean value of S2 intervals
+    features['sd_IntS2']    = np.round(np.std(segs[:,3]-segs[:,2]))                     # SD value of S2 intervals
+    features['mean_IntSys'] = np.round(np.mean(segs[:,2]-segs[:,1]))                    # mean value of systole intervals
+    features['sd_IntSys']   = np.round(np.std(segs[:,2]-segs[:,1]))                     # SD value of systole intervals
 
-    mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
-    mean_IntDia = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
+    features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
+    features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
 
     # =========================================================================
     # Local Features - Calculated per segment
@@ -186,11 +193,10 @@ def calculateFeatures(name, audioPath, segPath):
 
         i += 1
 
-    features = collections.defaultdict(lambda: None)
 
+    # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():
         features[key] = np.nanmean(perSegFeatures[key])
-    pdb.set_trace()
 
     return features
 
@@ -225,16 +231,19 @@ def calculateFeatures_helper(args):
 '''
 Processes filepath dictionary to generate a set of features for each file
 '''
-def generateFeatures(dataFilepaths, output_dir, parallelize=False):
+def generateFeatures(dataFilepaths, output_dir, parallelize=True):
+    results = []
     if parallelize:
         args = []
         pool = Pool(cpu_count())
         for pcgData in dataFilepaths:
             args.append((pcgData['name'],pcgData['audio'],pcgData['seg']))
-        result = pool.map(calculateFeatures_helper, args)
-        print result
+        results = pool.map(calculateFeatures_helper, args)
+        print results
     else:
         for pcgData in dataFilepaths:
-            calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg'])
+            results.append(calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg']))
+        print results
+    return results
 
 

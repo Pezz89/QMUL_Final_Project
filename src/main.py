@@ -53,6 +53,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--parallelize",
+        "-p",
+        action="store_true",
+        help="Run processing in parallel where possible to decrease increase"
+        " performance"
+    )
+
+    parser.add_argument(
         '--verbose',
         '-v',
         action='count',
@@ -85,7 +93,7 @@ def main():
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    generateFeatures(dataFilepaths, args.output_dir)
+    generateFeatures(dataFilepaths, args.output_dir, parallelize=args.parallelize)
 
 def getFilepaths(audioLocation, segmentsLocation):
     # Find all segmentation files

@@ -152,16 +152,21 @@ def calculateFeatures(name, audioPath, segPath):
         # Calculate center frequency of each bin
         fDia=audioSamplerate/2*np.linspace(0,1,diaFFTLength/2);
 
+        s1Mag = np.abs(s1FFT)
+        sysMag = np.abs(sysFFT)
+        s2Mag = np.abs(s2FFT)
+        diaMag = np.abs(diaFFT)
+
         # Spectral Flatness
-        perSegFeatures['s1Flat'][i] = np.mean(s1FFT)/(np.e**np.mean(np.log(s1FFT)))
-        perSegFeatures['sysFlat'][i] = np.mean(sysFFT)/(np.e**np.mean(np.log(sysFFT)))
-        perSegFeatures['s2Flat'][i] = np.mean(s2FFT)/(np.e**np.mean(np.log(s2FFT)))
-        perSegFeatures['diaFlat'][i] = np.mean(diaFFT)/(np.e**np.mean(np.log(diaFFT)))
+        perSegFeatures['s1Flat'][i] = np.mean(s1Mag)/(np.e**np.mean(np.log(s1Mag)))
+        perSegFeatures['sysFlat'][i] = np.mean(sysMag)/(np.e**np.mean(np.log(sysMag)))
+        perSegFeatures['s2Flat'][i] = np.mean(s2Mag)/(np.e**np.mean(np.log(s2Mag)))
+        perSegFeatures['diaFlat'][i] = np.mean(diaMag)/(np.e**np.mean(np.log(diaMag)))
 
 
+        # Spectral Centroid
         # Spectral Spread
         # Spectral Flatness
-        # Spectral Centroid
         i += 1
 
     avrS1ZeroX = np.nanmean(perSegFeatures['s1ZeroX'])

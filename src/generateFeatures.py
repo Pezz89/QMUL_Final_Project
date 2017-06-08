@@ -175,10 +175,10 @@ def calculateFeatures(name, audioPath, segPath):
         diaMag = np.abs(diaFFT)
 
         # Spectral Flatness
-        perSegFeatures['s1Flat'][i] = np.mean(s1Mag)/(np.e**np.mean(np.log(s1Mag)))
-        perSegFeatures['sysFlat'][i] = np.mean(sysMag)/(np.e**np.mean(np.log(sysMag)))
-        perSegFeatures['s2Flat'][i] = np.mean(s2Mag)/(np.e**np.mean(np.log(s2Mag)))
-        perSegFeatures['diaFlat'][i] = np.mean(diaMag)/(np.e**np.mean(np.log(diaMag)))
+        perSegFeatures['s1Flat'][i] = (np.e**np.mean(np.log(s1Mag)))/np.mean(s1Mag)
+        perSegFeatures['sysFlat'][i] = (np.e**np.mean(np.log(sysMag)))/np.mean(sysMag)
+        perSegFeatures['s2Flat'][i] = (np.e**np.mean(np.log(s2Mag)))/np.mean(s2Mag)
+        perSegFeatures['diaFlat'][i] = (np.e**np.mean(np.log(diaMag)))/np.mean(diaMag)
 
         # Spectral Centroid
         perSegFeatures['s1Cent'][i] = np.sum(s1Mag*fS1) / np.sum(s1Mag)

@@ -10,6 +10,7 @@ import pathops
 from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
+from buildClassifier import buildClassifier
 import pandas as pd
 
 import pdb
@@ -95,15 +96,16 @@ def main():
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    classifications = getClassifications(args.test_dir)
     features = generateFeatures(dataFilepaths, args.output_dir, parallelize=args.parallelize)
+    classifications = getClassifications(args.test_dir, features)
     evaluateFeatures(features, classifications)
+    buildClassifier(features, classifications)
 
 
 '''
 Read classification labels for files in the dataset
 '''
-def getClassifications(referenceLocation):
+def getClassifications(referenceLocation, features):
     # Find all reference files
     refLocs = []
     for root, dirs, files in os.walk(referenceLocation):
@@ -114,7 +116,9 @@ def getClassifications(referenceLocation):
     classifications = pd.Series([])
     for refFile in refLocs:
         classifications = classifications.append(pd.Series.from_csv(refFile))
+    classifications = classifications[features.index]
     return classifications
+
 
 def getFilepaths(audioLocation, segmentsLocation):
     # Find all segmentation files

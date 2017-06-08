@@ -11,30 +11,28 @@ plot = True
 
 def evaluateFeatures(features, classifications):
     # Find classification for each series of features
-    y = classifications[features.index]
     featureNames = features.keys()
 
     #sns.pairplot(features.ix[:, 0:3])
     minmax_scale = preprocessing.MinMaxScaler().fit(features)
     features = minmax_scale.transform(features)
-    chi2score = chi2(features, y)[0]
+    chi2score = chi2(features, classifications)[0]
 
     chi2score = chi2score.reshape(1, -1).T
     minmax_scale = preprocessing.MinMaxScaler().fit(chi2score)
     chi2score = minmax_scale.transform(chi2score)
 
     model = ExtraTreesClassifier()
-    model.fit(features, y)
+    model.fit(features, classifications)
     feature_importance_ = model.feature_importances_.reshape(1, -1).T
     minmax_scale = preprocessing.MinMaxScaler().fit(feature_importance_)
     feature_importance_ = minmax_scale.transform(feature_importance_)
 
-    anovaFScore = f_classif(features, y)[0]
+    anovaFScore = f_classif(features, classifications)[0]
     anovaFScore = anovaFScore.reshape(1, -1).T
     minmax_scale = preprocessing.MinMaxScaler().fit(anovaFScore)
     anovaFScore = minmax_scale.transform(anovaFScore)
 
-    chi2score, feature_importance_, anovaFScore = feature_importance_, anovaFScore, chi2score
 
     # Chi-Squared plotting code adapted from:
     # http://mark-kay.net/2014/03/10/using-chi-square-tfid-vectorization/

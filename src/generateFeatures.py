@@ -9,6 +9,7 @@ from scipy.stats import skew, tvar, kurtosis
 from scipy.signal import decimate
 import collections
 import os
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -198,7 +199,7 @@ def calculateFeatures(name, audioPath, segPath):
     for key in perSegFeatures.keys():
         features[key] = np.nanmean(perSegFeatures[key])
 
-    return features
+    return pd.Series(features)
 
 
 '''
@@ -230,20 +231,20 @@ def calculateFeatures_helper(args):
 
 '''
 Processes filepath dictionary to generate a set of features for each file
+Return a Pandas DataFrame containing features for all PCG recordings
 '''
 def generateFeatures(dataFilepaths, output_dir, parallelize=True):
     results = []
+    args = []
+    for pcgData in dataFilepaths:
+        args.append((pcgData['name'],pcgData['audio'],pcgData['seg']))
+
     if parallelize:
-        args = []
         pool = Pool(cpu_count())
-        for pcgData in dataFilepaths:
-            args.append((pcgData['name'],pcgData['audio'],pcgData['seg']))
         results = pool.map(calculateFeatures_helper, args)
-        print results
+        features = pd.DataFrame(results, map(lambda x: x[0], args))
     else:
-        for pcgData in dataFilepaths:
-            results.append(calculateFeatures(pcgData['name'],pcgData['audio'],pcgData['seg']))
-        print results
-    return results
-
-
+        for arg in args:
+            results.append(calculateFeatures(*arg))
+        features = pd.DataFrame(results, map(lambda x: x[0], args))
+    return features

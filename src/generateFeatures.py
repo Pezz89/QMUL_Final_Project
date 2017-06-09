@@ -10,6 +10,7 @@ from scipy.signal import decimate
 import collections
 import os
 import pandas as pd
+import pathops
 
 
 logger = logging.getLogger(__name__)
@@ -233,7 +234,20 @@ def calculateFeatures_helper(args):
 Processes filepath dictionary to generate a set of features for each file
 Return a Pandas DataFrame containing features for all PCG recordings
 '''
-def generateFeatures(dataFilepaths, output_dir, parallelize=True):
+def generateFeatures(dataFilepaths, output_dir, filename=None, parallelize=True):
+    outputFile = None
+    if filename:
+        pathops.dir_must_exist(output_dir)
+        outputFile = os.path.join(output_dir, filename)
+        try:
+            logger.debug("Attempting to load previously generated features from file: {0}".format(os.path.relpath(outputFile)))
+            features = pd.read_pickle(outputFile)
+            logger.debug("Features loaded from file succesfully".format(outputFile))
+            return features
+        except IOError:
+            logger.debug("No previously generated features loaded, generating new features...")
+            pass
+
     results = []
     args = []
     for pcgData in dataFilepaths:
@@ -247,4 +261,8 @@ def generateFeatures(dataFilepaths, output_dir, parallelize=True):
         for arg in args:
             results.append(calculateFeatures(*arg))
         features = pd.DataFrame(results, map(lambda x: x[0], args))
+
+    if outputFile:
+        features.to_pickle(outputFile)
+
     return features

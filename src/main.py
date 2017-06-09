@@ -50,6 +50,12 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--output_fname", "-o", type=str,
+        help="Specify the name of the file to save generated features to for "
+        "future use", metavar="OUTFNAME"
+    )
+
+    parser.add_argument(
         "--segment",
         action="store_true",
         help="Run Matlab segmentation script to create segmentation analysis"
@@ -96,7 +102,7 @@ def main():
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    features = generateFeatures(dataFilepaths, args.output_dir, parallelize=args.parallelize)
+    features = generateFeatures(dataFilepaths, args.output_dir, args.output_fname, parallelize=args.parallelize)
     classifications = getClassifications(args.test_dir, features)
     evaluateFeatures(features, classifications)
     buildClassifier(features, classifications)

@@ -7,7 +7,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 import numpy as np
 sns.set()
 
-plot = True
+plot = False
 
 def evaluateFeatures(features, classifications):
     # Find classification for each series of features

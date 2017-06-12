@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
 from buildClassifier import buildClassifier
+from resample import bootstrapResample
 import pandas as pd
 
 import pdb
@@ -104,6 +105,7 @@ def main():
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
     features = generateFeatures(dataFilepaths, args.output_dir, args.output_fname, parallelize=args.parallelize)
     classifications = getClassifications(args.test_dir, features)
+    features = bootstrapResample(features, classifications)
     evaluateFeatures(features, classifications)
     buildClassifier(features, classifications)
 

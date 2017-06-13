@@ -20,4 +20,6 @@ def bootstrapResample(features, classification):
     resampled_features = pd.concat([abnormal, normal])
     # Sort records in-place
     resampled_features.sort_index(inplace=True)
-    return resampled_features
+    # Get classification for all resampled features
+    classification = classification[resampled_features.index]
+    return resampled_features, classification

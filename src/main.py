@@ -105,7 +105,7 @@ def main():
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
     features = generateFeatures(dataFilepaths, args.output_dir, args.output_fname, parallelize=args.parallelize)
     classifications = getClassifications(args.test_dir, features)
-    features = bootstrapResample(features, classifications)
+    features, classifications = bootstrapResample(features, classifications)
     evaluateFeatures(features, classifications)
     buildClassifier(features, classifications)
 

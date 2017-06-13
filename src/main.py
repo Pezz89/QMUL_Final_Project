@@ -11,7 +11,7 @@ from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
 from buildClassifier import buildClassifier
-from resample import bootstrapResample
+from resample import bootstrapResample, jacknifeResample
 import pandas as pd
 
 import pdb

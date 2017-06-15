@@ -1,6 +1,8 @@
+from __future__ import division
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score, GroupKFold
+from sklearn.metrics.scorer import make_scorer
 
 import numpy as np
 import pdb
@@ -20,8 +22,17 @@ def buildClassifier(features, classifications):
     logger.info("Accuracy on test set: {:.3f}".format(forest.score(X_test, y_test)))
     '''
     groups = generateGroups(features)
+
+    my_scorer = make_scorer(my_custom_loss_func)
     # Evaluate model using startified cross-validation
-    scores = cross_val_score(forest, features, classifications, groups, cv=GroupKFold(n_splits=int(np.max(groups)+1)))
+    scores = cross_val_score(
+        forest,
+        features,
+        classifications,
+        groups,
+        cv=GroupKFold(n_splits=int(np.max(groups)+1)),
+        scoring=my_scorer
+    )
     logging.info("Cross-validation scores: {}".format(scores))
     logging.info("Average Cross-validation score: {}".format(np.mean(scores)))
 
@@ -30,7 +41,7 @@ def buildClassifier(features, classifications):
 Generate groups for a pandas DataFrame using keys for splitting
 '''
 def generateGroups(frame):
-    groups = np.empty(frame.index.size)
+    groups = np.empty(frame.index.size, dtype=int)
 
     groupKeys = {}
     i = 0
@@ -41,3 +52,24 @@ def generateGroups(frame):
             i += 1
         groups[ind] = groupKeys[groupChar]
     return groups
+
+def my_custom_loss_func(y, y_pred):
+    unsure_weight=0.5
+    y = np.array(y)
+    truePositive = np.sum(np.logical_and((y==y_pred), (y==1)))
+    falsePositive= np.sum(np.logical_and((y!=y_pred), (y==-1)))
+    trueNegative = np.sum(np.logical_and((y==y_pred), (y==-1)))
+    falseNegative= np.sum(np.logical_and((y!=y_pred), (y==1)))
+    positiveUnsure = np.sum(np.logical_and((y==0), (y_pred==1)))
+    negativeUnsure = np.sum(np.logical_and((y==0), (y_pred==-1)))
+
+    truePositive+=unsure_weight*positiveUnsure
+    trueNegative+=unsure_weight*negativeUnsure
+    truePositive+=negativeUnsure-(unsure_weight*negativeUnsure)
+    trueNegative+=positiveUnsure-(unsure_weight*positiveUnsure)
+
+    se = truePositive/(truePositive+falseNegative)
+    sp = trueNegative/(trueNegative+falsePositive)
+    macc = (se+sp)/2
+
+    return macc

@@ -23,7 +23,7 @@ def buildClassifier(features, classifications):
     '''
     groups = generateGroups(features)
 
-    my_scorer = make_scorer(my_custom_loss_func)
+    physionetScorer = make_scorer(physionetScore)
     # Evaluate model using startified cross-validation
     scores = cross_val_score(
         forest,
@@ -31,7 +31,7 @@ def buildClassifier(features, classifications):
         classifications,
         groups,
         cv=GroupKFold(n_splits=int(np.max(groups)+1)),
-        scoring=my_scorer
+        scoring=physionetScorer
     )
     logging.info("Cross-validation scores: {}".format(scores))
     logging.info("Average Cross-validation score: {}".format(np.mean(scores)))
@@ -53,7 +53,7 @@ def generateGroups(frame):
         groups[ind] = groupKeys[groupChar]
     return groups
 
-def my_custom_loss_func(y, y_pred):
+def physionetScore(y, y_pred):
     unsure_weight=0.5
     y = np.array(y)
     truePositive = np.sum(np.logical_and((y==y_pred), (y==1)))
@@ -68,8 +68,12 @@ def my_custom_loss_func(y, y_pred):
     truePositive+=negativeUnsure-(unsure_weight*negativeUnsure)
     trueNegative+=positiveUnsure-(unsure_weight*positiveUnsure)
 
+    # Sensitivity
     se = truePositive/(truePositive+falseNegative)
+    # Specificity
     sp = trueNegative/(trueNegative+falsePositive)
+
+    # Accuracy
     macc = (se+sp)/2
 
     return macc

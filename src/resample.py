@@ -13,7 +13,7 @@ def bootstrapResample(features, classification):
     normal = features.ix[classification[classification == -1].keys()]
 
     # Resample all abnormal samples with replacement to balance the dataset
-    abnormal = abnormal.sample(n=n, replace=True)
+    abnormal = abnormal.sample(n=n, replace=True, random_state=42)
     # Join resampled abnormal records with normal records
     resampled_features = pd.concat([abnormal, normal])
     # Sort records in-place
@@ -35,7 +35,7 @@ def jacknifeResample(features, classification):
     normal = features.ix[classification[classification == -1].keys()]
 
     # Resample all normal samples with replacement to balance the dataset
-    normal = normal.sample(n=n)
+    normal = normal.sample(n=n, random_state=42)
     # Join resampled normal records with abnormal records
     resampled_features = pd.concat([abnormal, normal])
     # Sort records in-place
@@ -69,9 +69,9 @@ def combinationResample(features, classification, mix=0.5):
     normal = features.ix[classification[classification == -1].keys()]
 
     # Resample all abnormal samples with replacement to balance the dataset
-    abnormal = abnormal.sample(n=n, replace=True)
+    abnormal = abnormal.sample(n=n, replace=True, random_state=42)
     # Resample all normal samples with replacement to balance the dataset
-    normal = normal.sample(n=n)
+    normal = normal.sample(n=n, random_state=42)
     # Join resampled abnormal records with normal records
     resampled_features = pd.concat([abnormal, normal])
     # Sort records in-place

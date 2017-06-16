@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score, GroupKFold
 from sklearn.metrics.scorer import make_scorer
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 
 from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
@@ -15,13 +17,20 @@ logger = logging.getLogger(__name__)
 
 def buildClassifier(features, classifications):
     forest = RandomForestClassifier(n_estimators=1000, random_state=42, n_jobs=-1)
-    logger.info("Generating model from training data...")
+    linSVM = LinearSVC()
+    lr = LogisticRegression()
+    logging.info("--------------------------------------------------------------------------------------------")
+    evaluateModel(lr, features, classifications, "Logistic Regression")
+    evaluateModel(linSVM, features, classifications, "Linear SVM")
+    evaluateModel(forest, features, classifications, "Random Forrest")
     '''
     forest.fit(X_train, y_train)
 
     logger.info("Accuracy on training set: {:.3f}".format(forest.score(X_train, y_train)))
     logger.info("Accuracy on test set: {:.3f}".format(forest.score(X_test, y_test)))
     '''
+def evaluateModel(model, features, classifications, name=''):
+    logger.info("Generating {} model from training data...".format(name).ljust(92))
     groups = generateGroups(features)
 
     #physionetScorer = make_scorer(physionetScore)
@@ -33,7 +42,7 @@ def buildClassifier(features, classifications):
 
     # Evaluate model using startified cross-validation
     cross_val_score(
-        forest,
+        model,
         features,
         classifications,
         groups,
@@ -42,12 +51,18 @@ def buildClassifier(features, classifications):
     )
 
     results = scorer.get_results()
+    np.set_printoptions(precision=4)
+    scr = np.array(results['score'])
+    sens = np.array(results['sensitivity'])
+    spec = np.array(results['specificity'])
 
-    logging.info("Cross-validation scores: {}".format(results['score']))
-    logging.info("Sensitivity {}".format(results['specificity']))
-    logging.info("Specificity: {}".format(results['sensitivity']))
-    logging.info("Average Cross-validation score: {}".format(np.mean(results['score'])))
-    logging.info("Standard-dev Cross-validation score: {}".format(np.std(results['score'])))
+    logging.info("--------------------------------------------------------------------------------------------")
+    logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
+    logging.info("Sensitivity:                               {}".format(sens).ljust(92))
+    logging.info("Specificity:                               {}".format(spec).ljust(92))
+    logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
+    logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    logging.info("--------------------------------------------------------------------------------------------")
 
 
 '''

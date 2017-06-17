@@ -1,6 +1,18 @@
 import numpy as np
 import pandas as pd
 import pdb
+
+from group import generateGroups, generateGroups2
+'''
+def groupResample(features, classification, mix=0.5):
+    groups = generateGroups2(features)
+    resampledFeatures = []
+    for inds in groups:
+        resampledFeatures.append(combinationResample(features.ix[inds], classification.ix[inds], mix=mix))
+
+    pdb.set_trace()
+'''
+
 '''
 Function for resampling rows with "abnormal" classification of a pandas
 dataframe using bootstrap resampling

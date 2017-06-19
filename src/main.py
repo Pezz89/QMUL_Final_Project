@@ -10,8 +10,8 @@ import pathops
 from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
-from buildClassifier import buildClassifier
-from resample import bootstrapResample, jacknifeResample, combinationResample
+from buildClassifier import optimizeClassifierModel
+from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
 import pandas as pd
 
 import pdb
@@ -105,9 +105,9 @@ def main():
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
     features = generateFeatures(dataFilepaths, args.output_dir, args.output_fname, parallelize=args.parallelize)
     classifications = getClassifications(args.test_dir, features)
-    features, classifications = combinationResample(features, classifications, mix=0.5)
+    features, classifications = groupResample(features, classifications, mix=0.5)
     evaluateFeatures(features, classifications)
-    buildClassifier(features, classifications)
+    optimizeClassifierModel(features, classifications)
 
 
 '''

@@ -1,0 +1,9 @@
+pathos==0.2.0
+scipy==0.19.0
+numpy==1.12.1
+pysndfile==0.2.13
+seaborn==0.7.1
+pandas==0.20.2
+Optunity==1.1.1
+matplotlib==2.0.2
+scikit_learn==0.18.1

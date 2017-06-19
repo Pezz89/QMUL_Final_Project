@@ -2,16 +2,21 @@ import numpy as np
 import pandas as pd
 import pdb
 
-from group import generateGroups, generateGroups2
-'''
+from group import generateGroups
+
 def groupResample(features, classification, mix=0.5):
-    groups = generateGroups2(features)
+    groups = generateGroups(features)
     resampledFeatures = []
-    for inds in groups:
+    groupCount = np.max(groups)+1
+
+    clusters = []
+    for i in xrange(groupCount):
+        clusters.append(np.where(groups == i)[0])
+
+    for inds in clusters:
         resampledFeatures.append(combinationResample(features.ix[inds], classification.ix[inds], mix=mix))
 
     pdb.set_trace()
-'''
 
 '''
 Function for resampling rows with "abnormal" classification of a pandas

@@ -22,14 +22,14 @@ from physionetscore import score, sensitivity, specificity
 from group import generateGroups
 
 import numpy as np
+import pandas as pd
 import pdb
 import logging
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
-def optimizeClassifierModel(features, classifications):
-    clusters = generateGroups2(features)
+def optimizeClassifierModel(features, classifications, optimization_fpath):
     groups = generateGroups(features)
     minmax_scale = preprocessing.MinMaxScaler().fit(features)
     features = minmax_scale.transform(features)
@@ -109,11 +109,14 @@ def optimizeClassifierModel(features, classifications):
         num_evals=300
     )
 
-    solution = dict([(k, v) for k, v in optimal_configuration.items() if v is not None])
+    # Create dictionary of all parameters that have values
+    solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})
     logging.info("Solution:".ljust(92))
-    for item in solution.items():
+    for item in solution.iteritems():
         logging.info("{:20.20}{:72.72}".format(item[0], str(item[1])))
-    pdb.set_trace()
+
+    solution.to_pickle(optimization_fpath)
+
 
 
 def train_svm(kernel, C, gamma, degree, coef0):

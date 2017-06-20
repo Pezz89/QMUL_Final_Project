@@ -51,7 +51,8 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--output_fname", "-o", type=str,
+        "--features_fname", "-o", type=str,
+        default='features.pkl',
         help="Specify the name of the file to save generated features to for "
         "future use", metavar="OUTFNAME"
     )
@@ -60,6 +61,20 @@ def parse_arguments():
         "--segment",
         action="store_true",
         help="Run Matlab segmentation script to create segmentation analysis"
+    )
+
+    parser.add_argument(
+        "--optimize",
+        action="store_true",
+        help="Run optimization algorithm to find best model and parameters "
+        "for classifier"
+    )
+
+    parser.add_argument(
+        "--parameters_fname", type=str,
+        default='parameters.pkl',
+        help="Specify the name of the file to save generated features to for "
+        "future use", metavar="OUTFNAME"
     )
 
     parser.add_argument(
@@ -77,6 +92,18 @@ def parse_arguments():
         help='Specifies level of verbosity in output. For example: \'-vvvvv\' '
         'will output all information. \'-v\' will output minimal information. '
     )
+
+    parser.add_argument(
+        '--resample_mix',
+        '-r',
+        type=float,
+        default=0.5,
+        help='Mix between bootstrap and jacknife resampling used to balance '
+        'the dataset (0=just jacknife, 1=just bootsrap)'
+    )
+
+
+
     args = parser.parse_args()
     if not args.verbose:
         args.verbose = 20
@@ -103,11 +130,12 @@ def main():
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    features = generateFeatures(dataFilepaths, args.output_dir, args.output_fname, parallelize=args.parallelize)
+    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=args.parallelize)
     classifications = getClassifications(args.test_dir, features)
-    features, classifications = groupResample(features, classifications, mix=0.5)
+    features, classifications = combinationResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)
-    optimizeClassifierModel(features, classifications)
+    if args.optimize:
+        optimizeClassifierModel(features, classifications, os.path.join(args.output_dir, args.parameters_fname))
 
 
 '''

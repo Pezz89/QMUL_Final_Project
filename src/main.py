@@ -8,9 +8,9 @@ import loggerops
 import logging
 import pathops
 from subprocess import Popen, PIPE
-from generateFeatures import generateFeatures
+from generateFeatures import generateFeatures, normaliseFeatures
 from evaluateFeatures import evaluateFeatures
-from buildClassifier import optimizeClassifierModel
+from buildClassifier import optimizeClassifierModel, fitOptimizedModel
 from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
 import pandas as pd
 
@@ -131,12 +131,14 @@ def main():
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
     features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=args.parallelize)
+    features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = combinationResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)
+    parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
     if args.optimize:
-        optimizeClassifierModel(features, classifications, os.path.join(args.output_dir, args.parameters_fname))
-
+        optimizeClassifierModel(features, classifications, parameters_filepath)
+    fitOptimizedModel(features, classifications, parameters_filepath)
 
 '''
 Read classification labels for files in the dataset

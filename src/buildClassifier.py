@@ -5,7 +5,6 @@ from sklearn.metrics.scorer import make_scorer
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
-from sklearn import preprocessing
 
 # k nearest neighbours
 from sklearn.neighbors import KNeighborsClassifier
@@ -29,66 +28,84 @@ import logging
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
+def generateModel(features, classifications, groups, algorithm, n_neighbors=None, n_estimators=None, max_features=None,
+                kernel=None, C=None, gamma=None, degree=None, coef0=None):
+    if algorithm == 'k-nn':
+        n_neighbors = int(np.round(n_neighbors))
+        logger.debug("Building k-NN Model with parameters:".ljust(92))
+        logger.debug("n_neighbors={}".format(n_neighbors).ljust(92))
+        model = KNeighborsClassifier(n_neighbors=int(n_neighbors))
+    elif algorithm == 'SVM':
+        logger.debug("Building SVM Model with parameters:".ljust(92))
+        logger.debug("kernel={0}, C={1}, gamma={2}, degree={3}, coef0={4}".format(kernel, C, gamma, degree, coef0).ljust(92))
+        model = train_svm(kernel, C, gamma, degree, coef0)
+    elif algorithm == 'naive-bayes':
+        logger.debug("Building Gaussian NB Model (no parameters)".ljust(92))
+        model = GaussianNB()
+    elif algorithm == 'random-forest':
+        max_features = int(np.round(max_features))
+        n_estimators = int(np.round(n_estimators))
+        logger.debug("Building Random Forest Model with parameters:".ljust(92))
+        logger.debug("n_estimators={0}, max_features={1}".format(n_estimators, max_features).ljust(92))
+        model = RandomForestClassifier(n_estimators=int(n_estimators),
+                                    max_features=int(max_features), random_state=42)
+    else:
+        raise ArgumentError('Unknown algorithm: {}'.format(algorithm))
+
+    return model
+
+
+def evaluateModel(features, classifications, groups, model):
+    #physionetScorer = make_scorer(physionetScore)
+    scorer = ms.MultiScorer({
+        'score': (score, {}),
+        'sensitivity': (sensitivity, {}),
+        'specificity': (specificity, {})
+    })
+
+    # Evaluate model using stratified cross-validation
+    cross_val_score(
+        model,
+        features,
+        classifications,
+        groups,
+        cv=GroupKFold(n_splits=int(np.max(groups)+1)),
+        scoring=scorer
+    )
+
+    results = scorer.get_results()
+    np.set_printoptions(precision=4)
+    scr = np.array(results['score'])
+    sens = np.array(results['sensitivity'])
+    spec = np.array(results['specificity'])
+
+    logging.info("--------------------------------------------------------------------------------------------")
+    logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
+    logging.info("Sensitivity:                               {}".format(sens).ljust(92))
+    logging.info("Specificity:                               {}".format(spec).ljust(92))
+    logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
+    logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    logging.info("--------------------------------------------------------------------------------------------")
+
+    return scr
+
+
+def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
+    groups = generateGroups(features)
+    # load model information from file
+    modelInfo = pd.read_pickle(optimization_fpath)
+    algorithm = modelInfo.pop('algorithm')
+    model = generateModel(features, classifications, groups, algorithm, **modelInfo)
+    scr = evaluateModel(features, classifications, groups, model)
+    return scr
+
+
 def optimizeClassifierModel(features, classifications, optimization_fpath):
     groups = generateGroups(features)
-    minmax_scale = preprocessing.MinMaxScaler().fit(features)
-    features = minmax_scale.transform(features)
 
-    def evaluateModel(algorithm, n_neighbors=None, n_estimators=None, max_features=None,
-                    kernel=None, C=None, gamma=None, degree=None, coef0=None):
-        if algorithm == 'k-nn':
-            n_neighbors = int(np.round(n_neighbors))
-            logger.debug("Building k-NN Model with parameters:".ljust(92))
-            logger.debug("n_neighbors={}".format(n_neighbors).ljust(92))
-            model = KNeighborsClassifier(n_neighbors=int(n_neighbors))
-        elif algorithm == 'SVM':
-            logger.debug("Building SVM Model with parameters:".ljust(92))
-            logger.debug("kernel={0}, C={1}, gamma={2}, degree={3}, coef0={4}".format(kernel, C, gamma, degree, coef0).ljust(92))
-            model = train_svm(kernel, C, gamma, degree, coef0)
-        elif algorithm == 'naive-bayes':
-            logger.debug("Building Gaussian NB Model (no parameters)".ljust(92))
-            model = GaussianNB()
-        elif algorithm == 'random-forest':
-            max_features = int(np.round(max_features))
-            n_estimators = int(np.round(n_estimators))
-            logger.debug("Building Random Forest Model with parameters:".ljust(92))
-            logger.debug("n_estimators={0}, max_features={1}".format(n_estimators, max_features).ljust(92))
-            model = RandomForestClassifier(n_estimators=int(n_estimators),
-                                        max_features=int(max_features), random_state=42)
-        else:
-            raise ArgumentError('Unknown algorithm: {}'.format(algorithm))
-
-        #physionetScorer = make_scorer(physionetScore)
-        scorer = ms.MultiScorer({
-            'score': (score, {}),
-            'sensitivity': (sensitivity, {}),
-            'specificity': (specificity, {})
-        })
-
-        # Evaluate model using stratified cross-validation
-        cross_val_score(
-            model,
-            features,
-            classifications,
-            groups,
-            cv=GroupKFold(n_splits=int(np.max(groups)+1)),
-            scoring=scorer
-        )
-
-        results = scorer.get_results()
-        np.set_printoptions(precision=4)
-        scr = np.array(results['score'])
-        sens = np.array(results['sensitivity'])
-        spec = np.array(results['specificity'])
-
-        logging.info("--------------------------------------------------------------------------------------------")
-        logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
-        logging.info("Sensitivity:                               {}".format(sens).ljust(92))
-        logging.info("Specificity:                               {}".format(spec).ljust(92))
-        logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
-        logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
-        logging.info("--------------------------------------------------------------------------------------------")
-
+    def optimizationWrapper(algorithm, **kwargs):
+        model = generateModel(features, classifications, groups, algorithm, **kwargs)
+        scr = evaluateModel(features, classifications, groups, model)
         return scr
 
     search = {'algorithm': {'k-nn': {'n_neighbors': [1, 5]},
@@ -104,7 +121,7 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
             }
 
     optimal_configuration, info, _ = optunity.maximize_structured(
-        evaluateModel,
+        optimizationWrapper,
         search_space=search,
         num_evals=300
     )

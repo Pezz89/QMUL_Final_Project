@@ -7,6 +7,7 @@ import logging
 from pathos.multiprocessing import Pool, cpu_count
 from scipy.stats import skew, tvar, kurtosis
 from scipy.signal import decimate
+from sklearn import preprocessing
 import collections
 import os
 import pandas as pd
@@ -201,6 +202,19 @@ def calculateFeatures(name, audioPath, segPath):
         features[key] = np.nanmean(perSegFeatures[key])
 
     return pd.Series(features)
+
+'''
+Scale a pandas DataFrame of features between 0 and 1, maintaining DataFrame
+datatype
+'''
+def normaliseFeatures(features):
+    minmax_scale = preprocessing.MinMaxScaler().fit(features)
+    features = pd.DataFrame(
+        minmax_scale.transform(features),
+        index=features.index,
+        columns=features.columns
+    )
+    return features
 
 
 '''

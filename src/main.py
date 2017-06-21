@@ -78,11 +78,17 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--parallelize",
+        "--no_parallel",
         "-p",
         action="store_true",
-        help="Run processing in parallel where possible to decrease increase"
-        " performance"
+        help="Disable processing in parallel. (Will likely decrease performance "
+        "but may aid in debugging)"
+    )
+
+    parser.add_argument(
+        "--reanalyse",
+        action="store_true",
+        help="Force regeneration of database features"
     )
 
     parser.add_argument(
@@ -130,7 +136,7 @@ def main():
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=args.parallelize)
+    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=not args.no_parallel, reanalyse=args.reanalyse)
     features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = combinationResample(features, classifications, mix=args.resample_mix)
@@ -139,6 +145,7 @@ def main():
     if args.optimize:
         optimizeClassifierModel(features, classifications, parameters_filepath)
     fitOptimizedModel(features, classifications, parameters_filepath)
+
 
 '''
 Read classification labels for files in the dataset

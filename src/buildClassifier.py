@@ -120,10 +120,11 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
                             }
             }
 
-    optimal_configuration, info, _ = optunity.maximize_structured(
+    optimal_configuration, info, solverInfo = optunity.maximize_structured(
         optimizationWrapper,
         search_space=search,
-        num_evals=300
+        num_evals=1000,
+        pmap=optunity.pmap
     )
 
     # Create dictionary of all parameters that have values

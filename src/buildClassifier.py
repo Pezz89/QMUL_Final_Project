@@ -14,6 +14,8 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 # Random Forest
 from sklearn.ensemble import RandomForestClassifier
+# Recursive Feature Elimination with Cross-Validation
+from sklearn.feature_selection import RFECV
 import optunity
 
 from multiscorer import multiscorer as ms
@@ -62,8 +64,12 @@ def evaluateModel(features, classifications, groups, model):
         'sensitivity': (sensitivity, {}),
         'specificity': (specificity, {})
     })
+    rfecv = RFECV(estimator=model, step=1, cv=GroupKFold(n_splits=int(np.max(groups)+1, groups=groups)),
+                scoring=scorer)
+    rfecv.fit(features, classifications)
 
     # Evaluate model using stratified cross-validation
+    '''
     cross_val_score(
         model,
         features,
@@ -72,6 +78,7 @@ def evaluateModel(features, classifications, groups, model):
         cv=GroupKFold(n_splits=int(np.max(groups)+1)),
         scoring=scorer
     )
+    '''
 
     results = scorer.get_results()
     np.set_printoptions(precision=4)
@@ -124,7 +131,7 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
         optimizationWrapper,
         search_space=search,
         num_evals=1000,
-        pmap=optunity.pmap
+        #pmap=optunity.pmap
     )
 
     # Create dictionary of all parameters that have values

@@ -15,7 +15,7 @@ from sklearn.naive_bayes import GaussianNB
 # Random Forest
 from sklearn.ensemble import RandomForestClassifier
 # Recursive Feature Elimination with Cross-Validation
-from sklearn.feature_selection import RFECV
+from sequential_feature_selector_group import SequentialFeatureSelectorGroup as SFS
 import optunity
 
 from multiscorer import multiscorer as ms
@@ -50,7 +50,8 @@ def generateModel(features, classifications, groups, algorithm, n_neighbors=None
         logger.debug("Building Random Forest Model with parameters:".ljust(92))
         logger.debug("n_estimators={0}, max_features={1}".format(n_estimators, max_features).ljust(92))
         model = RandomForestClassifier(n_estimators=int(n_estimators),
-                                    max_features=int(max_features), random_state=42)
+                                    #max_features=int(max_features), random_state=42)
+                                    random_state=42)
     else:
         raise ArgumentError('Unknown algorithm: {}'.format(algorithm))
 
@@ -64,9 +65,18 @@ def evaluateModel(features, classifications, groups, model):
         'sensitivity': (sensitivity, {}),
         'specificity': (specificity, {})
     })
-    rfecv = RFECV(estimator=model, step=1, cv=GroupKFold(n_splits=int(np.max(groups)+1, groups=groups)),
-                scoring=scorer)
-    rfecv.fit(features, classifications)
+
+    sfs1 = SFS(
+        model,
+        k_features=3,
+        forward=True,
+        floating=False,
+        verbose=2,
+        scoring=scorer,
+        cv=GroupKFold(n_splits=3)#int(np.max(groups)+1))
+    )
+
+    sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix(), groups=groups)
 
     # Evaluate model using stratified cross-validation
     '''
@@ -87,9 +97,9 @@ def evaluateModel(features, classifications, groups, model):
     spec = np.array(results['specificity'])
 
     logging.info("--------------------------------------------------------------------------------------------")
-    logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
-    logging.info("Sensitivity:                               {}".format(sens).ljust(92))
-    logging.info("Specificity:                               {}".format(spec).ljust(92))
+    #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
+    #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
+    #logging.info("Specificity:                               {}".format(spec).ljust(92))
     logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")

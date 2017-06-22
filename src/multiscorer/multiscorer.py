@@ -1,4 +1,4 @@
-
+import numpy as np
 
 class MultiScorer():
     '''
@@ -49,7 +49,7 @@ class MultiScorer():
 
         self._called = True
 
-        return 0.5
+        return np.mean(self.results['score'])
 
     def get_metric_names(self):
         '''

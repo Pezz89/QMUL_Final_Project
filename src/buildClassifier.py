@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
 def generateModel(features, classifications, groups, algorithm, n_neighbors=None, n_estimators=None, max_features=None,
-                kernel=None, C=None, gamma=None, degree=None, coef0=None):
+                kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
     if algorithm == 'k-nn':
         n_neighbors = int(np.round(n_neighbors))
         logger.debug("Building k-NN Model with parameters:".ljust(92))
@@ -47,10 +47,12 @@ def generateModel(features, classifications, groups, algorithm, n_neighbors=None
     elif algorithm == 'random-forest':
         max_features = int(np.round(max_features))
         n_estimators = int(np.round(n_estimators))
+        max_depth=int(np.round(max_depth))
         logger.debug("Building Random Forest Model with parameters:".ljust(92))
-        logger.debug("n_estimators={0}, max_features={1}".format(n_estimators, max_features).ljust(92))
+        logger.debug("n_estimators={0}, max_features={1}, max_depth={2}".format(n_estimators, max_features, max_depth).ljust(92))
         model = RandomForestClassifier(n_estimators=int(n_estimators),
                                     #max_features=int(max_features), random_state=42)
+                                       max_depth=max_depth,
                                     random_state=42)
     else:
         raise ArgumentError('Unknown algorithm: {}'.format(algorithm))
@@ -59,21 +61,23 @@ def generateModel(features, classifications, groups, algorithm, n_neighbors=None
 
 
 def evaluateModel(features, classifications, groups, model):
-    #physionetScorer = make_scorer(physionetScore)
+    physionetScorer = make_scorer(score)
+    '''
     scorer = ms.MultiScorer({
         'score': (score, {}),
         'sensitivity': (sensitivity, {}),
         'specificity': (specificity, {})
     })
+    '''
 
     sfs1 = SFS(
         model,
-        k_features=3,
+        k_features=(1, 20),
         forward=True,
-        floating=False,
+        floating=True,
         verbose=2,
-        scoring=scorer,
-        cv=GroupKFold(n_splits=3)#int(np.max(groups)+1))
+        scoring=physionetScorer,
+        cv=GroupKFold(n_splits=int(np.max(groups)+1)),
     )
 
     sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix(), groups=groups)
@@ -90,21 +94,24 @@ def evaluateModel(features, classifications, groups, model):
     )
     '''
 
-    results = scorer.get_results()
     np.set_printoptions(precision=4)
+    '''
+    results = scorer.get_results()
     scr = np.array(results['score'])
     sens = np.array(results['sensitivity'])
     spec = np.array(results['specificity'])
+    '''
 
     logging.info("--------------------------------------------------------------------------------------------")
     #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
     #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
-    logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
-    logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
+    #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    logging.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
 
-    return scr
+    return sfs1.k_score_
 
 
 def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
@@ -125,23 +132,24 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
         scr = evaluateModel(features, classifications, groups, model)
         return scr
 
-    search = {'algorithm': {'k-nn': {'n_neighbors': [1, 5]},
+    search = {'algorithm': {
                             'SVM': {'kernel': {'linear': {'C': [0, 2]},
                                             'rbf': {'gamma': [0, 1], 'C': [0, 10]},
                                             'poly': {'degree': [2, 5], 'C': [0, 50], 'coef0': [0, 1]}
                                             }
                                     },
-                            'naive-bayes': None,
                             'random-forest': {'n_estimators': [10, 30],
-                                            'max_features': [5, 20]}
+                                           'max_features': [5, 20],
+                                              'max_depth': [1, 10]
+                                              }
                             }
             }
 
     optimal_configuration, info, solverInfo = optunity.maximize_structured(
         optimizationWrapper,
         search_space=search,
-        num_evals=1000,
-        #pmap=optunity.pmap
+        num_evals=50,
+        pmap=optunity.pmap
     )
 
     # Create dictionary of all parameters that have values

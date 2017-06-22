@@ -16,6 +16,21 @@ import pathops
 
 logger = logging.getLogger(__name__)
 
+from scipy.signal import butter, lfilter
+
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
 def parse_segmentation_file(segPath):
     '''
     Returns a dictionary with elements for each header value in csv file and a
@@ -44,7 +59,8 @@ def calculateFeatures(name, audioPath, segPath):
     if resampleRatio % 1.0:
         raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
     audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
-    audioSamplerate // resampleRatio
+    audioSamplerate = audioSamplerate // resampleRatio
+    audioData = butter_bandpass_filter(audioData, 25, 400, audioSamplerate, order=4)
     segData = segmentation['data']
 
     # Organise segments into a 4*N array, where each column represents the S1,

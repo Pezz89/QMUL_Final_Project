@@ -1,6 +1,6 @@
 from __future__ import division
-from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score, GroupKFold
+from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.metrics.scorer import make_scorer
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
@@ -123,25 +123,39 @@ def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
 
 
 def optimizeClassifierModel(features, classifications, optimization_fpath):
+    # Split features into training and test set by database
     groups = generateGroups(features)
+    logo = LeaveOneGroupOut()
+    # Split data into test and training sets by database
+    train_inds, test_inds = logo.split(features, classifications, groups=groups).next()
+    train_features = features.ix[train_inds]
+    test_features = features.ix[test_inds]
+    train_classifications = classifications.ix[train_inds]
+    test_classifications = classifications.ix[test_inds]
 
     def optimizationWrapper(algorithm, **kwargs):
-        model = generateModel(features, classifications, algorithm, **kwargs)
-        scr = evaluateModel(features, classifications, model)
+        model = generateModel(train_features, train_classifications, algorithm, **kwargs)
+        scr = evaluateModel(train_features, train_classifications, model)
         return scr
 
-    search = {'algorithm': {
-                            'SVM': {'kernel': {'linear': {'C': [0, 2]},
-                                            'rbf': {'gamma': [0, 1], 'C': [0, 10]},
-                                            'poly': {'degree': [2, 5], 'C': [0, 50], 'coef0': [0, 1]}
-                                            }
-                                    },
-                            'random-forest': {'n_estimators': [10, 30],
-                                           'max_features': [5, 20],
-                                              'max_depth': [1, 10]
-                                              }
-                            }
+    # Define search space, providing model names and parameter ranges to search
+    # for best solution
+    search = {
+        'algorithm': {
+            'SVM': {
+                'kernel': {
+                    'linear': {'C': [0, 2]},
+                    'rbf': {'gamma': [0, 1], 'C': [0, 10]},
+                    'poly': {'degree': [2, 5], 'C': [0, 50], 'coef0': [0, 1]}
+                }
+            },
+            'random-forest': {
+                'n_estimators': [10, 30],
+                'max_features': [5, 20],
+                'max_depth': [1, 10]
             }
+        }
+    }
 
     optimal_configuration, info, solverInfo = optunity.maximize_structured(
         optimizationWrapper,

@@ -7,6 +7,7 @@ from group import generateGroups
 def groupResample(features, classification, mix=0.5):
     groups = generateGroups(features)
     resampledFeatures = []
+    resampledClassifications = []
     groupCount = np.max(groups)+1
 
     clusters = []
@@ -14,9 +15,19 @@ def groupResample(features, classification, mix=0.5):
         clusters.append(np.where(groups == i)[0])
 
     for inds in clusters:
-        resampledFeatures.append(combinationResample(features.ix[inds], classification.ix[inds], mix=mix))
+        f, c = combinationResample(features.ix[inds], classification.ix[inds], mix=mix)
+        resampledFeatures.append(f)
+        resampledClassifications.append(c)
 
-    pdb.set_trace()
+    # Join resampled abnormal records with normal records
+    resampledFeatures = pd.concat(resampledFeatures)
+    # Sort records in-place
+    resampledFeatures.sort_index(inplace=True)
+
+    classifications = pd.concat(resampledClassifications)
+    # Sort records in-place
+    classifications.sort_index(inplace=True)
+    return resampledFeatures, classifications
 
 '''
 Function for resampling rows with "abnormal" classification of a pandas
@@ -82,15 +93,22 @@ def combinationResample(features, classification, mix=0.5):
 
     n = int(abnormal_n + (diff * mix))
     # Get features for all abnormal records
-    abnormal = features.ix[classification[classification == 1].keys()]
-    normal = features.ix[classification[classification == -1].keys()]
+    features1 = features.ix[classification[classification == 1].keys()]
+    features2 = features.ix[classification[classification == -1].keys()]
 
-    # Resample all abnormal samples with replacement to balance the dataset
-    abnormal = abnormal.sample(n=n, replace=True, random_state=42)
-    # Resample all normal samples with replacement to balance the dataset
-    normal = normal.sample(n=n, random_state=42)
+    if features1.shape[0] < features2.shape[0]:
+        # Resample all abnormal samples with replacement to balance the dataset
+        features1 = features1.sample(n=n, replace=True, random_state=42)
+        # Resample all normal samples with replacement to balance the dataset
+        features2 = features2.sample(n=n, random_state=42)
+    else:
+        # Resample all abnormal samples with replacement to balance the dataset
+        features2 = features2.sample(n=n, replace=True, random_state=42)
+        # Resample all normal samples with replacement to balance the dataset
+        features1 = features1.sample(n=n, random_state=42)
+
     # Join resampled abnormal records with normal records
-    resampled_features = pd.concat([abnormal, normal])
+    resampled_features = pd.concat([features1, features2])
     # Sort records in-place
     resampled_features.sort_index(inplace=True)
     # Get classification for all resampled features

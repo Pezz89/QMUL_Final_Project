@@ -139,7 +139,7 @@ def main():
     features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=not args.no_parallel, reanalyse=args.reanalyse)
     features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
-    features, classifications = combinationResample(features, classifications, mix=args.resample_mix)
+    features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
     if args.optimize:

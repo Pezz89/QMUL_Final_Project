@@ -14,7 +14,7 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 # Random Forest
 from sklearn.ensemble import RandomForestClassifier
-from sequential_feature_selector_group import SequentialFeatureSelectorGroup as SFS
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 import optunity
 
 from multiscorer import multiscorer as ms
@@ -59,7 +59,7 @@ def generateModel(features, classifications, algorithm, n_neighbors=None, n_esti
     return model
 
 
-def evaluateModel(features, classifications, groups, model):
+def evaluateModel(features, classifications, gkf, model):
     physionetScorer = make_scorer(score)
     '''
     scorer = ms.MultiScorer({
@@ -76,10 +76,10 @@ def evaluateModel(features, classifications, groups, model):
         floating=True,
         verbose=2,
         scoring=physionetScorer,
-        cv=GroupKFold(n_splits=3)#int(np.max(groups)+1))
+        cv=gkf
     )
 
-    sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix(), groups=groups)
+    sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix())
 
     # Evaluate model using stratified cross-validation
     '''
@@ -123,7 +123,7 @@ def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
     return scr
 
 
-def optimizeClassifierModel(features, classifications, optimization_fpath):
+def optimizeClassifierModel(features, classifications, optimization_fpath, parallelize=False):
     # Split features into training and test set by database
     groups = generateGroups(features)
     logo = LeaveOneGroupOut()
@@ -136,9 +136,11 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
     train_groups = generateGroups(train_features)
     test_groups = generateGroups(test_features)
 
+    gkf = list(GroupKFold(n_splits=3).split(train_features,train_classifications,train_groups))#int(np.max(groups)+1))
+
     def optimizationWrapper(algorithm, **kwargs):
         model = generateModel(train_features, train_classifications, algorithm, **kwargs)
-        scr = evaluateModel(train_features, train_classifications, train_groups, model)
+        scr = evaluateModel(train_features, train_classifications, gkf, model)
         return scr
 
     # Define search space, providing model names and parameter ranges to search
@@ -160,11 +162,16 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
         }
     }
 
+    if parallelize:
+        pmap = optunity.pmap
+    else:
+        pmap = map
+
     optimal_configuration, info, solverInfo = optunity.maximize_structured(
         optimizationWrapper,
         search_space=search,
         num_evals=50,
-        pmap=optunity.pmap
+        pmap=pmap
     )
 
     # Create dictionary of all parameters that have values

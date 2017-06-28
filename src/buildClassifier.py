@@ -14,7 +14,7 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 # Random Forest
 from sklearn.ensemble import RandomForestClassifier
-from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from sequential_feature_selector_group import SequentialFeatureSelectorGroup as SFS
 import optunity
 
 from multiscorer import multiscorer as ms
@@ -54,12 +54,12 @@ def generateModel(features, classifications, algorithm, n_neighbors=None, n_esti
                                        max_depth=max_depth,
                                     random_state=42)
     else:
-        raise ArgumentError('Unknown algorithm: {}'.format(algorithm))
+        raise ValueError('Unknown algorithm: {}'.format(algorithm))
 
     return model
 
 
-def evaluateModel(features, classifications, model):
+def evaluateModel(features, classifications, groups, model):
     physionetScorer = make_scorer(score)
     '''
     scorer = ms.MultiScorer({
@@ -72,14 +72,14 @@ def evaluateModel(features, classifications, model):
     sfs1 = SFS(
         model,
         k_features=(1, 20),
-        forward=True,
+        forward=False,
         floating=True,
         verbose=2,
         scoring=physionetScorer,
-        cv=3
+        cv=GroupKFold(n_splits=3)#int(np.max(groups)+1))
     )
 
-    sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix())
+    sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix(), groups=groups)
 
     # Evaluate model using stratified cross-validation
     '''
@@ -115,10 +115,11 @@ def evaluateModel(features, classifications, model):
 
 def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
     # load model information from file
+    groups = generateGroups(features)
     modelInfo = pd.read_pickle(optimization_fpath)
     algorithm = modelInfo.pop('algorithm')
     model = generateModel(features, classifications, algorithm, **modelInfo)
-    scr = evaluateModel(features, classifications, model)
+    scr = evaluateModel(features, classifications, groups, model)
     return scr
 
 
@@ -132,10 +133,12 @@ def optimizeClassifierModel(features, classifications, optimization_fpath):
     test_features = features.ix[test_inds]
     train_classifications = classifications.ix[train_inds]
     test_classifications = classifications.ix[test_inds]
+    train_groups = generateGroups(train_features)
+    test_groups = generateGroups(test_features)
 
     def optimizationWrapper(algorithm, **kwargs):
         model = generateModel(train_features, train_classifications, algorithm, **kwargs)
-        scr = evaluateModel(train_features, train_classifications, model)
+        scr = evaluateModel(train_features, train_classifications, train_groups, model)
         return scr
 
     # Define search space, providing model names and parameter ranges to search

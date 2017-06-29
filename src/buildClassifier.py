@@ -16,6 +16,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 import optunity
+import optunity.search_spaces as search_spaces
+import optunity.constraints as constraints
 
 from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
@@ -25,6 +27,7 @@ import numpy as np
 import pandas as pd
 import pdb
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
@@ -71,12 +74,13 @@ def evaluateModel(features, classifications, gkf, model):
 
     sfs1 = SFS(
         model,
-        k_features=(1, 20),
+        k_features=(30, 50),
         forward=False,
         floating=True,
-        verbose=2,
+        verbose=1,
         scoring=physionetScorer,
-        cv=gkf
+        #cv=gkf
+        cv=0
     )
 
     sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix())
@@ -167,12 +171,33 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
     else:
         pmap = map
 
-    optimal_configuration, info, solverInfo = optunity.maximize_structured(
-        optimizationWrapper,
-        search_space=search,
-        num_evals=50,
-        pmap=pmap
+    num_evals=50
+    tree = search_spaces.SearchTree(search)
+    box = tree.to_box()
+
+    # we need to position the call log here
+    # because the function signature used later on is internal logic
+    #f = optunity.functions.logged(optimizationWrapper)
+
+    # wrap the decoder and constraints for the internal search space representation
+    f = tree.wrap_decoder(optimizationWrapper)
+    f = constraints.wrap_constraints(f, -sys.float_info.max, range_oo=box)
+
+    # Create solver keyword args based on number of evaluations and box
+    # constraints
+    suggestion = optunity.suggest_solver(num_evals, "particle swarm", **box)
+    solver = optunity.make_solver(**suggestion)
+    solution, details = optunity.optimize(
+        solver,
+        f,
+        maximize=True,
+        max_evals=num_evals,
+        pmap=pmap,
+        decoder=tree.decode
+
     )
+    optimal_configuration, info, solverInfo = solution, details, suggestion
+
 
     # Create dictionary of all parameters that have values
     solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})

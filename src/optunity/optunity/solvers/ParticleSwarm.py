@@ -35,6 +35,7 @@ import operator as op
 import random
 import array
 import functools
+import os
 
 from .solver_registry import register_solver
 from .util import Solver, _copydoc, uniform_in_bounds
@@ -252,7 +253,7 @@ class ParticleSwarm(Solver):
                                             particle.position)])
 
     @_copydoc(Solver.optimize)
-    def optimize(self, f, maximize=True, pmap=map):
+    def optimize(self, f, maximize=True, pmap=map, solutionFPath=None):
 
         @functools.wraps(f)
         def evaluate(d):
@@ -266,7 +267,15 @@ class ParticleSwarm(Solver):
         pop = [self.generate() for _ in range(self.num_particles)]
         best = None
 
-        for g in range(self.num_generations):
+        # Clear any previous solutions file at filepath ready for new solutions
+        if solutionFPath:
+            try:
+                os.remove(solutionFPath)
+            except OSError:
+                pass
+        for ind, g in enumerate(range(self.num_generations)):
+            # Will return scores and best features for saving to file on each
+            # iteration
             fitnesses = pmap(evaluate, list(map(self.particle2dict, pop)))
             for part, fitness in zip(pop, fitnesses):
                 part.fitness = fit * util.score(fitness)
@@ -278,5 +287,11 @@ class ParticleSwarm(Solver):
             for part in pop:
                 self.updateParticle(part, best, self.phi1, self.phi2)
 
+            # Save intermediate solutions and feature selections
+            # solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})
+            if solutionFPath:
+                pdb.set_trace()
+                # Create dataframe for solution and feature selection
+                #df.to_hdf(solutionFPath, key="solution{0}".format(ind))
         return dict([(k, v)
                         for k, v in zip(self.bounds.keys(), best.position)]), None

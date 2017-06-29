@@ -125,12 +125,35 @@ def main():
     # Process commandline arguments
     args = parse_arguments()
 
+    class LoggerWriter:
+        def __init__(self, level):
+            # self.level is really like using log.debug(message)
+            # at least in my case
+            self.level = level
+
+        def write(self, message):
+            # if statement reduces the amount of newlines that are
+            # printed to the logger
+            mess = [s.strip() for s in message.splitlines()]
+            for m in mess:
+                self.level(m.ljust(92))
+
+        def flush(self):
+            # create a flush method so things can be flushed when
+            # the system wants to. Not sure if simply 'printing'
+            # sys.stderr is the correct way to do it, but it seemed
+            # to work properly for me.
+            pass
+            #self.level(sys.stderr)
+
     global logger
     logger = loggerops.create_logger(
         logger_streamlevel=args.verbose,
         log_filename=modpath,
         logger_filelevel=args.verbose
     )
+    sys.stdout = LoggerWriter(logger.info)
+    sys.stderr = LoggerWriter(logger.debug)
 
     if args.segment:
         logger.info("Running MATLAB segmentation...")

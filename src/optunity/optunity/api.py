@@ -242,7 +242,7 @@ def optimize(solver, func, maximize=True, max_evals=0, pmap=map, decoder=None):
 
     time = timeit.default_timer()
     try:
-        solution, report = solver.optimize(f, maximize, pmap=pmap)
+        solution, report = solver.optimize(f, maximize, pmap=pmap, solutionFPath='./blah.h5')
     except fun.MaximumEvaluationsException:
         # early stopping because maximum number of evaluations is reached
         # retrieve solution from the call log

@@ -125,6 +125,7 @@ def main():
     # Process commandline arguments
     args = parse_arguments()
 
+    # This code was taken from: https://stackoverflow.com/questions/19425736/how-to-redirect-stdout-and-stderr-to-logger-in-py
     class LoggerWriter:
         def __init__(self, level):
             # self.level is really like using log.debug(message)
@@ -152,7 +153,7 @@ def main():
         log_filename=modpath,
         logger_filelevel=args.verbose
     )
-    sys.stdout = LoggerWriter(logger.info)
+    #sys.stdout = LoggerWriter(logger.info)
     sys.stderr = LoggerWriter(logger.debug)
 
     if args.segment:

@@ -77,7 +77,7 @@ def evaluateModel(features, classifications, gkf, model):
         k_features=(30, 50),
         forward=False,
         floating=True,
-        verbose=1,
+        verbose=2,
         scoring=physionetScorer,
         #cv=gkf
         cv=0
@@ -113,8 +113,9 @@ def evaluateModel(features, classifications, gkf, model):
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
     logging.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
+    pdb.set_trace()
 
-    return sfs1.k_score_
+    return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
 
 
 def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
@@ -123,8 +124,8 @@ def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
     modelInfo = pd.read_pickle(optimization_fpath)
     algorithm = modelInfo.pop('algorithm')
     model = generateModel(features, classifications, algorithm, **modelInfo)
-    scr = evaluateModel(features, classifications, groups, model)
-    return scr
+    scr, featureLabels = evaluateModel(features, classifications, groups, model)
+    return scr, featureLabels
 
 
 def optimizeClassifierModel(features, classifications, optimization_fpath, parallelize=False):
@@ -142,10 +143,17 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
 
     gkf = list(GroupKFold(n_splits=3).split(train_features,train_classifications,train_groups))#int(np.max(groups)+1))
 
+    def dummyWrapper(algorithm, **kwargs):
+        '''Dummy function created for debugging optimization quickly'''
+        return 0.5, pd.Index(['test', 'test2'])
+
     def optimizationWrapper(algorithm, **kwargs):
         model = generateModel(train_features, train_classifications, algorithm, **kwargs)
-        scr = evaluateModel(train_features, train_classifications, gkf, model)
-        return scr
+        scr, featureLabels = evaluateModel(train_features, train_classifications, gkf, model)
+        return scr, featureLabels
+    # TODO: Used for quickly debugging particle swarm optimization, remove for
+    # production
+    optimizationWrapper = dummyWrapper
 
     # Define search space, providing model names and parameter ranges to search
     # for best solution
@@ -194,8 +202,9 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
         max_evals=num_evals,
         pmap=pmap,
         decoder=tree.decode
-
     )
+
+    # TODO: Remove this...
     optimal_configuration, info, solverInfo = solution, details, suggestion
 
 

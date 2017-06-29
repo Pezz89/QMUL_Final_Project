@@ -36,11 +36,17 @@ import random
 import array
 import functools
 import os
+import logging
+import pandas as pd
+
+import pdb
 
 from .solver_registry import register_solver
 from .util import Solver, _copydoc, uniform_in_bounds
 from . import util
 from .Sobol import Sobol
+
+logger = logging.getLogger(__name__)
 
 @register_solver('particle swarm',
                  'particle swarm optimization',
@@ -253,7 +259,7 @@ class ParticleSwarm(Solver):
                                             particle.position)])
 
     @_copydoc(Solver.optimize)
-    def optimize(self, f, maximize=True, pmap=map, solutionFPath=None):
+    def optimize(self, f, maximize=True, pmap=map, solutionFPath=None, decoder=None):
 
         @functools.wraps(f)
         def evaluate(d):
@@ -273,25 +279,33 @@ class ParticleSwarm(Solver):
                 os.remove(solutionFPath)
             except OSError:
                 pass
+        logger.debug("Running particle swarm parameter optimization...")
         for ind, g in enumerate(range(self.num_generations)):
+            logger.debug("Iteration {0} of {1}".format(ind+1, self.num_generations))
+
             # Will return scores and best features for saving to file on each
             # iteration
-            fitnesses = pmap(evaluate, list(map(self.particle2dict, pop)))
-            for part, fitness in zip(pop, fitnesses):
+            fitnesses, featureLabels = zip(*pmap(evaluate, list(map(self.particle2dict, pop))))
+            for part, fitness, label in zip(pop, fitnesses, featureLabels):
                 part.fitness = fit * util.score(fitness)
                 if not part.best or part.best_fitness < part.fitness:
                     part.best = part.position
                     part.best_fitness = part.fitness
                 if not best or best.fitness < part.fitness:
                     best = part.clone()
+                    bestLabel = label
             for part in pop:
                 self.updateParticle(part, best, self.phi1, self.phi2)
 
             # Save intermediate solutions and feature selections
             # solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})
             if solutionFPath:
-                pdb.set_trace()
+                solution = dict([(k, v) for k, v in zip(self.bounds.keys(), best.position)])
+                if decoder:
+                    solution = pd.Series(decoder(solution))
+
                 # Create dataframe for solution and feature selection
-                #df.to_hdf(solutionFPath, key="solution{0}".format(ind))
-        return dict([(k, v)
-                        for k, v in zip(self.bounds.keys(), best.position)]), None
+                solution.to_hdf(solutionFPath, key="solution{0}".format(ind))
+                bestLabel.to_series().to_hdf(solutionFPath, key="bestFeatures{0}".format(ind))
+                pdb.set_trace()
+        return dict([(k, v) for k, v in zip(self.bounds.keys(), best.position)]), None

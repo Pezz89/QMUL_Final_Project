@@ -145,7 +145,7 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
 
     def dummyWrapper(algorithm, **kwargs):
         '''Dummy function created for debugging optimization quickly'''
-        return 0.5, pd.Index(['test', 'test2'])
+        return (0.5, pd.Index(['test', 'test2']))
 
     def optimizationWrapper(algorithm, **kwargs):
         model = generateModel(train_features, train_classifications, algorithm, **kwargs)
@@ -189,7 +189,7 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
 
     # wrap the decoder and constraints for the internal search space representation
     f = tree.wrap_decoder(optimizationWrapper)
-    f = constraints.wrap_constraints(f, -sys.float_info.max, range_oo=box)
+    f = constraints.wrap_constraints(f, (-sys.float_info.max, pd.Index(['test', 'test2'])), range_oo=box)
 
     # Create solver keyword args based on number of evaluations and box
     # constraints
@@ -201,12 +201,15 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
         maximize=True,
         max_evals=num_evals,
         pmap=pmap,
-        decoder=tree.decode
+        decoder=tree.decode,
+        solutionFPath='./blah.h5'
     )
 
     # TODO: Remove this...
     optimal_configuration, info, solverInfo = solution, details, suggestion
 
+    with pd.HDFStore('./blah.h5') as hdf:
+        pdb.set_trace()
 
     # Create dictionary of all parameters that have values
     solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})

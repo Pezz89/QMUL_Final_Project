@@ -307,5 +307,4 @@ class ParticleSwarm(Solver):
                 # Create dataframe for solution and feature selection
                 solution.to_hdf(solutionFPath, key="solution{0}".format(ind))
                 bestLabel.to_series().to_hdf(solutionFPath, key="bestFeatures{0}".format(ind))
-                pdb.set_trace()
         return dict([(k, v) for k, v in zip(self.bounds.keys(), best.position)]), None

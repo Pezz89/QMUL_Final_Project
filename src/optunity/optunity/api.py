@@ -213,7 +213,7 @@ def minimize(f, num_evals=50, solver_name=None, pmap=map, **kwargs):
     return solution, details, suggestion
 
 
-def optimize(solver, func, maximize=True, max_evals=0, pmap=map, decoder=None):
+def optimize(solver, func, maximize=True, max_evals=0, pmap=map, decoder=None, solutionFPath=None):
     """Optimizes func with given solver.
 
     :param solver: the solver to be used, for instance a result from :func:`optunity.make_solver`
@@ -242,7 +242,7 @@ def optimize(solver, func, maximize=True, max_evals=0, pmap=map, decoder=None):
 
     time = timeit.default_timer()
     try:
-        solution, report = solver.optimize(f, maximize, pmap=pmap, decoder=decoder, solutionFPath='./blah.h5')
+        solution, report = solver.optimize(f, maximize, pmap=pmap, decoder=decoder, solutionFPath=solutionFPath)
     except fun.MaximumEvaluationsException:
         # early stopping because maximum number of evaluations is reached
         # retrieve solution from the call log

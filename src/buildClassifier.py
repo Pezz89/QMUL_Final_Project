@@ -69,7 +69,7 @@ def modelFeatureSelection(features, classifications, gkf, model):
 
     sfs1 = SFS(
         model,
-        k_features=(1, 50),
+        k_features=(3, 50),
         forward=False,
         floating=True,
         verbose=2,
@@ -88,6 +88,7 @@ def modelFeatureSelection(features, classifications, gkf, model):
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
     #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    logging.info("Selected features: {}".format(" ".join([x for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
     logging.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
 

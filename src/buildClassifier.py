@@ -53,6 +53,7 @@ def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimat
         max_depth=int(np.round(max_depth))
         logger.debug("Building Random Forest Model with parameters:".ljust(92))
         logger.debug("n_estimators={0}, max_features={1}, max_depth={2}".format(n_estimators, max_features, max_depth).ljust(92))
+        #TODO: Implement max features count
         model = RandomForestClassifier(n_estimators=int(n_estimators),
                                     #max_features=int(max_features), random_state=42)
                                        max_depth=max_depth,
@@ -65,46 +66,21 @@ def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimat
 
 def modelFeatureSelection(features, classifications, gkf, model):
     physionetScorer = make_scorer(score)
-    '''
-    scorer = ms.MultiScorer({
-        'score': (score, {}),
-        'sensitivity': (sensitivity, {}),
-        'specificity': (specificity, {})
-    })
-    '''
 
     sfs1 = SFS(
         model,
-        k_features=(30, 50),
+        k_features=(1, 50),
         forward=False,
         floating=True,
         verbose=2,
         scoring=physionetScorer,
-        #cv=gkf
-        cv=0
+        cv=gkf
+        #cv=0
     )
 
     sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix())
 
-    # Evaluate model using stratified cross-validation
-    '''
-    cross_val_score(
-        model,
-        features,
-        classifications,
-        groups,
-        cv=GroupKFold(n_splits=int(np.max(groups)+1)),
-        scoring=scorer
-    )
-    '''
-
     np.set_printoptions(precision=4)
-    '''
-    results = scorer.get_results()
-    scr = np.array(results['score'])
-    sens = np.array(results['sensitivity'])
-    spec = np.array(results['specificity'])
-    '''
 
     logging.info("--------------------------------------------------------------------------------------------")
     #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
@@ -114,7 +90,6 @@ def modelFeatureSelection(features, classifications, gkf, model):
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
     logging.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
-    pdb.set_trace()
 
     return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
 
@@ -136,11 +111,6 @@ def scoreOptimizedModel(train_features, test_features, train_classifications, te
     physionetScorer = make_scorer(score)
     finalScore = physionetScorer(model, test_features, test_classifications)
     logging.info("--------------------------------------------------------------------------------------------")
-    #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
-    #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
-    #logging.info("Specificity:                               {}".format(spec).ljust(92))
-    #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
-    #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
     logging.info("Final optimized score:                      {}".format(finalScore).ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
 
@@ -172,7 +142,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         return scr, featureLabels
     # TODO: Used for quickly debugging particle swarm optimization, remove for
     # production
-    optimizationWrapper = dummyWrapper
+    #optimizationWrapper = dummyWrapper
 
     # Define search space, providing model names and parameter ranges to search
     # for best solution

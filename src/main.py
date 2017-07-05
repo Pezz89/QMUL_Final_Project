@@ -10,8 +10,9 @@ import pathops
 from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures, normaliseFeatures
 from evaluateFeatures import evaluateFeatures
-from buildClassifier import optimizeClassifierModel, fitOptimizedModel
+from buildClassifier import optimizeClassifierModel, scoreOptimizedModel, group_train_test_split
 from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
+from group import generateGroups
 import pandas as pd
 
 import pdb
@@ -167,9 +168,12 @@ def main():
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
+    # Split features into training and test set by database
+    groups = generateGroups(features)
+    train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
     if args.optimize:
-        optimizeClassifierModel(features, classifications, parameters_filepath, parallelize=parallelize)
-    fitOptimizedModel(features, classifications, parameters_filepath)
+        optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
+    scoreOptimizedModel(train_features, test_features, train_classifications, test_classifications, parameters_filepath)
 
 
 '''

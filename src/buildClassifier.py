@@ -23,6 +23,7 @@ from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
 from group import generateGroups
 
+import re
 import numpy as np
 import pandas as pd
 import pdb
@@ -32,7 +33,7 @@ import sys
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
-def generateModel(features, classifications, algorithm, n_neighbors=None, n_estimators=None, max_features=None,
+def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimators=None, max_features=None,
                 kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
     if algorithm == 'k-nn':
         n_neighbors = int(np.round(n_neighbors))
@@ -62,7 +63,7 @@ def generateModel(features, classifications, algorithm, n_neighbors=None, n_esti
     return model
 
 
-def evaluateModel(features, classifications, gkf, model):
+def modelFeatureSelection(features, classifications, gkf, model):
     physionetScorer = make_scorer(score)
     '''
     scorer = ms.MultiScorer({
@@ -118,19 +119,33 @@ def evaluateModel(features, classifications, gkf, model):
     return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
 
 
-def fitOptimizedModel(features, classifications, optimization_fpath, **kwargs):
+def scoreOptimizedModel(train_features, test_features, train_classifications, test_classifications, optimization_fpath, **kwargs):
     # load model information from file
-    groups = generateGroups(features)
-    modelInfo = pd.read_pickle(optimization_fpath)
-    algorithm = modelInfo.pop('algorithm')
-    model = generateModel(features, classifications, algorithm, **modelInfo)
-    scr, featureLabels = evaluateModel(features, classifications, groups, model)
-    return scr, featureLabels
+    groups = generateGroups(train_features)
+    with pd.HDFStore(optimization_fpath) as hdf:
+        iterations = [extract_number(x)[0] for x in hdf.keys()]
+        latestIteration = max(iterations)
+        latestSolution = hdf["/solution{}".format(latestIteration)]
+        latestFeatures = pd.Index(hdf["/bestFeatures{}".format(latestIteration)])
+    latestSolution = latestSolution.dropna()
+    algorithm = latestSolution.pop('algorithm')
+    train_features = train_features.ix[:, latestFeatures]
+    test_features = test_features.ix[:, latestFeatures]
+    model = buildModel(train_features, train_classifications, algorithm, **latestSolution)
+    model.fit(train_features, train_classifications)
+    physionetScorer = make_scorer(score)
+    finalScore = physionetScorer(model, test_features, test_classifications)
+    logging.info("--------------------------------------------------------------------------------------------")
+    #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
+    #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
+    #logging.info("Specificity:                               {}".format(spec).ljust(92))
+    #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
+    #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
+    logging.info("Final optimized score:                      {}".format(finalScore).ljust(92))
+    logging.info("--------------------------------------------------------------------------------------------")
 
 
-def optimizeClassifierModel(features, classifications, optimization_fpath, parallelize=False):
-    # Split features into training and test set by database
-    groups = generateGroups(features)
+def group_train_test_split(features, classifications, groups):
     logo = LeaveOneGroupOut()
     # Split data into test and training sets by database
     train_inds, test_inds = logo.split(features, classifications, groups=groups).next()
@@ -141,15 +156,19 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
     train_groups = generateGroups(train_features)
     test_groups = generateGroups(test_features)
 
-    gkf = list(GroupKFold(n_splits=3).split(train_features,train_classifications,train_groups))#int(np.max(groups)+1))
+    return (train_features, test_features, train_classifications, test_classifications, train_groups, test_groups)
+
+
+def optimizeClassifierModel(features, classifications, groups, optimization_fpath, parallelize=False):
+    gkf = list(GroupKFold(n_splits=3).split(features,classifications,groups))#int(np.max(groups)+1))
 
     def dummyWrapper(algorithm, **kwargs):
         '''Dummy function created for debugging optimization quickly'''
-        return (0.5, pd.Index(['test', 'test2']))
+        return (0.5, pd.Index(['diaCent', 'diaDur', 'diaFlat']))
 
     def optimizationWrapper(algorithm, **kwargs):
-        model = generateModel(train_features, train_classifications, algorithm, **kwargs)
-        scr, featureLabels = evaluateModel(train_features, train_classifications, gkf, model)
+        model = buildModel(features, classifications, algorithm, **kwargs)
+        scr, featureLabels = modelFeatureSelection(features, classifications, gkf, model)
         return scr, featureLabels
     # TODO: Used for quickly debugging particle swarm optimization, remove for
     # production
@@ -202,23 +221,21 @@ def optimizeClassifierModel(features, classifications, optimization_fpath, paral
         max_evals=num_evals,
         pmap=pmap,
         decoder=tree.decode,
-        solutionFPath='./blah.h5'
+        solutionFPath=optimization_fpath
     )
 
     # TODO: Remove this...
     optimal_configuration, info, solverInfo = solution, details, suggestion
 
-    with pd.HDFStore('./blah.h5') as hdf:
-        pdb.set_trace()
-
     # Create dictionary of all parameters that have values
-    solution = pd.Series({k: v for k, v in optimal_configuration.items() if v is not None})
     logging.info("Solution:".ljust(92))
-    for item in solution.iteritems():
+    for item in optimal_configuration.iteritems():
         logging.info("{:20.20}{:72.72}".format(item[0], str(item[1])))
 
-    solution.to_pickle(optimization_fpath)
 
+def extract_number(f):
+    s = re.findall("\d+$",f)
+    return (int(s[0]) if s else -1,f)
 
 
 def train_svm(kernel, C, gamma, degree, coef0):

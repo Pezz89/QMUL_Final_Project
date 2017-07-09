@@ -15,9 +15,11 @@ def log_newline(self, how_many_lines=1):
     self.addHandler(self.console_handler)
 
 def create_logger(
+    name=None,
     logger_streamlevel=logging.DEBUG,
     log_filename=None,
-    logger_filelevel=logging.DEBUG
+    logger_filelevel=logging.DEBUG,
+    use_stream_handler=True
 ):
     """
     Create a main program logger with generic config.
@@ -28,7 +30,7 @@ def create_logger(
         logger = create_logger(__name__)
     """
     # Create a logger object to use in the main script of an application
-    logger = logging.getLogger()
+    logger = logging.getLogger(name=name)
     # Set the level of messages to be handled by the logger. defaults to all
     # messages
     logger.setLevel(logging.DEBUG)
@@ -49,15 +51,16 @@ def create_logger(
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    # Create a stream handler to send messages to the output.
-    stream_handler = logging.StreamHandler()
-    # Add formatter to the stream handler
-    stream_handler.setFormatter(formatter)
-    # Set the level of messages to stream to the output
-    stream_handler.setLevel(logger_streamlevel)
+    if use_stream_handler:
+        # Create a stream handler to send messages to the output.
+        stream_handler = logging.StreamHandler()
+        # Add formatter to the stream handler
+        stream_handler.setFormatter(formatter)
+        # Set the level of messages to stream to the output
+        stream_handler.setLevel(logger_streamlevel)
 
-    # Add the handlers to the logger
-    logger.addHandler(stream_handler)
+        # Add the handlers to the logger
+        logger.addHandler(stream_handler)
 
     return logger
 

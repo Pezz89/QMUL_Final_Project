@@ -27,8 +27,10 @@ import re
 import numpy as np
 import pandas as pd
 import pdb
+import loggerops
 import logging
 import sys
+import multiprocessing
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
@@ -66,13 +68,18 @@ def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimat
 
 def modelFeatureSelection(features, classifications, gkf, model):
     physionetScorer = make_scorer(score)
+    process_name = multiprocessing.current_process().name
+    worker_log = loggerops.create_logger(process_name, log_filename="{}.log".format(process_name), use_stream_handler=False)
+    worker_log.info("--------------------------------------------------------------------------------------------")
+    worker_log.info("Running feature selection...")
+    worker_log.info("--------------------------------------------------------------------------------------------")
 
     sfs1 = SFS(
         model,
         k_features=(3, 50),
         forward=False,
         floating=True,
-        verbose=2,
+        verbose=0,
         scoring=physionetScorer,
         cv=gkf
         #cv=0
@@ -82,15 +89,15 @@ def modelFeatureSelection(features, classifications, gkf, model):
 
     np.set_printoptions(precision=4)
 
-    logging.info("--------------------------------------------------------------------------------------------")
+    worker_log.info("--------------------------------------------------------------------------------------------")
     #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
     #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
     #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
-    logging.info("Selected features: {}".format(" ".join([x for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
-    logging.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
-    logging.info("--------------------------------------------------------------------------------------------")
+    worker_log.info("Selected features: {}".format(" ".join([x for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
+    worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
+    worker_log.info("--------------------------------------------------------------------------------------------")
 
     return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
 
@@ -103,6 +110,7 @@ def scoreOptimizedModel(train_features, test_features, train_classifications, te
         latestIteration = max(iterations)
         latestSolution = hdf["/solution{}".format(latestIteration)]
         latestFeatures = pd.Index(hdf["/bestFeatures{}".format(latestIteration)])
+    latestFeatures = pd.Index(["s2Skew", "s2Spread", "diaRMS", "diaSkew", "sd_IntSys", "sysFlat", "s1RMS", "sd_IntS1", "s2Dur", "s2Flat", "s2Kurt", "s2RMS"])
     latestSolution = latestSolution.dropna()
     algorithm = latestSolution.pop('algorithm')
     train_features = train_features.ix[:, latestFeatures]

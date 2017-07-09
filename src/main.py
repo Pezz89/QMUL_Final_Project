@@ -136,7 +136,7 @@ def main():
         def write(self, message):
             # if statement reduces the amount of newlines that are
             # printed to the logger
-            mess = [s.strip() for s in message.splitlines()]
+            mess = [s for s in message.splitlines()]
             for m in mess:
                 self.level(m.ljust(92))
 

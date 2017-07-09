@@ -12,6 +12,8 @@ import collections
 import os
 import pandas as pd
 import pathops
+from scipy.stats import entropy
+from pyentrp import entropy as ent
 
 
 logger = logging.getLogger(__name__)
@@ -97,6 +99,7 @@ def calculateFeatures(name, audioPath, segPath):
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
 
+
     # =========================================================================
     # Local Features - Calculated per segment
     # =========================================================================
@@ -116,6 +119,9 @@ def calculateFeatures(name, audioPath, segPath):
         s2 = audioData[segs[i,2]:segs[i,3]]
         dia = audioData[segs[i,3]:segs[i+1,0]]
 
+        perSegFeatures['R_SysRR'][i]  = (segs[i,2]-segs[i,1])/(segs[i+1,0]-segs[i,0])*100;
+        perSegFeatures['R_DiaRR'][i]  = (segs[i+1,0]-segs[i,3])/(segs[i+1,0]-segs[i,0])*100;
+        perSegFeatures['R_SysDia'][i] = perSegFeatures['R_SysRR'][i]/perSegFeatures['R_DiaRR'][i]*100;
         # =====================================================================
         # Time-domain Features
         # =====================================================================
@@ -161,6 +167,18 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['sysVar'][i] = tvar(sys)
         perSegFeatures['s2Var'][i] = tvar(s2)
         perSegFeatures['diaVar'][i] = tvar(dia)
+
+        # Sample Entropy
+        perSegFeatures['s1SampEnt'][i] = ent.sample_entropy(s1, 1, 0.2*np.std(s1))
+        perSegFeatures['sysSampEnt'][i] = ent.sample_entropy(sys, 1, 0.2*np.std(sys))
+        perSegFeatures['s2SampEnt'][i] = ent.sample_entropy(s2, 1, 0.2*np.std(s2))
+        perSegFeatures['diaSampEnt'][i] = ent.sample_entropy(dia, 1, 0.2*np.std(dia))
+
+        # Sample Entropy
+        perSegFeatures['s1ShanEnt'][i] = entropy(s1)
+        perSegFeatures['sysShanEnt'][i] = entropy(sys)
+        perSegFeatures['s2ShanEnt'][i] = entropy(s2)
+        perSegFeatures['diaShanEnt'][i] = entropy(dia)
 
         # =====================================================================
         # Frequency-domain Features
@@ -210,8 +228,15 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Spread'][i] = spectralspread(s2Mag, fS2, perSegFeatures['s2Cent'][i])
         perSegFeatures['diaSpread'][i] = spectralspread(diaMag, fDia, perSegFeatures['diaCent'][i])
 
+
         i += 1
 
+    features['m_Ratio_SysRR']   = np.mean(perSegFeatures['R_SysRR']);  # mean value of the interval ratios between systole and RR in each heart beat
+    features['sd_Ratio_SysRR']  = np.std(perSegFeatures['R_SysRR']);   # SD value of the interval ratios between systole and RR in each heart beat
+    features['m_Ratio_DiaRR']   = np.mean(perSegFeatures['R_DiaRR']);  # mean value of the interval ratios between diastole and RR in each heart beat
+    features['sd_Ratio_DiaRR']  = np.std(perSegFeatures['R_DiaRR']);   # SD value of the interval ratios between diastole and RR in each heart beat
+    features['m_Ratio_SysDia']  = np.mean(perSegFeatures['R_SysDia']); # mean value of the interval ratios between systole and diastole in each heart beat
+    features['sd_Ratio_SysDia'] = np.std(perSegFeatures['R_SysDia']);  # SD value of the interval ratios between systole and diastole in each heart beat
 
     # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():

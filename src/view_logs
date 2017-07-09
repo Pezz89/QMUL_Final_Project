@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+multitail -s 3 -P o 37 -P l -f ./*.log

@@ -2,6 +2,7 @@
 
 import logging
 import types
+import pdb
 
 def log_newline(self, how_many_lines=1):
     # Switch handler, output a blank line
@@ -51,6 +52,7 @@ def create_logger(
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
+    stream_handler = logging.StreamHandler()
     if use_stream_handler:
         # Create a stream handler to send messages to the output.
         stream_handler = logging.StreamHandler()
@@ -61,6 +63,9 @@ def create_logger(
 
         # Add the handlers to the logger
         logger.addHandler(stream_handler)
+    else:
+        logger.removeHandler(stream_handler)
+
 
     return logger
 

@@ -155,7 +155,7 @@ def main():
         logger_filelevel=args.verbose
     )
     #sys.stdout = LoggerWriter(logger.info)
-    sys.stderr = LoggerWriter(logger.debug)
+    #sys.stderr = LoggerWriter(logger.debug)
 
     if args.segment:
         logger.info("Running MATLAB segmentation...")

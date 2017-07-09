@@ -35,26 +35,26 @@ import multiprocessing
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
-def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimators=None, max_features=None,
+def buildModel(features, classifications, algorithm, worker_log = None, n_neighbors=None, n_estimators=None, max_features=None,
                 kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
     if algorithm == 'k-nn':
         n_neighbors = int(np.round(n_neighbors))
-        logger.debug("Building k-NN Model with parameters:".ljust(92))
-        logger.debug("n_neighbors={}".format(n_neighbors).ljust(92))
+        worker_log.debug("Building k-NN Model with parameters:".ljust(92))
+        worker_log.debug("n_neighbors={}".format(n_neighbors).ljust(92))
         model = KNeighborsClassifier(n_neighbors=int(n_neighbors))
     elif algorithm == 'SVM':
-        logger.debug("Building SVM Model with parameters:".ljust(92))
-        logger.debug("kernel={0}, C={1}, gamma={2}, degree={3}, coef0={4}".format(kernel, C, gamma, degree, coef0).ljust(92))
+        worker_log.debug("Building SVM Model with parameters:".ljust(92))
+        worker_log.debug("kernel={0}, C={1}, gamma={2}, degree={3}, coef0={4}".format(kernel, C, gamma, degree, coef0).ljust(92))
         model = train_svm(kernel, C, gamma, degree, coef0)
     elif algorithm == 'naive-bayes':
-        logger.debug("Building Gaussian NB Model (no parameters)".ljust(92))
+        worker_log.debug("Building Gaussian NB Model (no parameters)".ljust(92))
         model = GaussianNB()
     elif algorithm == 'random-forest':
         max_features = int(np.round(max_features))
         n_estimators = int(np.round(n_estimators))
         max_depth=int(np.round(max_depth))
-        logger.debug("Building Random Forest Model with parameters:".ljust(92))
-        logger.debug("n_estimators={0}, max_features={1}, max_depth={2}".format(n_estimators, max_features, max_depth).ljust(92))
+        worker_log.debug("Building Random Forest Model with parameters:".ljust(92))
+        worker_log.debug("n_estimators={0}, max_features={1}, max_depth={2}".format(n_estimators, max_features, max_depth).ljust(92))
         #TODO: Implement max features count
         model = RandomForestClassifier(n_estimators=int(n_estimators),
                                     #max_features=int(max_features), random_state=42)
@@ -66,12 +66,10 @@ def buildModel(features, classifications, algorithm, n_neighbors=None, n_estimat
     return model
 
 
-def modelFeatureSelection(features, classifications, gkf, model):
+def modelFeatureSelection(features, classifications, gkf, model, worker_log=None):
     physionetScorer = make_scorer(score)
-    process_name = multiprocessing.current_process().name
-    worker_log = loggerops.create_logger(process_name, log_filename="{}.log".format(process_name), use_stream_handler=False)
     worker_log.info("--------------------------------------------------------------------------------------------")
-    worker_log.info("Running feature selection...")
+    worker_log.info("Running feature selection...".ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
 
     sfs1 = SFS(
@@ -79,10 +77,10 @@ def modelFeatureSelection(features, classifications, gkf, model):
         k_features=(3, 50),
         forward=False,
         floating=True,
-        verbose=0,
+        verbose=2,
         scoring=physionetScorer,
-        cv=gkf
-        #cv=0
+        cv=gkf,
+        logger=worker_log
     )
 
     sfs1 = sfs1.fit(features.as_matrix(), classifications.as_matrix())
@@ -146,8 +144,15 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         return (0.5, pd.Index(['diaCent', 'diaDur', 'diaFlat']))
 
     def optimizationWrapper(algorithm, **kwargs):
-        model = buildModel(features, classifications, algorithm, **kwargs)
-        scr, featureLabels = modelFeatureSelection(features, classifications, gkf, model)
+        process_name = multiprocessing.current_process().name
+        worker_log = loggerops.create_logger(
+            process_name,
+            log_filename="{}.log".format(process_name),
+            use_stream_handler=False
+        )
+        worker_log.propagate = False
+        model = buildModel(features, classifications, algorithm, worker_log=worker_log, **kwargs)
+        scr, featureLabels = modelFeatureSelection(features, classifications, gkf, model, worker_log=worker_log)
         return scr, featureLabels
     # TODO: Used for quickly debugging particle swarm optimization, remove for
     # production

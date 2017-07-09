@@ -124,8 +124,11 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
                  verbose=0, scoring=None,
                  cv=5, skip_if_stuck=True, n_jobs=1,
                  pre_dispatch='2*n_jobs',
-                 clone_estimator=True):
+                 clone_estimator=True, logger=None):
 
+        self.logger = logger
+        if not logger and verbose > 0:
+            raise ValueError("A logger object must be provided to log output")
         self.estimator = estimator
         self.k_features = k_features
         self.forward = forward
@@ -243,7 +246,6 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
                 'cv_scores': k_score,
                 'avg_score': np.nanmean(k_score)
             }
-        print(' k_to_select',  k_to_select)
         best_subset = None
         k_score = 0
         try:
@@ -299,14 +301,12 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
                 sdq.append(set(k_idx))
 
                 if self.verbose == 1:
-                    sys.stderr.write('\rFeatures: %d/%s' % (
+                    self.logger.debug('Features: %d/%s' % (
                         len(k_idx),
                         k_to_select
                     ))
-                    sys.stderr.flush()
                 elif self.verbose > 1:
-                    sys.stderr.write('\n[%s] Features: %d/%s -- score: %s' % (
-                        datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    self.logger.debug('Features: %d/%s -- score: %s' % (
                         len(k_idx),
                         k_to_select,
                         k_score
@@ -317,7 +317,7 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
 
         except KeyboardInterrupt as e:
             self.interrupted_ = True
-            sys.stderr.write('\nSTOPPING EARLY DUE TO KEYBOARD INTERRUPT...')
+            self.logger.error('STOPPING EARLY DUE TO KEYBOARD INTERRUPT...')
 
         if select_in_range:
             max_score = float('-inf')
@@ -351,14 +351,14 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
         if remaining:
             features = len(remaining)
             n_jobs = min(self.n_jobs, features)
-            parallel = Parallel(n_jobs=n_jobs, verbose=self.verbose,
+            parallel = Parallel(n_jobs=n_jobs, verbose=0,
                                 pre_dispatch=self.pre_dispatch)
             work = parallel(delayed(_calc_score)
                             (self, X, y, tuple(subset | {feature}))
                             for feature in remaining)
 
             for new_subset, cv_scores in work:
-                all_avg_scores.append(np.nanmean(cv_scores)) 
+                all_avg_scores.append(np.nanmean(cv_scores))
                 all_cv_scores.append(cv_scores)
                 all_subsets.append(new_subset)
 
@@ -377,7 +377,7 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
             all_subsets = []
             features = n
             n_jobs = min(self.n_jobs, features)
-            parallel = Parallel(n_jobs=n_jobs, verbose=self.verbose,
+            parallel = Parallel(n_jobs=n_jobs, verbose=0,
                                 pre_dispatch=self.pre_dispatch)
             work = parallel(delayed(_calc_score)(self, X, y, p)
                             for p in combinations(feature_set, r=n - 1)

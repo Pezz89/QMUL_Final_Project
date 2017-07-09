@@ -41,30 +41,31 @@ def create_logger(
                                   "%Y-%m-%d %H:%M:%S")
 
     # If a log file path has been provided...
-    if log_filename:
-        # Create file handler to save logging messages to.
-        file_handler = logging.FileHandler(log_filename)
-        # Set the level of messages to save to the log file
-        file_handler.setLevel(logging.DEBUG)
+    if not len(logger.handlers):
+        if log_filename:
+            # Create file handler to save logging messages to.
+            file_handler = logging.FileHandler(log_filename, mode='w')
+            # Set the level of messages to save to the log file
+            file_handler.setLevel(logging.DEBUG)
 
-        # Create a formatter to set message style.
-        # Add the formatter to the file handler.
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+            # Create a formatter to set message style.
+            # Add the formatter to the file handler.
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
-    stream_handler = logging.StreamHandler()
-    if use_stream_handler:
-        # Create a stream handler to send messages to the output.
         stream_handler = logging.StreamHandler()
-        # Add formatter to the stream handler
-        stream_handler.setFormatter(formatter)
-        # Set the level of messages to stream to the output
-        stream_handler.setLevel(logger_streamlevel)
+        if use_stream_handler:
+            # Create a stream handler to send messages to the output.
+            stream_handler = logging.StreamHandler()
+            # Add formatter to the stream handler
+            stream_handler.setFormatter(formatter)
+            # Set the level of messages to stream to the output
+            stream_handler.setLevel(logger_streamlevel)
 
-        # Add the handlers to the logger
-        logger.addHandler(stream_handler)
-    else:
-        logger.removeHandler(stream_handler)
+            # Add the handlers to the logger
+            logger.addHandler(stream_handler)
+        else:
+            logger.removeHandler(stream_handler)
 
 
     return logger

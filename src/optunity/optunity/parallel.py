@@ -71,8 +71,19 @@ try:
         q_in = multiprocessing.Queue(1)
         q_out = multiprocessing.Queue()
 
-        proc = [multiprocessing.Process(target=_fun, args=(f, q_in, q_out))
-                for _ in range(nprocs)]
+        proc = [multiprocessing.Process(name="Process-{}".format(i), target=_fun, args=(f, q_in, q_out))
+                for i in range(nprocs)]
+
+        import loggerops
+        for p in proc:
+
+            worker_log = loggerops.create_logger(
+                p.name,
+                log_filename="{}.log".format(p.name),
+                use_stream_handler=False
+            )
+            worker_log.propagate = False
+
         for p in proc:
             p.daemon = True
             p.start()

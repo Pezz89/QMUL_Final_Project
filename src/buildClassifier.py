@@ -37,6 +37,9 @@ random_state = np.random.RandomState(42)
 
 def buildModel(features, classifications, algorithm, worker_log = None, n_neighbors=None, n_estimators=None, max_features=None,
                 kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
+    worker_log.info("--------------------------------------------------------------------------------------------")
+    worker_log.info("Building Mode...".ljust(92))
+    worker_log.info("--------------------------------------------------------------------------------------------")
     if algorithm == 'k-nn':
         n_neighbors = int(np.round(n_neighbors))
         worker_log.debug("Building k-NN Model with parameters:".ljust(92))
@@ -74,7 +77,7 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=None
 
     sfs1 = SFS(
         model,
-        k_features=(3, 50),
+        k_features=(49, 50),
         forward=False,
         floating=True,
         verbose=2,

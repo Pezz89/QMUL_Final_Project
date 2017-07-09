@@ -14,11 +14,24 @@ from buildClassifier import optimizeClassifierModel, scoreOptimizedModel, group_
 from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
 from group import generateGroups
 import pandas as pd
+import traceback
+import StringIO
 
 import pdb
 
 modpath = sys.argv[0]
 modpath = os.path.splitext(modpath)[0]+'.log'
+
+def add_custom_print_exception():
+    old_print_exception = traceback.print_exception
+    def custom_print_exception(etype, value, tb, limit=None, file=None):
+        tb_output = StringIO.StringIO()
+        traceback.print_tb(tb, limit, tb_output)
+        logger = logging.getLogger(__name__)
+        logger.error(tb_output.getvalue())
+        tb_output.close()
+        old_print_exception(etype, value, tb, limit=None, file=None)
+    traceback.print_exception = custom_print_exception
 
 def extant_file(x):
     """
@@ -157,6 +170,7 @@ def main():
     #sys.stdout = LoggerWriter(logger.info)
     #sys.stderr = LoggerWriter(logger.debug)
 
+    #add_custom_print_exception()
     if args.segment:
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)

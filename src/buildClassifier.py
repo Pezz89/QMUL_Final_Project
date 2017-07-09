@@ -35,10 +35,8 @@ import multiprocessing
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
-def buildModel(features, classifications, algorithm, worker_log = None, n_neighbors=None, n_estimators=None, max_features=None,
+def buildModel(features, classifications, algorithm, worker_log = logging.getLogger(__name__), n_neighbors=None, n_estimators=None, max_features=None,
                 kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
-    worker_log.info("--------------------------------------------------------------------------------------------")
-    worker_log.info("Building Mode...".ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
     if algorithm == 'k-nn':
         n_neighbors = int(np.round(n_neighbors))
@@ -69,7 +67,7 @@ def buildModel(features, classifications, algorithm, worker_log = None, n_neighb
     return model
 
 
-def modelFeatureSelection(features, classifications, gkf, model, worker_log=None):
+def modelFeatureSelection(features, classifications, gkf, model, worker_log=logging.getLogger(__name__)):
     physionetScorer = make_scorer(score)
     worker_log.info("--------------------------------------------------------------------------------------------")
     worker_log.info("Running feature selection...".ljust(92))

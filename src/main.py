@@ -195,6 +195,9 @@ def main():
 def apply_pca(train_X, test_X, train_Y, test_Y):
     from sklearn.decomposition import KernelPCA
 
+    train_rows = train_X.index
+    test_rows = test_X.index
+
     kpca = KernelPCA()
     kpca.fit(train_X)
 
@@ -224,7 +227,6 @@ def apply_pca(train_X, test_X, train_Y, test_Y):
 
     train_X = X_pca[:, :30]
 
-    kpca.fit(test_X)
     X_pca = kpca.transform(test_X)
 
     tot = sum(kpca.lambdas_)
@@ -248,7 +250,7 @@ def apply_pca(train_X, test_X, train_Y, test_Y):
 
 
     test_X = X_pca[:, :30]
-    return pd.DataFrame(train_X), pd.DataFrame(test_X)
+    return pd.DataFrame(train_X, index=train_rows), pd.DataFrame(test_X, index=test_rows)
 
 '''
 Read classification labels for files in the dataset

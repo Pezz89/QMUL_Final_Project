@@ -15,6 +15,7 @@ import pathops
 from scipy.stats import entropy
 from pyeeg import samp_entropy
 
+import pywt
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2SampEnt'][i] = samp_entropy(s2, 1, 0.2*np.std(s2))
         perSegFeatures['diaSampEnt'][i] = samp_entropy(dia, 1, 0.2*np.std(dia))
 
-        # Sample Entropy
+        # Shannon Entropy
         perSegFeatures['s1ShanEnt'][i] = entropy(s1**2)
         perSegFeatures['sysShanEnt'][i] = entropy(sys**2)
         perSegFeatures['s2ShanEnt'][i] = entropy(s2**2)
@@ -228,7 +229,6 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Spread'][i] = spectralspread(s2Mag, fS2, perSegFeatures['s2Cent'][i])
         perSegFeatures['diaSpread'][i] = spectralspread(diaMag, fDia, perSegFeatures['diaCent'][i])
 
-
         i += 1
 
     features['m_Ratio_SysRR']   = np.mean(perSegFeatures['R_SysRR']);  # mean value of the interval ratios between systole and RR in each heart beat
@@ -237,6 +237,45 @@ def calculateFeatures(name, audioPath, segPath):
     features['sd_Ratio_DiaRR']  = np.std(perSegFeatures['R_DiaRR']);   # SD value of the interval ratios between diastole and RR in each heart beat
     features['m_Ratio_SysDia']  = np.mean(perSegFeatures['R_SysDia']); # mean value of the interval ratios between systole and diastole in each heart beat
     features['sd_Ratio_SysDia'] = np.std(perSegFeatures['R_SysDia']);  # SD value of the interval ratios between systole and diastole in each heart beat
+
+    # =====================================================================
+    # Wavelet-based Features
+    # =====================================================================
+    (cA5, cD5, cD4, cD3, cD2, cD1) = pywt.wavedec(audioData, 'db1', level=5)
+
+    features['D1Shan'] = entropy(cD1**2)
+    features['D2Shan'] = entropy(cD2**2)
+    features['D3Shan'] = entropy(cD3**2)
+    features['D4Shan'] = entropy(cD4**2)
+    features['D5Shan'] = entropy(cD5**2)
+    features['A5Shan'] = entropy(cA5**2)
+
+    levels = 5
+    test = pywt.wavedec(audioData, 'db2', level=levels)
+    (cA5, cD5, cD4, cD3, cD2, cD1) = test
+    n = len(audioData)
+    # Reconstruct decomposed signals at each level
+    A5 = pywt.upcoef('a', cA5, 'db2', take=n, level=levels)
+    D5 = pywt.upcoef('d', cD5, 'db2', take=n, level=5)
+    A4 = pywt.waverec((A5, D5), 'db2')
+    D4 = pywt.upcoef('d', cD4, 'db2', take=n, level=4)
+    A3 = pywt.waverec((A4, D4), 'db2')
+    D3 = pywt.upcoef('d', cD3, 'db2', take=n, level=3)
+    A2 = pywt.waverec((A3, D3), 'db2')
+    D2 = pywt.upcoef('d', cD2, 'db2', take=n, level=2)
+    A1 = pywt.waverec((A2, D2), 'db2')
+    D1 = pywt.upcoef('d', cD1, 'db2', take=n, level=1)
+    X = A1 + D1
+
+    import matplotlib.pyplot as plt
+    plt.plot(audioData)
+    plt.plot(X)
+    plt.show()
+    pdb.set_trace()
+
+    i = 0
+    while i < maxCycles:
+        i += 1
 
     # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():

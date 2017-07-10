@@ -22,7 +22,6 @@ import optunity.constraints as constraints
 from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
 from group import generateGroups
-import threading
 
 import re
 import numpy as np

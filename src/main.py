@@ -181,14 +181,74 @@ def main():
     classifications = getClassifications(args.test_dir, features)
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)
+
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
     # Split features into training and test set by database
     groups = generateGroups(features)
     train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
+
+    train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
     scoreOptimizedModel(train_features, test_features, train_classifications, test_classifications, parameters_filepath)
 
+def apply_pca(train_X, test_X, train_Y, test_Y):
+    from sklearn.decomposition import KernelPCA
+
+    kpca = KernelPCA()
+    kpca.fit(train_X)
+
+    X_pca = kpca.transform(train_X)
+    import matplotlib.pyplot as plt
+
+
+
+    tot = sum(kpca.lambdas_)
+    var_exp = [(i / tot)*100 for i in sorted(kpca.lambdas_, reverse=True)]
+    cum_var_exp = np.cumsum(var_exp)
+
+    if False:
+        with plt.style.context('seaborn-whitegrid'):
+            fig, ax = plt.subplots(figsize=(6, 4))
+            plt.bar(range(X_pca.shape[1]), var_exp, alpha=0.5, align='center',
+                    label='individual explained variance')
+            plt.step(range(X_pca.shape[1]), cum_var_exp, where='mid',
+                    label='cumulative explained variance')
+            plt.ylabel('Explained variance ratio')
+            plt.xlabel('Principal components')
+            plt.xticks(range(X_pca.shape[1]))
+            ax.set_xticklabels(np.arange(1, train_X.shape[1] + 1))
+            plt.legend(loc='best')
+            plt.tight_layout()
+            plt.show()
+
+    train_X = X_pca[:, :30]
+
+    kpca.fit(test_X)
+    X_pca = kpca.transform(test_X)
+
+    tot = sum(kpca.lambdas_)
+    var_exp = [(i / tot)*100 for i in sorted(kpca.lambdas_, reverse=True)]
+    cum_var_exp = np.cumsum(var_exp)
+
+    if False:
+        with plt.style.context('seaborn-whitegrid'):
+            fig, ax = plt.subplots(figsize=(6, 4))
+            plt.bar(range(X_pca.shape[1]), var_exp, alpha=0.5, align='center',
+                    label='individual explained variance')
+            plt.step(range(X_pca.shape[1]), cum_var_exp, where='mid',
+                    label='cumulative explained variance')
+            plt.ylabel('Explained variance ratio')
+            plt.xlabel('Principal components')
+            plt.xticks(range(X_pca.shape[1]))
+            ax.set_xticklabels(np.arange(1, X.shape[1] + 1))
+            plt.legend(loc='best')
+            plt.tight_layout()
+            plt.show()
+
+
+    test_X = X_pca[:, :30]
+    return pd.DataFrame(train_X), pd.DataFrame(test_X)
 
 '''
 Read classification labels for files in the dataset

@@ -13,7 +13,7 @@ import os
 import pandas as pd
 import pathops
 from scipy.stats import entropy
-from pyentrp import entropy as ent
+from pyeeg import samp_entropy
 
 
 logger = logging.getLogger(__name__)
@@ -169,16 +169,16 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['diaVar'][i] = tvar(dia)
 
         # Sample Entropy
-        perSegFeatures['s1SampEnt'][i] = ent.sample_entropy(s1, 1, 0.2*np.std(s1))
-        perSegFeatures['sysSampEnt'][i] = ent.sample_entropy(sys, 1, 0.2*np.std(sys))
-        perSegFeatures['s2SampEnt'][i] = ent.sample_entropy(s2, 1, 0.2*np.std(s2))
-        perSegFeatures['diaSampEnt'][i] = ent.sample_entropy(dia, 1, 0.2*np.std(dia))
+        perSegFeatures['s1SampEnt'][i] = samp_entropy(s1, 1, 0.2*np.std(s1))
+        perSegFeatures['sysSampEnt'][i] = samp_entropy(sys, 1, 0.2*np.std(sys))
+        perSegFeatures['s2SampEnt'][i] = samp_entropy(s2, 1, 0.2*np.std(s2))
+        perSegFeatures['diaSampEnt'][i] = samp_entropy(dia, 1, 0.2*np.std(dia))
 
         # Sample Entropy
-        perSegFeatures['s1ShanEnt'][i] = entropy(s1)
-        perSegFeatures['sysShanEnt'][i] = entropy(sys)
-        perSegFeatures['s2ShanEnt'][i] = entropy(s2)
-        perSegFeatures['diaShanEnt'][i] = entropy(dia)
+        perSegFeatures['s1ShanEnt'][i] = entropy(s1**2)
+        perSegFeatures['sysShanEnt'][i] = entropy(sys**2)
+        perSegFeatures['s2ShanEnt'][i] = entropy(s2**2)
+        perSegFeatures['diaShanEnt'][i] = entropy(dia**2)
 
         # =====================================================================
         # Frequency-domain Features

@@ -22,6 +22,7 @@ import optunity.constraints as constraints
 from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
 from group import generateGroups
+import threading
 
 import re
 import numpy as np
@@ -75,8 +76,8 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
 
     sfs1 = SFS(
         model,
-        k_features=(49, 50),
-        forward=False,
+        k_features=(4, 25),
+        forward=True,
         floating=True,
         verbose=2,
         scoring=physionetScorer,
@@ -94,7 +95,7 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
     #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
-    worker_log.info("Selected features: {}".format(" ".join([x for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
+    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
     worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
 
@@ -109,7 +110,6 @@ def scoreOptimizedModel(train_features, test_features, train_classifications, te
         latestIteration = max(iterations)
         latestSolution = hdf["/solution{}".format(latestIteration)]
         latestFeatures = pd.Index(hdf["/bestFeatures{}".format(latestIteration)])
-    latestFeatures = pd.Index(["s2Skew", "s2Spread", "diaRMS", "diaSkew", "sd_IntSys", "sysFlat", "s1RMS", "sd_IntS1", "s2Dur", "s2Flat", "s2Kurt", "s2RMS"])
     latestSolution = latestSolution.dropna()
     algorithm = latestSolution.pop('algorithm')
     train_features = train_features.ix[:, latestFeatures]

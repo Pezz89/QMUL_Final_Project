@@ -16,6 +16,7 @@ from scipy.stats import entropy
 from pyeeg import samp_entropy
 
 import pyyawt
+import pywt
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,22 @@ def parse_segmentation_file(segPath):
             "data": csvData,
             "heartRate": heartRate
         }
+
+
+def wrcoef(X, coef_type, coeffs, wavename, level):
+    N = np.array(X).size
+    a, ds = coeffs[0], list(reversed(coeffs[1:]))
+
+    if coef_type =='a':
+        return pywt.upcoef('a', a, wavename, level=level)[:N]
+    elif coef_type == 'd':
+        try:
+            return pywt.upcoef('d', ds[level-1], wavename, level=level)[:N]
+        except:
+            pdb.set_trace()
+
+    else:
+        raise ValueError("Invalid coefficient type: {}".format(coef_type))
 
 
 def calculateFeatures(name, audioPath, segPath):
@@ -261,32 +278,20 @@ def calculateFeatures(name, audioPath, segPath):
 
 
     import pywt
-    level = 2
+    level = 5
     coeffs = pywt.wavedec(audioData,'db1',level=level)
     #create wavelet coefficients: cAn, cDn, cD(n-1)... cD1
 
-    end = len(audioData)
-    pdb.set_trace()
-    l1 = pywt.upcoef('a',coeffs[0],'db1',level=2,) + pywt.upcoef('d',coeffs[1],'db1',level=2)
-    l2 = pywt.upcoef('a', l1, 'db1', level=1, take=end) + pywt.upcoef('d', coeffs[2], 'db1', level=1, take=end)
 
-    '''
-    #highpass = np.zeros(end)
-    for x in range(1,(level+1)):
-        highpass += pywt.upcoef('d',coeffs[len(coeffs)-x],'db1',\
-                                level=x,take=end)
-    X = highpass + lowpass
-    '''
-    X = l2 + l1
+    A5 = wrcoef(audioData,'a', coeffs, 'db1', 5)
+    D5 = wrcoef(audioData,'d', coeffs, 'db1', 5)
+    D4 = wrcoef(audioData,'d', coeffs, 'db1', 4)
+    D3 = wrcoef(audioData,'d', coeffs, 'db1', 3)
+    D2 = wrcoef(audioData,'d', coeffs, 'db1', 2)
+    D1 = wrcoef(audioData,'d', coeffs, 'db1', 1)
+    X = A5 + D5 + D4 + D3 + D2 + D1
 
-    '''
-    # Reconstruct decomposed signals at each level
-    rD = []
-    rA = pyyawt.dwt1d.idwt('a', C, L, 'db4', 5);
-    for i in reversed(xrange(5)):
-        pdb.set_trace()
-        rD[i] = pyyawt.dwt1d.wrcoef('d', C, L, 'db4', i);
-    '''
+
 
 
 

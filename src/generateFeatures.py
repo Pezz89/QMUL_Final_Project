@@ -15,7 +15,7 @@ import pathops
 from scipy.stats import entropy
 from pyeeg import samp_entropy
 
-import pywt
+import pyyawt
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +241,14 @@ def calculateFeatures(name, audioPath, segPath):
     # =====================================================================
     # Wavelet-based Features
     # =====================================================================
-    (cA5, cD5, cD4, cD3, cD2, cD1) = pywt.wavedec(audioData, 'db1', level=5)
+    C, L = pyyawt.dwt1d.wavedec(audioData, 5, 'db1')
+
+    cA5=C[0:L[0]];
+    cD5=C[L[0]:sum(L[0:2])];
+    cD4=C[sum(L[0:2]):sum(L[0:3])];
+    cD3=C[sum(L[0:3]):sum(L[0:4])];
+    cD2=C[sum(L[0:4]):sum(L[0:5])];
+    cD1=C[sum(L[0:5]):sum(L[0:6])];
 
     features['D1Shan'] = entropy(cD1**2)
     features['D2Shan'] = entropy(cD2**2)
@@ -250,22 +257,38 @@ def calculateFeatures(name, audioPath, segPath):
     features['D5Shan'] = entropy(cD5**2)
     features['A5Shan'] = entropy(cA5**2)
 
-    levels = 5
-    test = pywt.wavedec(audioData, 'db2', level=levels)
-    (cA5, cD5, cD4, cD3, cD2, cD1) = test
-    n = len(audioData)
+    C, L = pyyawt.dwt1d.wavedec(audioData, 5, 'db4')
+
+
+    import pywt
+    level = 2
+    coeffs = pywt.wavedec(audioData,'db1',level=level)
+    #create wavelet coefficients: cAn, cDn, cD(n-1)... cD1
+
+    end = len(audioData)
+    pdb.set_trace()
+    l1 = pywt.upcoef('a',coeffs[0],'db1',level=2,) + pywt.upcoef('d',coeffs[1],'db1',level=2)
+    l2 = pywt.upcoef('a', l1, 'db1', level=1, take=end) + pywt.upcoef('d', coeffs[2], 'db1', level=1, take=end)
+
+    '''
+    #highpass = np.zeros(end)
+    for x in range(1,(level+1)):
+        highpass += pywt.upcoef('d',coeffs[len(coeffs)-x],'db1',\
+                                level=x,take=end)
+    X = highpass + lowpass
+    '''
+    X = l2 + l1
+
+    '''
     # Reconstruct decomposed signals at each level
-    A5 = pywt.upcoef('a', cA5, 'db2', take=n, level=levels)
-    D5 = pywt.upcoef('d', cD5, 'db2', take=n, level=5)
-    A4 = pywt.waverec((A5, D5), 'db2')
-    D4 = pywt.upcoef('d', cD4, 'db2', take=n, level=4)
-    A3 = pywt.waverec((A4, D4), 'db2')
-    D3 = pywt.upcoef('d', cD3, 'db2', take=n, level=3)
-    A2 = pywt.waverec((A3, D3), 'db2')
-    D2 = pywt.upcoef('d', cD2, 'db2', take=n, level=2)
-    A1 = pywt.waverec((A2, D2), 'db2')
-    D1 = pywt.upcoef('d', cD1, 'db2', take=n, level=1)
-    X = A1 + D1
+    rD = []
+    rA = pyyawt.dwt1d.idwt('a', C, L, 'db4', 5);
+    for i in reversed(xrange(5)):
+        pdb.set_trace()
+        rD[i] = pyyawt.dwt1d.wrcoef('d', C, L, 'db4', i);
+    '''
+
+
 
     import matplotlib.pyplot as plt
     plt.plot(audioData)

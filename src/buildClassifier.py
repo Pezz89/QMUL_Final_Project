@@ -63,6 +63,7 @@ def buildModel(features, classifications, algorithm, worker_log = logging.getLog
                                     random_state=42)
     else:
         raise ValueError('Unknown algorithm: {}'.format(algorithm))
+    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns])).ljust(92))
 
     return model
 
@@ -75,7 +76,7 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
 
     sfs1 = SFS(
         model,
-        k_features=(4, 25),
+        k_features=(10, 40),
         forward=True,
         floating=True,
         verbose=2,
@@ -169,13 +170,16 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
                     'poly': {'degree': [2, 5], 'C': [0, 50], 'coef0': [0, 1]}
                 }
             },
+            'naive-bayes': None,
+        }
+    }
+    '''
             'random-forest': {
                 'n_estimators': [10, 30],
                 'max_features': [5, 20],
                 'max_depth': [1, 10]
             }
-        }
-    }
+    '''
 
     if parallelize:
         pmap = optunity.pmap

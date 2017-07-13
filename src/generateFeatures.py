@@ -14,8 +14,8 @@ import pandas as pd
 import pathops
 from scipy.stats import entropy
 from pyeeg import samp_entropy
+from librosa.feature import mfcc
 
-import pyyawt
 import pywt
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     y = lfilter(b, a, data)
     return y
+
 
 def parse_segmentation_file(segPath):
     '''
@@ -58,11 +59,7 @@ def wrcoef(X, coef_type, coeffs, wavename, level):
     if coef_type =='a':
         return pywt.upcoef('a', a, wavename, level=level)[:N]
     elif coef_type == 'd':
-        try:
-            return pywt.upcoef('d', ds[level-1], wavename, level=level)[:N]
-        except:
-            pdb.set_trace()
-
+        return pywt.upcoef('d', ds[level-1], wavename, level=level)[:N]
     else:
         raise ValueError("Invalid coefficient type: {}".format(coef_type))
 
@@ -74,7 +71,6 @@ def calculateFeatures(name, audioPath, segPath):
     audioFile = pysndfile.PySndfile(audioPath, 'r')
     audioData = audioFile.read_frames()
     audioSamplerate = audioFile.samplerate()
-    # TODO: Apply downsampling here...
     resampleRatio = segmentation['originalSR'] / segmentation['downsampledSR']
     if resampleRatio % 1.0:
         raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
@@ -88,11 +84,11 @@ def calculateFeatures(name, audioPath, segPath):
     firstS1 = np.where(segData[:, 1] == 1)[0][0]
     lastDiastole = np.where(segData[:, 1] == 4)[0][-1]
     segs = segData[firstS1:lastDiastole+1, 0].reshape(segData[firstS1:lastDiastole+1, 1].size // 4, 4)
-    '''
-    plt.plot(audioData)
-    plt.step(segData[:, 0]*int(segmentation['originalSR']/segmentation['downsampledSR']), segData[:, 1])
-    plt.show()
-    '''
+
+    if False:
+        plt.plot(audioData)
+        plt.step(segData[:, 0]*int(segmentation['originalSR']/segmentation['downsampledSR']), segData[:, 1])
+        plt.show()
 
     # =========================================================================
     # Global Features - Calculated over entire signal
@@ -140,6 +136,7 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['R_SysRR'][i]  = (segs[i,2]-segs[i,1])/(segs[i+1,0]-segs[i,0])*100;
         perSegFeatures['R_DiaRR'][i]  = (segs[i+1,0]-segs[i,3])/(segs[i+1,0]-segs[i,0])*100;
         perSegFeatures['R_SysDia'][i] = perSegFeatures['R_SysRR'][i]/perSegFeatures['R_DiaRR'][i]*100;
+
         # =====================================================================
         # Time-domain Features
         # =====================================================================
@@ -167,6 +164,18 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['sysDur'][i] = sys.size
         perSegFeatures['s2Dur'][i] = s2.size
         perSegFeatures['diaDur'][i] = dia.size
+
+        # Signal Max
+        perSegFeatures['s1Max'][i] = np.max(s1)
+        perSegFeatures['sysMax'][i] = np.max(sys)
+        perSegFeatures['s2Max'][i] = np.max(s2)
+        perSegFeatures['diaMax'][i] = np.max(dia)
+
+        # Signal Mean
+        perSegFeatures['s1Mean'][i] = np.mean(s1)
+        perSegFeatures['sysMean'][i] = np.mean(sys)
+        perSegFeatures['s2Mean'][i] = np.mean(s2)
+        perSegFeatures['diaMean'][i] = np.mean(dia)
 
         # Skewness
         perSegFeatures['s1Skew'][i] = skew(s1)
@@ -198,6 +207,12 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2ShanEnt'][i] = entropy(s2**2)
         perSegFeatures['diaShanEnt'][i] = entropy(dia**2)
 
+        # Total power in time domain
+        perSegFeatures['TPTs1'][i] = (np.linalg.norm(s1)**2)/s1.size;
+        perSegFeatures['TPTsys'][i] = (np.linalg.norm(sys)**2)/sys.size;
+        perSegFeatures['TPTs2'][i] = (np.linalg.norm(s2)**2)/s2.size;
+        perSegFeatures['TPTdia'][i] = (np.linalg.norm(dia)**2)/dia.size;
+
         # =====================================================================
         # Frequency-domain Features
         # =====================================================================
@@ -223,6 +238,12 @@ def calculateFeatures(name, audioPath, segPath):
         # Calculate center frequency of each bin
         fDia=audioSamplerate/2*np.linspace(0,1,diaFFTLength/2);
 
+        # Total power in frequency domain
+        perSegFeatures['TPFs1'][i] = np.real(np.sum(s1FFT*np.conj(s1FFT))/(s1FFTLength**2))
+        perSegFeatures['TPFsys'][i] = np.real(np.sum(sysFFT*np.conj(sysFFT))/(sysFFTLength**2))
+        perSegFeatures['TPFs2'][i] = np.real(np.sum(s2FFT*np.conj(s2FFT))/(s2FFTLength**2))
+        perSegFeatures['TPFdia'][i] = np.real(np.sum(diaFFT*np.conj(diaFFT))/(diaFFTLength**2))
+
         s1Mag = np.abs(s1FFT)
         sysMag = np.abs(sysFFT)
         s2Mag = np.abs(s2FFT)
@@ -246,6 +267,25 @@ def calculateFeatures(name, audioPath, segPath):
         perSegFeatures['s2Spread'][i] = spectralspread(s2Mag, fS2, perSegFeatures['s2Cent'][i])
         perSegFeatures['diaSpread'][i] = spectralspread(diaMag, fDia, perSegFeatures['diaCent'][i])
 
+        # =====================================================================
+        # MFCC Features
+        # =====================================================================
+
+
+        n_mfcc = 13
+        s1Mel = np.hstack(mfcc(y=s1, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=s1.size+1))
+        for ind, m in enumerate(s1Mel):
+            perSegFeatures['s1MFCC{}'.format(ind)] = m
+        sysMel = np.hstack(mfcc(y=sys, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=sys.size+1))
+        for ind, m in enumerate(sysMel):
+            perSegFeatures['sysMFCC{}'.format(ind)] = m
+        s2Mel = np.hstack(mfcc(y=s2, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=s2.size+1))
+        for ind, m in enumerate(s2Mel):
+            perSegFeatures['s2MFCC{}'.format(ind)] = m
+        diaMel = np.hstack(mfcc(y=dia, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=dia.size+1))
+        for ind, m in enumerate(diaMel):
+            perSegFeatures['diaMFCC{}'.format(ind)] = m
+
         i += 1
 
     features['m_Ratio_SysRR']   = np.mean(perSegFeatures['R_SysRR']);  # mean value of the interval ratios between systole and RR in each heart beat
@@ -258,15 +298,14 @@ def calculateFeatures(name, audioPath, segPath):
     # =====================================================================
     # Wavelet-based Features
     # =====================================================================
-    C, L = pyyawt.dwt1d.wavedec(audioData, 5, 'db1')
 
-    cA5=C[0:L[0]];
-    cD5=C[L[0]:sum(L[0:2])];
-    cD4=C[sum(L[0:2]):sum(L[0:3])];
-    cD3=C[sum(L[0:3]):sum(L[0:4])];
-    cD2=C[sum(L[0:4]):sum(L[0:5])];
-    cD1=C[sum(L[0:5]):sum(L[0:6])];
+    level = 5
+    wavelet_type = 'db4'
+    #create wavelet coefficients: cAn, cDn, cD(n-1)... cD1
+    coeffs = pywt.wavedec(audioData, wavelet_type,level=level)
+    cA5, cD5, cD4, cD3, cD2, cD1 = coeffs
 
+    # Shannon entropy of wavelet coefficients for entire signal
     features['D1Shan'] = entropy(cD1**2)
     features['D2Shan'] = entropy(cD2**2)
     features['D3Shan'] = entropy(cD3**2)
@@ -274,36 +313,106 @@ def calculateFeatures(name, audioPath, segPath):
     features['D5Shan'] = entropy(cD5**2)
     features['A5Shan'] = entropy(cA5**2)
 
-    C, L = pyyawt.dwt1d.wavedec(audioData, 5, 'db4')
+    # Reconstruct signal at each branch from individual wavelet coefficients
+    A5 = wrcoef(audioData,'a', coeffs,  wavelet_type, 5)
+    D5 = wrcoef(audioData,'d', coeffs,  wavelet_type, 5)
+    D4 = wrcoef(audioData,'d', coeffs,  wavelet_type, 4)
+    D3 = wrcoef(audioData,'d', coeffs,  wavelet_type, 3)
+    D2 = wrcoef(audioData,'d', coeffs,  wavelet_type, 2)
+    D1 = wrcoef(audioData,'d', coeffs,  wavelet_type, 1)
+
+    if False:
+        import matplotlib.pyplot as plt
+        plt.plot(audioData)
+        plt.plot(X)
+        plt.show()
 
 
-    import pywt
-    level = 5
-    coeffs = pywt.wavedec(audioData,'db1',level=level)
-    #create wavelet coefficients: cAn, cDn, cD(n-1)... cD1
-
-
-    A5 = wrcoef(audioData,'a', coeffs, 'db1', 5)
-    D5 = wrcoef(audioData,'d', coeffs, 'db1', 5)
-    D4 = wrcoef(audioData,'d', coeffs, 'db1', 4)
-    D3 = wrcoef(audioData,'d', coeffs, 'db1', 3)
-    D2 = wrcoef(audioData,'d', coeffs, 'db1', 2)
-    D1 = wrcoef(audioData,'d', coeffs, 'db1', 1)
-    X = A5 + D5 + D4 + D3 + D2 + D1
-
-
-
-
-
-    import matplotlib.pyplot as plt
-    plt.plot(audioData)
-    plt.plot(X)
-    plt.show()
-    pdb.set_trace()
+    s1Slices = []
+    sysSlices = []
+    s2Slices = []
+    diaSlices = []
 
     i = 0
     while i < maxCycles:
+        # Generate slices for all segments of each heart beat cycle
+        s1 = slice(segs[i,0], segs[i,1])
+        sys = slice(segs[i,1], segs[i,2])
+        s2 = slice(segs[i,2], segs[i,3])
+        dia = slice(segs[i,3], segs[i+1,0])
+        s1Slices.append(s1)
+        sysSlices.append(sys)
+        s2Slices.append(s2)
+        diaSlices.append(dia)
+
+        # Shannon entropy of reconstructed signals from wavelet decomposition
+        # per segment
+        perSegFeatures['AvrA5s1Shan'][i] = entropy(A5[s1]**2)
+        perSegFeatures['AvrD5s1Shan'][i] = entropy(D5[s1]**2)
+        perSegFeatures['AvrD4s1Shan'][i] = entropy(D4[s1]**2)
+        perSegFeatures['AvrD3s1Shan'][i] = entropy(D3[s1]**2)
+        perSegFeatures['AvrD2s1Shan'][i] = entropy(D2[s1]**2)
+        perSegFeatures['AvrD1s1Shan'][i] = entropy(D1[s1]**2)
+
+        perSegFeatures['AvrA5sysShan'][i] = entropy(A5[sys]**2)
+        perSegFeatures['AvrD5sysShan'][i] = entropy(D5[sys]**2)
+        perSegFeatures['AvrD4sysShan'][i] = entropy(D4[sys]**2)
+        perSegFeatures['AvrD3sysShan'][i] = entropy(D3[sys]**2)
+        perSegFeatures['AvrD2sysShan'][i] = entropy(D2[sys]**2)
+        perSegFeatures['AvrD1sysShan'][i] = entropy(D1[sys]**2)
+
+        perSegFeatures['AvrA5s2Shan'][i] = entropy(A5[s2]**2)
+        perSegFeatures['AvrD5s2Shan'][i] = entropy(D5[s2]**2)
+        perSegFeatures['AvrD4s2Shan'][i] = entropy(D4[s2]**2)
+        perSegFeatures['AvrD3s2Shan'][i] = entropy(D3[s2]**2)
+        perSegFeatures['AvrD2s2Shan'][i] = entropy(D2[s2]**2)
+        perSegFeatures['AvrD1s2Shan'][i] = entropy(D1[s2]**2)
+
+        perSegFeatures['AvrA5diaShan'][i] = entropy(A5[dia]**2)
+        perSegFeatures['AvrD5diaShan'][i] = entropy(D5[dia]**2)
+        perSegFeatures['AvrD4diaShan'][i] = entropy(D4[dia]**2)
+        perSegFeatures['AvrD3diaShan'][i] = entropy(D3[dia]**2)
+        perSegFeatures['AvrD2diaShan'][i] = entropy(D2[dia]**2)
+        perSegFeatures['AvrD1diaShan'][i] = entropy(D1[dia]**2)
+
         i += 1
+
+    # Convert slices to numpy compatible indexes
+    s1Slices = np.r_[tuple(s1Slices)]
+    sysSlices = np.r_[tuple(sysSlices)]
+    s2Slices = np.r_[tuple(s2Slices)]
+    diaSlices = np.r_[tuple(diaSlices)]
+
+    # Total shannon entropy accross all decomposed segments
+    features['TotA5s1Shan']  = entropy(A5[s1Slices]**2)
+    features['TotA5sysShan'] = entropy(A5[sysSlices]**2)
+    features['TotA5s2Shan']  = entropy(A5[s2Slices]**2)
+    features['TotA5diaShan'] = entropy(A5[diaSlices]**2)
+
+    features['TotD5s1Shan']  = entropy(D5[s1Slices]**2)
+    features['TotD5sysShan'] = entropy(D5[sysSlices]**2)
+    features['TotD5s2Shan']  = entropy(D5[s2Slices]**2)
+    features['TotD5diaShan'] = entropy(D5[diaSlices]**2)
+
+    features['TotD4s1Shan']  = entropy(D4[s1Slices]**2)
+    features['TotD4sysShan'] = entropy(D4[sysSlices]**2)
+    features['TotD4s2Shan']  = entropy(D4[s2Slices]**2)
+    features['TotD4diaShan'] = entropy(D4[diaSlices]**2)
+
+    features['TotD3s1Shan']  = entropy(D3[s1Slices]**2)
+    features['TotD3sysShan'] = entropy(D3[sysSlices]**2)
+    features['TotD3s2Shan']  = entropy(D3[s2Slices]**2)
+    features['TotD3diaShan'] = entropy(D3[diaSlices]**2)
+
+    features['TotD2s1Shan']  = entropy(D2[s1Slices]**2)
+    features['TotD2sysShan'] = entropy(D2[sysSlices]**2)
+    features['TotD2s2Shan']  = entropy(D2[s2Slices]**2)
+    features['TotD2diaShan'] = entropy(D2[diaSlices]**2)
+
+    features['TotD1s1Shan']  = entropy(D1[s1Slices]**2)
+    features['TotD1sysShan'] = entropy(D1[sysSlices]**2)
+    features['TotD1s2Shan']  = entropy(D1[s2Slices]**2)
+    features['TotD1diaShan'] = entropy(D1[diaSlices]**2)
 
     # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():

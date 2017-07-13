@@ -187,7 +187,7 @@ def main():
     groups = generateGroups(features)
     train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
 
-    train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
+    #train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
     scoreOptimizedModel(train_features, test_features, train_classifications, test_classifications, parameters_filepath)
@@ -210,6 +210,8 @@ def apply_pca(train_X, test_X, train_Y, test_Y):
     var_exp = [(i / tot)*100 for i in sorted(kpca.lambdas_, reverse=True)]
     cum_var_exp = np.cumsum(var_exp)
 
+    numPC = 110
+
     if False:
         with plt.style.context('seaborn-whitegrid'):
             fig, ax = plt.subplots(figsize=(6, 4))
@@ -224,8 +226,9 @@ def apply_pca(train_X, test_X, train_Y, test_Y):
             plt.legend(loc='best')
             plt.tight_layout()
             plt.show()
+            pdb.set_trace()
 
-    train_X = X_pca[:, :30]
+    train_X = X_pca[:, :numPC]
 
     X_pca = kpca.transform(test_X)
 
@@ -249,7 +252,7 @@ def apply_pca(train_X, test_X, train_Y, test_Y):
             plt.show()
 
 
-    test_X = X_pca[:, :30]
+    test_X = X_pca[:, :numPC]
     return pd.DataFrame(train_X, index=train_rows), pd.DataFrame(test_X, index=test_rows)
 
 '''

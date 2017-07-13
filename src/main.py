@@ -15,23 +15,12 @@ from resample import bootstrapResample, jacknifeResample, combinationResample, g
 from group import generateGroups
 import pandas as pd
 import traceback
-import StringIO
 
 import pdb
 
 modpath = sys.argv[0]
 modpath = os.path.splitext(modpath)[0]+'.log'
 
-def add_custom_print_exception():
-    old_print_exception = traceback.print_exception
-    def custom_print_exception(etype, value, tb, limit=None, file=None):
-        tb_output = StringIO.StringIO()
-        traceback.print_tb(tb, limit, tb_output)
-        logger = logging.getLogger(__name__)
-        logger.error(tb_output.getvalue())
-        tb_output.close()
-        old_print_exception(etype, value, tb, limit=None, file=None)
-    traceback.print_exception = custom_print_exception
 
 def extant_file(x):
     """
@@ -176,7 +165,11 @@ def main():
         runSpringerSegmentation(args.test_dir, args.output_dir)
     parallelize = not args.no_parallel
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
-    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=parallelize, reanalyse=args.reanalyse)
+    # Calculate all features for dataset
+    # FIXME: Paralellization has been disabled due to incompatability with
+    # librosa library used for MFCC calculations. This is a bug that needs to
+    # be filed with the librosa team
+    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=False, reanalyse=args.reanalyse)
     features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)

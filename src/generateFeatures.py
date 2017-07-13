@@ -2,10 +2,10 @@ from __future__ import division
 import numpy as np
 import pysndfile
 import matplotlib.pyplot as plt
-import pdb
+import ipdb
 import logging
 from pathos.multiprocessing import Pool, cpu_count
-from scipy.stats import skew, tvar, kurtosis
+from scipy.stats import skew, tvar, kurtosis, moment
 from scipy.signal import decimate
 from sklearn import preprocessing
 import collections
@@ -15,12 +15,42 @@ import pathops
 from scipy.stats import entropy
 from pyeeg import samp_entropy
 from librosa.feature import mfcc
+import io
+import functools
+import sys
 
 import pywt
 
 logger = logging.getLogger(__name__)
 
 from scipy.signal import butter, lfilter
+
+genfromtxt_old = np.genfromtxt
+@functools.wraps(genfromtxt_old)
+def genfromtxt_py3_fixed(f, encoding="utf-8", *args, **kwargs):
+  if isinstance(f, io.TextIOBase):
+    if hasattr(f, "buffer") and hasattr(f.buffer, "raw") and \
+    isinstance(f.buffer.raw, io.FileIO):
+      # Best case: get underlying FileIO stream (binary!) and use that
+      fb = f.buffer.raw
+      # Reset cursor on the underlying object to match that on wrapper
+      fb.seek(f.tell())
+      result = genfromtxt_old(fb, *args, **kwargs)
+      # Reset cursor on wrapper to match that of the underlying object
+      f.seek(fb.tell())
+    else:
+      # Not very good but works: Put entire contents into BytesIO object,
+      # otherwise same ideas as above
+      old_cursor_pos = f.tell()
+      fb = io.BytesIO(bytes(f.read(), encoding=encoding))
+      result = genfromtxt_old(fb, *args, **kwargs)
+      f.seek(old_cursor_pos + fb.tell())
+  else:
+    result = genfromtxt_old(f, *args, **kwargs)
+  return result
+
+if sys.version_info >= (3,):
+  np.genfromtxt = genfromtxt_py3_fixed
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -41,7 +71,7 @@ def parse_segmentation_file(segPath):
     Returns a dictionary with elements for each header value in csv file and a
     data element for segmentation values, stored ina numpy array
     '''
-    with open(segPath, 'r') as csvfile:
+    with io.open(segPath, 'r') as csvfile:
         originalSR, downsampledSR, heartRate = np.genfromtxt(csvfile, delimiter=",", max_rows=1, dtype=float, unpack=True)
         csvData = np.genfromtxt(csvfile, delimiter=",",  dtype=int)
         return {
@@ -112,6 +142,7 @@ def calculateFeatures(name, audioPath, segPath):
 
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
+
 
 
     # =========================================================================
@@ -272,6 +303,7 @@ def calculateFeatures(name, audioPath, segPath):
         # =====================================================================
 
 
+
         n_mfcc = 13
         s1Mel = np.hstack(mfcc(y=s1, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=s1.size+1))
         for ind, m in enumerate(s1Mel):
@@ -413,6 +445,16 @@ def calculateFeatures(name, audioPath, segPath):
     features['TotD1sysShan'] = entropy(D1[sysSlices]**2)
     features['TotD1s2Shan']  = entropy(D1[s2Slices]**2)
     features['TotD1diaShan'] = entropy(D1[diaSlices]**2)
+
+    # =========================================================================
+    # Global MFCC Features
+    # =========================================================================
+
+    mel = mfcc(y=audioData, sr=audioSamplerate, n_mfcc=13, hop_length=int(np.round(audioSamplerate * 0.010)))
+    mel = mel.T
+    features['meanMinMFCC'] = np.mean(np.min(mel, axis=1))
+    features['maxMomMFCC'] = np.abs(moment(np.max(mel, axis=1), 4, 0, nan_policy='raise'))**(1/4.)
+    features['skewMomMFCC'] = np.abs(moment(skew(mel, axis=1), 4, 0, nan_policy='raise'))**(1/4.)
 
     # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():

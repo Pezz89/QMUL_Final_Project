@@ -8,7 +8,7 @@ def file_must_exist(path):
     If not or the path is a directory then raises and IOError
     """
     # Check that path is a string value
-    if not isinstance(path, basestring):
+    if not isinstance(path, str):
         raise TypeError("File path argument is not a string")
     if not os.path.isfile(path):
         raise IOError("File doesn't exist: ", path)
@@ -22,7 +22,7 @@ def dir_must_exist(path):
     If not then tries to create the directory.
     If this fails then an IOError is raised.
     """
-    if not isinstance(path, basestring):
+    if not isinstance(path, str):
         raise TypeError("Directory path argument is not a string")
     try:
         os.makedirs(path)

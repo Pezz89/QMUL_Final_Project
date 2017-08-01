@@ -1,5 +1,4 @@
-\documentclass[titlepage]{scrartcl}
-\usepackage{enumitem}
+\documentclass[titlepage, 12pt]{scrartcl} \usepackage{enumitem}
 \usepackage[british]{babel}
 \usepackage[style=apa, backend=biber]{biblatex}
 \DeclareLanguageMapping{british}{british-apa}
@@ -11,32 +10,36 @@
 \MakePerPage{footnote}
 \usepackage{abstract}
 \usepackage{graphicx}
+\usepackage{setspace}
 % Create hyperlinks in bibliography
 \usepackage{hyperref}
 \usepackage{amsmath}
+
+\usepackage[pass]{geometry}
+\usepackage{graphicx}
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{blindtext}
 \setkomafont{disposition}{\normalfont\bfseries}
 
+\usepackage{etoolbox}
 \graphicspath{{./resources/}}
 \addbibresource{~/Documents/library.bib}
 
-\newsavebox{\abstractbox}
-\renewenvironment{abstract}
-  {\begin{lrbox}{0}\begin{minipage}{\textwidth}
-   \begin{center}\normalfont\sectfont\abstractname\end{center}\quotation}
-  {\endquotation\end{minipage}\end{lrbox}%
-   \global\setbox\abstractbox=\box0 }
+%\newsavebox{\abstractbox}
+%\renewenvironment{abstract}
+%  {\begin{lrbox}{0}\begin{minipage}{\textwidth}
+%   \begin{center}\normalfont\sectfont\abstractname\end{center}\quotation}
+%  {\endquotation\end{minipage}\end{lrbox}%
+%   \global\setbox\abstractbox=\box0 }
 
-\usepackage{etoolbox}
-\makeatletter
-\expandafter\patchcmd\csname\string\maketitle\endcsname
-  {\vskip\z@\@plus3fill}
-  {\vskip\z@\@plus2fill\box\abstractbox\vskip\z@\@plus1fill}
-  {}{}
-\makeatother
+%\makeatletter
+%\expandafter\patchcmd\csname\string\maketitle\endcsname
+%  {\vskip\z@\@plus3fill}
+%  {\vskip\z@\@plus2fill\box\abstractbox\vskip\z@\@plus1fill}
+%  {}{}
+%\makeatother
 
 \DeclareCiteCommand{\citeyearpar}
     {}
@@ -67,133 +70,195 @@
    showspaces=false,
    showstringspaces=false}
 
+
 \begin{document}
-\title{ECS750P --- Final Project}
-\subtitle{\LARGE{Extraction of Statistical Features from PCG Signals for the
-Classification of Heart Abnormalities}}
+\newgeometry{lmargin=1.5cm}
+\begin{titlepage}
 
-\author{Sam Perry --- EC16039}
+    \begingroup
 
-\maketitle
+    \setlength{\tabcolsep}{1.5cm}
+    
+    \begin{tabular}[c]{p{0.30\textwidth} | p{0.4\textwidth}}
+    
+    {\vspace{1.2cm} \Large School of Electronic Engineering and Computer Science \par} 
+    & 
+    {\vspace{1.2cm} \large Sound and Music Computing \newline Project Report \the\year \par}\\
+    
+    & {\vspace{0.5cm} \Large \textbf{Extraction of Statistical Features from PCG Signals for the
+Classification of Heart Abnormalities} \par}\\
+    
+    \vspace{0.4\textheight}
+    \includegraphics[width=5cm]{qmul_logo}
+    &
+    {\vspace{1cm} \large \textbf{Samuel Perry}}\\
+    
+    &
+    \multicolumn{1}{|r}{August \the\year}
+    
+    \end{tabular}
 
-\section{Literature Review}
-There are currently a wide variety of methods are employed for the analysis and
-classification of PCG signals. Current research focuses on a number of areas,
-the most relevant of which are:
-\begin{itemize}
-    \item Algorithms for the pre-processing and segmentation of PCG data,
-        aiming to extract the structure of the signal over time. This is a key
-        stage in the analysis of PCG signals as the structure and relationships between the
-        fundamental heart sounds (FHSs) form the basis for much of the further
-        analysis performed on PCG data. A number of methods exist for the
-        extraction of FHSs. Some rely on direct extraction of peaks in the time
-        domain to determine the structure of a signal. These methods perform
-        various transformation in order to accentuate the transient events with
-        the intention of isolating them~\parencite{Groch1992, Liang1997}.
-        However, these methods tend to suffer significantly from background
-        noise and so perform poorly in sub-optimal conditions.\\ 
-        Other methods rely on spectral representations to assist in the
-        splitting of the FHSs, in particular using wavelet
-        decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
-        the separation of components based on their frequency content in place
-        of, or in addition to their temporal characteristics.\\
-        In addition, Machine learning algorithms have been employed, such as
-        $k$-Nearest Neighbour~\parencite{Gupta2007} and Neural
-        Networks~\parencite{Oskiper2002} to improve segment classification.
-        More recently, particular success has been observed in Springer's use
-        of logistic regression and Hidden semi-Markov
-        models~\citeyearpar{Springer2016}.
+    \endgroup
 
-    \item A wide variety of methods exist for the extraction of statistical
-        features from PCG data. These features are used for the creation of
-        robust, meaningful representations of the data.\\
-        The use of spectral representations for PCG data are prominent in the
-        literature. The ability to separate activity across the frequency
-        spectrum reveals patterns that may not be attainable by analysing the
-        time domain signal alone.\\
-        Due to the need for low frequency analysis and the high noise levels
-        found in PCG signals, it has been found that the traditional FFT
-        method for extracting spectral information may not be
-        suitable~\parencite{Akay1990}. For this reason, parametric methods for
-        spectral estimation have been a popular choice for extraction of such information. 
-        Methods such as AR, ARMA, AR-HOS and MUSIC have been shown to provide spectral
-        representations suitable for analysis and classification of heart
-        sound~\parencite{Ergen2001, Schmidt2015}.\\
-        Other methods such as Wavelet Decomposition and MFCCs have also been
-        successfully  employed for extracting spectral data for purposes such
-        as heart valve disease identification and heart murmur
-        detection~\parencite{Quiceno-Manrique2010a, Maglogiannis2009}.\\
-        
-        In addition to direct analysis on the signal, the ability to segment
-        and extract RR values from the signal allows for their statistical
-        analysis, both in the time and frequency domain, for use as features.\\
-        Dash et al.\ use a number of time-based statistical analysis on the RR
-        time series for the detection of atrial fibrillation. Statistical
-        analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
-        used as feature vectors for classification of
-        signals~\citeyearpar{Dash2009}.  A similar approach is used by Yaghouby
-        et al.\ for the generalized classification of heart abnormality. Here,
-        a selection of linear and non-linear features are used for
-        classification with promising results~\citeyearpar{Yaghouby2009}.\\
-        Frequency domain analysis of RR values are also used by calculating the
-        PSD of the RR values via  approaches such as VFCDM.\ This form of
-        approach allows for higher resolution time-frequency representations of
-        the RR data than approaches such as the FFT or wavelet transform~\parencite{Wang2006}.
-        From a spectral representations such as this, Yaghouby et al.\
-        demonstrate the use of such descriptors for the discrimination between
-        sympathetic and parasympathetic contents of the signal, not directly
-        detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
-        Further in-depth analysis of statistical features for HRV can be found
-        in~\parencite{Electrophysiology1996}
+\end{titlepage}
+\restoregeometry
 
-    \item Classification of signals for diagnostic purposes.  The aim being to
-        distinguish healthy signals from those with certain heart
-        conditions/abnormality. This is most commonly achieved by extracting
-        sets of features vectors from PCG signals, followed by their
-        classification, most commonly using machine learning algorithms for
-        automatic classification. The features extracted and classification
-        algorithms applied vary across the literature based on factors such as
-        the diagnostic aims of the classification and computing performance
-        requirements.\\
+\doublespacing
+\begin{abstract}
+   Things and stuff and words...
+\end{abstract}
 
-        Artificial neural networks and support vector machines have proven to
-        be popular choices for classification. Much success has been seen in
-        employing these machine learning techniques for classification across
-        both PCG and ECG data for conditions such as chronic heart failure,
-        atrial fibrillation and flutter, diastolic murmurs, and for general
-        pathology detection~\parencite{Cathers1995, Wu1995, Bung2000,
-        Lubaib2016, Maji2014, Ari2010, Maglogiannis2009}. Results do vary based
-        on the combination of features and exact classification methods used.
-        However, encouraging results are presented with highly accurate
-        classifications for general abnormality detection and for more specific
-        pathological condition detection.\\
+\renewcommand{\abstractname}{Acknowledgements}
+\begin{abstract}
+I'd like to thanks anyone and everyone...
+\end{abstract}
 
-        However, there is a lack of research into other machine learning
-        techniques such as bayesian classification~\parencite{Lubaib2016},
-        $k$-Nearest Neighbour~\parencite{Quiceno-Manrique2010a, Lubaib2016} and
-        Linear Regression~\parencite{Orhan2013}. Studies that utilize these
-        methods for classification have generated promising results.  There is
-        therefore the potential for further research into exploiting the
-        benefits of these techniques for heart abnormality detection.\\
+\tableofcontents
+\newpage
 
-        The selection of features used for classification also depends
-        predominantly on the aims for the classification. For general
-        abnormality classification, spectral representations such as wavelet
-        transformations, VFCMD, FFTs and MFCCs are a popular
-        choice~\parencite{Bung2000, Wu1995, Yaghouby2009, Dash2009}. Their
-        multi-dimensional representation of the data reveals details in the
-        signal that cannot be seen through a 1 dimensional time series alone,
-        allowing for more accurate classification. Higher-level statistical
-        methods are also widely used for both time and spectral
-        representations~\parencite{Bung2000, Quiceno-Manrique2010a,
-        Schmidt2015, Dash2009, Yaghouby2009}. These allow for the
-        classification based on more specific statistical properties of the
-        data. It is highlighted by Orhan that Higher level statistical methods
-        may add considerable complexity to computations, and so care should be
-        taken, particularly when considering systems in a real-time
-        context~\citeyearpar{Orhan2013}.
-        
-\end{itemize}
+\section{Related Work}
+There are currently a wide variety of methods employed for the analysis and
+classification of PCG signals. Current research can be divided into 3 areas,
+each of which are combined to create full classification system. These areas
+are: signal preprocessing and segmentation, feature extraction methods and
+classification methods.
+
+\subsection{Signal Preprocessing and Segmentation}
+Due to factors such as recording conditions and 
+
+Algorithms for the pre-processing and segmentation of PCG data
+aim to  extract the structure of the signal over time. This is a key
+stage in the analysis of PCG signals as the structure and relationships between the
+fundamental heart sounds (FHSs) form the basis for much of the further
+analysis performed on PCG data. A number of methods exist for the
+extraction of FHSs. Some rely on direct extraction of peaks in the time
+domain to determine the structure of a signal. These methods perform
+various transformation in order to accentuate the transient events with
+the intention of isolating them~\parencite{Groch1992, Liang1997}.
+However, these methods tend to suffer significantly from background
+noise and so perform poorly in sub-optimal conditions.\\
+Other methods rely on spectral representations to assist in the
+splitting of the FHSs, in particular using wavelet
+decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
+the separation of components based on their frequency content in place
+of, or in addition to their temporal characteristics.\\
+In addition, Machine learning algorithms have been employed, such as
+$k$-Nearest Neighbour~\parencite{Gupta2007} and Neural
+Networks~\parencite{Oskiper2002} to improve segment classification.
+More recently, particular success has been observed in Springer's use
+of logistic regression and Hidden semi-Markov
+models~\citeyearpar{Springer2016}.
+
+\subsection{Statistical Feature Extraction}
+A wide variety of methods exist for the extraction of statistical
+features from PCG data. These features are used for the creation of
+robust, meaningful representations of the data.\\
+The use of spectral representations for PCG data are prominent in the
+literature. The ability to separate activity across the frequency
+spectrum reveals patterns that may not be attainable by analysing the
+time domain signal alone.\\
+Due to the need for low frequency analysis and the high noise levels
+found in PCG signals, it has been found that the traditional FFT
+method for extracting spectral information may not be
+suitable~\parencite{Akay1990}. For this reason, parametric methods for
+spectral estimation have been a popular choice for extraction of such information.
+Methods such as AR, ARMA, AR-HOS and MUSIC have been shown to provide spectral
+representations suitable for analysis and classification of heart
+sound~\parencite{Ergen2001, Schmidt2015}.\\
+Other methods such as Wavelet Decomposition and MFCCs have also been
+successfully  employed for extracting spectral data for purposes such
+as heart valve disease identification and heart murmur
+detection~\parencite{Quiceno-Manrique2010a, Maglogiannis2009}.\\
+
+In addition to direct analysis on the signal, the ability to segment
+and extract RR values from the signal allows for their statistical
+analysis, both in the time and frequency domain, for use as features.\\
+Dash et al.\ use a number of time-based statistical analysis on the RR
+time series for the detection of atrial fibrillation. Statistical
+analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
+used as feature vectors for classification of
+signals~\citeyearpar{Dash2009}.  A similar approach is used by Yaghouby
+et al.\ for the generalized classification of heart abnormality. Here,
+a selection of linear and non-linear features are used for
+classification with promising results~\citeyearpar{Yaghouby2009}.\\
+Frequency domain analysis of RR values are also used by calculating the
+PSD of the RR values via  approaches such as VFCDM.\ This form of
+approach allows for higher resolution time-frequency representations of
+the RR data than approaches such as the FFT or wavelet transform~\parencite{Wang2006}.
+From a spectral representations such as this, Yaghouby et al.\
+demonstrate the use of such descriptors for the discrimination between
+sympathetic and parasympathetic contents of the signal, not directly
+detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
+Further in-depth analysis of statistical features for HRV can be found
+in~\parencite{Electrophysiology1996}
+
+\subsection{Signal Classification}
+Classification of signals for diagnostic purposes.  The aim being to
+distinguish healthy signals from those with certain heart
+conditions/abnormality. This is most commonly achieved by extracting
+sets of features vectors from PCG signals, followed by their
+classification, most commonly using machine learning algorithms for
+automatic classification. The features extracted and classification
+algorithms applied vary across the literature based on factors such as
+the diagnostic aims of the classification and computing performance
+requirements.\\
+
+Artificial neural networks and support vector machines have proven to
+be popular choices for classification. Much success has been seen in
+employing these machine learning techniques for classification across
+both PCG and ECG data for conditions such as chronic heart failure,
+atrial fibrillation and flutter, diastolic murmurs, and for general
+pathology detection~\parencite{Cathers1995, Wu1995, Bung2000,
+Lubaib2016, Maji2014, Ari2010, Maglogiannis2009}. Results do vary based
+on the combination of features and exact classification methods used.
+However, encouraging results are presented with highly accurate
+classifications for general abnormality detection and for more specific
+pathological condition detection.\\
+
+However, there is a lack of research into other machine learning
+techniques such as bayesian classification~\parencite{Lubaib2016},
+$k$-Nearest Neighbour~\parencite{Quiceno-Manrique2010a, Lubaib2016} and
+Linear Regression~\parencite{Orhan2013}. Studies that utilize these
+methods for classification have generated promising results.  There is
+therefore the potential for further research into exploiting the
+benefits of these techniques for heart abnormality detection.\\
+
+The selection of features used for classification also depends
+predominantly on the aims for the classification. For general
+abnormality classification, spectral representations such as wavelet
+transformations, VFCMD, FFTs and MFCCs are a popular
+choice~\parencite{Bung2000, Wu1995, Yaghouby2009, Dash2009}. Their
+multi-dimensional representation of the data reveals details in the
+signal that cannot be seen through a 1 dimensional time series alone,
+allowing for more accurate classification. Higher-level statistical
+methods are also widely used for both time and spectral
+representations~\parencite{Bung2000, Quiceno-Manrique2010a,
+Schmidt2015, Dash2009, Yaghouby2009}. These allow for the
+classification based on more specific statistical properties of the
+data. It is highlighted by Orhan that Higher level statistical methods
+may add considerable complexity to computations, and so care should be
+taken, particularly when considering systems in a real-time
+context~\citeyearpar{Orhan2013}.
+
+\section{Dataset}
+
+\section{Design}
+The system aims to provide robust heart abnormality detection for PCG signals,
+such that use of the system could reliably recommend further medical attention
+when neccesary. 
+\subsection{Signal Segmentation}
+\subsection{Choice of features}
+\subsection{Feature selection method}
+dimensionality reduction
+\subsection{Classification Algorithm}
+
+\section{Implementation}
+\section{Evaluation}
+Group cross-validation
+Weighted specificity and weighted Accuracy measures
+\section{Conclusion}
+
+
 
 \pagebreak{}
 \printbibliography{}

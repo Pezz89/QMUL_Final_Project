@@ -4,8 +4,8 @@
 \DeclareLanguageMapping{british}{british-apa}
 \usepackage{url}
 \usepackage{float}
-\usepackage[labelformat=empty]{caption}
-\restylefloat{table}
+\usepackage{caption}
+%\restylefloat{table}
 \usepackage{perpage}
 \MakePerPage{footnote}
 \usepackage{abstract}
@@ -14,8 +14,11 @@
 % Create hyperlinks in bibliography
 \usepackage{hyperref}
 \usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabulary}
 
 \usepackage[pass]{geometry}
+\usepackage{pdflscape}
 \usepackage{graphicx}
 
 \usepackage[T1]{fontenc}
@@ -40,6 +43,13 @@
 %  {\vskip\z@\@plus2fill\box\abstractbox\vskip\z@\@plus1fill}
 %  {}{}
 %\makeatother
+
+\newcommand{\dtoprule}{\specialrule{1pt}{0pt}{1.4pt}%
+            \specialrule{1pt}{0pt}{\belowrulesep}%
+            }
+\newcommand{\dbottomrule}{\specialrule{1pt}{0pt}{1.4pt}%
+            \specialrule{1pt}{0pt}{\belowrulesep}%
+            }
 
 \DeclareCiteCommand{\citeyearpar}
     {}
@@ -69,7 +79,7 @@
    tabsize=4,
    showspaces=false,
    showstringspaces=false}
-
+\usepackage[shortcuts]{extdash}
 
 \begin{document}
 \newgeometry{lmargin=1.5cm}
@@ -78,24 +88,24 @@
     \begingroup
 
     \setlength{\tabcolsep}{1.5cm}
-    
+
     \begin{tabular}[c]{p{0.30\textwidth} | p{0.4\textwidth}}
-    
-    {\vspace{1.2cm} \Large School of Electronic Engineering and Computer Science \par} 
-    & 
+
+    {\vspace{1.2cm} \Large School of Electronic Engineering and Computer Science \par}
+    &
     {\vspace{1.2cm} \large Sound and Music Computing \newline Project Report \the\year \par}\\
-    
+
     & {\vspace{0.5cm} \Large \textbf{Extraction of Statistical Features from PCG Signals for the
 Classification of Heart Abnormalities} \par}\\
-    
+
     \vspace{0.4\textheight}
     \includegraphics[width=5cm]{qmul_logo}
     &
     {\vspace{1cm} \large \textbf{Samuel Perry}}\\
-    
+
     &
     \multicolumn{1}{|r}{August \the\year}
-    
+
     \end{tabular}
 
     \endgroup
@@ -120,36 +130,90 @@ I'd like to thanks anyone and everyone...
 There are currently a wide variety of methods employed for the analysis and
 classification of PCG signals. Current research can be divided into 3 areas,
 each of which are combined to create full classification system. These areas
-are: signal preprocessing and segmentation, feature extraction methods and
-classification methods.
+are: signal preprocessing, signal segmentation and feature extraction methods,
+and classification methods.
+The performance and evaluation of complete systems are also discussed in
+section~\ref{performance}
 
-\subsection{Signal Preprocessing and Segmentation}
-Due to factors such as recording conditions and 
 
-Algorithms for the pre-processing and segmentation of PCG data
-aim to  extract the structure of the signal over time. This is a key
-stage in the analysis of PCG signals as the structure and relationships between the
-fundamental heart sounds (FHSs) form the basis for much of the further
-analysis performed on PCG data. A number of methods exist for the
-extraction of FHSs. Some rely on direct extraction of peaks in the time
-domain to determine the structure of a signal. These methods perform
-various transformation in order to accentuate the transient events with
-the intention of isolating them~\parencite{Groch1992, Liang1997}.
-However, these methods tend to suffer significantly from background
-noise and so perform poorly in sub-optimal conditions.\\
-Other methods rely on spectral representations to assist in the
-splitting of the FHSs, in particular using wavelet
-decomposition~\parencite{LiangHuiying1997, Vepa2008}. This allows for
-the separation of components based on their frequency content in place
-of, or in addition to their temporal characteristics.\\
-In addition, Machine learning algorithms have been employed, such as
-$k$-Nearest Neighbour~\parencite{Gupta2007} and Neural
-Networks~\parencite{Oskiper2002} to improve segment classification.
-More recently, particular success has been observed in Springer's use
-of logistic regression and Hidden semi-Markov
-models~\citeyearpar{Springer2016}.
+\subsection{Signal Preprocessing}
+There are a large number of factors that lead to variation in quality of PCG
+recordings: stethescope type, make and model, it's microphone/sensors used for
+recording of the data, the position used to record (i.e.  lower left sternal
+border, apex, pulmonic area, aortic area), built in filters/signal processing 
+used by the stethescope (i.e. noise filters, anti-tremor filters), medication that
+a pacient may be taking, as well as many other factors that may influence the
+recorded signal~\parencite[p.4]{Pavlopoulos2004}. This presents a significant
+issue when attempting to analyse and compare a dataset of signals, as
+variations in recordings and artefacts caused by factors other than heart
+sounds will most likely interfere with analysis and comparison methods. To
+account for this, pre-processing methods are widely used aiming to standardize
+a dataset. This is also used as a way to accentuate features of the data that
+are expected to be relevant during classification.\\
 
-\subsection{Statistical Feature Extraction}
+A common method employed is the use of decimation and a static filter to remove
+unwanted spectral content that is most likely noise~\parencite{Liang1997a,
+Homsi2016, Springer2016, Gupta2007}. This helps reduce higher frequency noise
+such as speech, microphone movement and other interference caused externally.
+Decimation tends to downsample to around 1--4KHz, with anti-aliasing filter
+specifications varying across the literature. Generally, highpass chebychev or
+butterworth filters are favoured with cutoff frequencies ranging from
+400--750Hz.\\
+
+In addition, many methods decompose the filtered signal using wavelet based
+methods such as the discrete wavelet transform
+(DWT)~\parencite{Liang1997a, Pavlopoulos2004}, continuous
+wavelet transform (CWT)~\parencite{Langley2016} or wavelet
+package decomposition (WPD)~\parencite{Liang1998}.
+Wavelet transforms are popular as unlike Fourier transforms, they are well
+localized in both the time and frequency domain. This allows for the analysis
+of PCG signals across multiple frequency bands whilst maintaining transient
+temporal events in the resulting decomposition~\parencite[p.93]{Ari2008}.
+This may be used for analysis of transient events such as murmurs, that may
+consist of higher frequency components than normal heart sounds.
+
+\subsection{Signal Segmentation}
+Algorithms for the segmentation of PCG data aim to  extract the structure of
+the signal over time. This is a key stage in the analysis of PCG signals as the
+structure and relationships between the fundamental heart sounds (FHSs) form
+the basis for much of the further analysis performed on PCG data. A number of
+methods exist for the extraction of FHSs. Tradiational methods rely on direct
+extraction of peaks in the time domain to determine the structure of a signal.
+These methods perform various transformation in order to accentuate the
+transient events with the intention of isolating them~\parencite{Liang1997b}.
+However, these methods tend to suffer significantly from background noise and
+so perform poorly in sub-optimal conditions.\\ More recent methods use spectral
+representations to assist in the splitting of the FHSs, in particular using
+wavelet decomposition~\parencite{Liang1997a, Vepa2008}. These methods tend to
+perform more robustly on signals of varying conditions\\ In addition, Machine
+learning algorithms have been employed, such as $k$-Nearest
+Neighbour~\parencite{Gupta2007} and Neural Networks~\parencite{Oskiper2002} to
+improve segment classification.  Particular success has been observed in
+Springer's use of logistic regression and Hidden semi-Markov models
+(HSMM)~\citeyearpar{Springer2016}.
+
+% TODO: Insert table of segmentation methods and results
+\newgeometry{margin=1cm} % modify this if you need even more space
+\begin{landscape}
+\begin{table}[htbp]
+    \captionof{table}{Summary of Segmentation Algorithms} \label{SegmentationTable}
+\small
+%\centering
+\begin{tabulary}{\linewidth}{LLLLL}
+\dtoprule
+Author                                                                    & Method                                                  & Datasets                                                                                       & Reported Metrics and Results                      & Notes                                                                                              \\ \midrule
+Springer, D. B., Tarassenko, L., \& Clifford, G. D. (2016)                & HSMM/Logistic regression                                & 10,172s of recordings from 112 patients. 12 181 first and 11 627 second heart sounds.          & F1 score of 95.630.85\%                          & Supervised algorithm.                                                                              \\
+Huiying, Sakari, \& Iiro, (1997b)                                         & Normalised Average Shannon Energy Envelope/Peak Picking & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles                & 91.03\% correct, 5.83\% missing, 1.17\% incorrect & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on entire dataset \\
+Gupta, C. N., Palaniappan, R., Swaminathan, S., \& Krishnan, S. M. (2007) &
+Homomorphic Filtering\slash K\=/means clustering                & 41 recordings (340 cycles). Mix of normal (32\%), systolic (36\%) and diastolic murmurs (32\%) & 90.29\% Ac.                           & Unsupervised Algorithm.                                                                            \\
+\dbottomrule \\
+\end{tabulary}
+\end{table}
+\end{landscape}
+\restoregeometry
+
+
+\subsection{Feature Extraction}
 A wide variety of methods exist for the extraction of statistical
 features from PCG data. These features are used for the creation of
 robust, meaningful representations of the data.\\
@@ -192,7 +256,10 @@ detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
 Further in-depth analysis of statistical features for HRV can be found
 in~\parencite{Electrophysiology1996}
 
-\subsection{Signal Classification}
+\subsection{Classification Models}
+
+% TODO: Revise to include physionet entries
+% TODO: Add section for parameter optimization/feature selection methods
 Classification of signals for diagnostic purposes.  The aim being to
 distinguish healthy signals from those with certain heart
 conditions/abnormality. This is most commonly achieved by extracting
@@ -240,22 +307,40 @@ may add considerable complexity to computations, and so care should be
 taken, particularly when considering systems in a real-time
 context~\citeyearpar{Orhan2013}.
 
+
+\subsection{System Performance}\label{performance}
+\subsubsection{Work prior to the Physionet Challenge}
+\subsubsection{Physionet Challenge 2016 Entries}
+
+% TODO: Insert table of previous research methods, datasets and results
+
 \section{Dataset}
 
 \section{Design}
 The system aims to provide robust heart abnormality detection for PCG signals,
 such that use of the system could reliably recommend further medical attention
-when neccesary. 
+when neccesary.
 \subsection{Signal Segmentation}
 \subsection{Choice of features}
+
+Augmentation of features using 2nd order polynomial features
+- Dangers of overfitting with higher order features
+\subsubsection{Wavelet Decomposition}
+% TODO: Insert wavelet diagram here
 \subsection{Feature selection method}
-dimensionality reduction
-\subsection{Classification Algorithm}
+PCA/KPCA
+Sequential forward feature selection
+\subsection{Classification Model Selection/Optimization}
+Particle Swarm Optimization
+Individual model structures used in optimization
 
 \section{Implementation}
 \section{Evaluation}
 Group cross-validation
 Weighted specificity and weighted Accuracy measures
+Computational cost was not considered, unlike other entries to the physionet
+challenge
+Comparison with T-Pot
 \section{Conclusion}
 
 

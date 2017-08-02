@@ -6,6 +6,7 @@
 \usepackage{float}
 \usepackage{caption}
 %\restylefloat{table}
+\usepackage[table]{xcolor}
 \usepackage{perpage}
 \MakePerPage{footnote}
 \usepackage{abstract}
@@ -199,10 +200,15 @@ Springer's use of logistic regression and Hidden semi-Markov models
     \captionof{table}{Summary of Segmentation Algorithms} \label{SegmentationTable}
 \small
 %\centering
+\rowcolors{1}{gray!15}{white}
 \begin{tabulary}{\linewidth}{LLLLL}
 \dtoprule
-Author                                                                    & Method                                                  & Datasets                                                                                       & Reported Metrics and Results                      & Notes                                                                                              \\ \midrule
-Springer, D. B., Tarassenko, L., \& Clifford, G. D. (2016)                & HSMM/Logistic regression                                & 10,172s of recordings from 112 patients. 12 181 first and 11 627 second heart sounds.          & F1 score of 95.630.85\%                          & Supervised algorithm.                                                                              \\
+Author                                                                    &
+Method                                                  & Datasets
+                                                        & Reported Metrics and
+Results                      & Notes
+\\ \bottomrule
+Springer, D. B., Tarassenko, L., \& Clifford, G. D. (2016)                & HSMM/Logistic regression                                & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds.          & F1 score of 95.630.85\%                          & Supervised algorithm.                                                                              \\
 Huiying, Sakari, \& Iiro, (1997b)                                         & Normalised Average Shannon Energy Envelope/Peak Picking & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles                & 91.03\% correct, 5.83\% missing, 1.17\% incorrect & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on entire dataset \\
 Gupta, C. N., Palaniappan, R., Swaminathan, S., \& Krishnan, S. M. (2007) &
 Homomorphic Filtering\slash K\=/means clustering                & 41 recordings (340 cycles). Mix of normal (32\%), systolic (36\%) and diastolic murmurs (32\%) & 90.29\% Ac.                           & Unsupervised Algorithm.                                                                            \\

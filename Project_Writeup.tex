@@ -139,10 +139,10 @@ section~\ref{performance}
 
 \subsection{Signal Preprocessing}
 There are a large number of factors that lead to variation in quality of PCG
-recordings: stethescope type, make and model, it's microphone/sensors used for
-recording of the data, the position used to record (i.e.  lower left sternal
-border, apex, pulmonic area, aortic area), built in filters/signal processing 
-used by the stethescope (i.e. noise filters, anti-tremor filters), medication that
+recordings: stethescope type, make and model, its microphone/sensors used for
+recording of the data, the position used to record (i.e.\ lower left sternal
+border, apex, pulmonic area, aortic area), built in filters/signal processing
+used by the stethescope (i.e.\ noise filters, anti-tremor filters), medication that
 a pacient may be taking, as well as many other factors that may influence the
 recorded signal~\parencite[p.4]{Pavlopoulos2004}. This presents a significant
 issue when attempting to analyse and compare a dataset of signals, as
@@ -188,36 +188,40 @@ representations to assist in the splitting of the FHSs, in particular using
 wavelet decomposition~\parencite{Liang1997a, Vepa2008}. These methods tend to
 perform more robustly on signals of varying conditions\\ In addition, Machine
 learning algorithms have been employed, such as $k$-Nearest
-Neighbour~\parencite{Gupta2007} and Neural Networks~\parencite{Oskiper2002} to
-improve segment classification.  Particular success has been observed in
-Springer's use of logistic regression and Hidden semi-Markov models
-(HSMM)~\citeyearpar{Springer2016}.
+Neighbour classifiers~\parencite{Gupta2007}, Neural
+Networks~\parencite{Sepehri2010}, and Hidden Markov
+Models (HMMs)~\parencite{Ricke2005} to improve segment classification.  Particular
+success has been observed in Springer's use of logistic regression and Hidden
+semi-Markov models (HSMM)~\citeyearpar{Springer2016}.
 
-% TODO: Insert table of segmentation methods and results
+
+Table~\ref{SegmentationTable} provides a brief overview of significant research
+into PCG segmentation. For a more complete summary of the current state of PCG
+segmentation, please refer to Liu et.\ al~\citeyearpar{Liu2016}
+
 \newgeometry{margin=1cm} % modify this if you need even more space
 \begin{landscape}
 \begin{table}[htbp]
     \captionof{table}{Summary of Segmentation Algorithms} \label{SegmentationTable}
-\small
+\footnotesize
 %\centering
 \rowcolors{1}{gray!15}{white}
+\doublespacing
 \begin{tabulary}{\linewidth}{LLLLL}
 \dtoprule
-Author                                                                    &
-Method                                                  & Datasets
-                                                        & Reported Metrics and
-Results                      & Notes
-\\ \bottomrule
-Springer, D. B., Tarassenko, L., \& Clifford, G. D. (2016)                & HSMM/Logistic regression                                & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds.          & F1 score of 95.630.85\%                          & Supervised algorithm.                                                                              \\
-Huiying, Sakari, \& Iiro, (1997b)                                         & Normalised Average Shannon Energy Envelope/Peak Picking & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles                & 91.03\% correct, 5.83\% missing, 1.17\% incorrect & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on entire dataset \\
-Gupta, C. N., Palaniappan, R., Swaminathan, S., \& Krishnan, S. M. (2007) &
-Homomorphic Filtering\slash K\=/means clustering                & 41 recordings (340 cycles). Mix of normal (32\%), systolic (36\%) and diastolic murmurs (32\%) & 90.29\% Ac.                           & Unsupervised Algorithm.                                                                            \\
-\dbottomrule \\
+Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \midrule
+Springer et.\ al (2016) & HSMM/Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds.          & $95.63\pm0.85\%\;Ac$				& Supervised algorithm.                                                                            \\
+Huiying et.\ al (1997b) & Normalised average shannon energy envelope/peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles                & $91.03\%\;Ac$              & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset \\
+Vepa et.\ al (2008)     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)             & $84\%\;Ac$                 & Unsupervised Algorithm, Optimized on full dataset                                                \\
+Sun et.\ al             & Viola integral envelope extraction, short-time modified Hilbert transform, peak picking        & 6949s of recordings, from 121 patients                                                         & $97.37\%\;Ac$              & Supervised algorithm. Tolerance for segmentation accuracy not specified                          \\
+Sepehri et.\ al         & Spectral density estimation, auto-regressive parameters, multi-layer perceptron neural network & 120 recording, from 60 patients                                                                & $93.6\%\;Ac$               & Supervised algorithm                                                                             \\
+Ricke et.\ al (2005)    & Shannon energy (and related features), HMM                                                     & 9 Recordings, from 9 patients                                                                  & $98\%\;Ac$                 & Supervised algorithm                                                                             \\
+Gupta et.\ al (2007)    & Homomorphic filtering/K-means clustering                                                       & 41 recordings (340 cycles). Mix of normal (32\%), systolic (36\%) and diastolic murmurs (32\%) & $90.29\%\;Ac$              & Unsupervised Algorithm.                                                                          \\ \bottomrule
+\dbottomrule\\
 \end{tabulary}
 \end{table}
 \end{landscape}
 \restoregeometry
-
 
 \subsection{Feature Extraction}
 A wide variety of methods exist for the extraction of statistical
@@ -327,6 +331,8 @@ The system aims to provide robust heart abnormality detection for PCG signals,
 such that use of the system could reliably recommend further medical attention
 when neccesary.
 \subsection{Signal Segmentation}
+Choice of springer algorithm allows for direct comparison with Physionet
+entries
 \subsection{Choice of features}
 
 Augmentation of features using 2nd order polynomial features

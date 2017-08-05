@@ -133,12 +133,12 @@ I'd like to thanks anyone and everyone...
 
 \section{Related Work}
 There are currently a wide variety of methods employed for the analysis and
-classification of PCG signals. Current research can be divided into 4 areas,
-each of which are combined to create full classification system. These areas
-are: signal preprocessing, signal segmentation, feature extraction methods,
-and classification methods.
-The performance and evaluation of complete systems are also discussed in
+classification of PCG signals. Current methods can typically be divided into 3
+areas, each of which are combined to create full classification system. These
+areas are: signal preprocessing, signal segmentation, and classification.  The
+performance and evaluation of complete systems are also discussed in
 section~\ref{performance}
+% TODO: Make flow diagram of 3 stages
 
 
 \subsection{Signal Preprocessing}
@@ -176,8 +176,6 @@ of PCG signals across multiple frequency bands whilst maintaining transient
 temporal events in the resulting decomposition~\parencite[p.93]{Ari2008}.
 This may be used for analysis of transient events such as murmurs, that may
 consist of higher frequency components than normal heart sounds.
-
-% TODO: Add reference to table of methods
 
 \subsection{Signal Segmentation}
 Algorithms for the segmentation of PCG data aim to  extract the structure of
@@ -285,7 +283,7 @@ segmentation, please refer to Liu et.\ al~\citeyearpar{Liu2016}
 \doublespacing
 \begin{tabulary}{\linewidth}{LLLLL}
 \dtoprule
-Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \midrule
+Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
 Springer et.\ al \citeyearpar{Springer2016} & HSMM, Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds. & $95.63\pm0.85\%$                             & Supervised algorithm.                                                                                                                                                            \\
 Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset                                                                                 \\
 Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full dataset                                                                                                                                \\
@@ -305,7 +303,9 @@ Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clus
 
 
 \doublespacing
-\subsection{Feature Extraction}
+
+\subsection{Classification Models}
+
 A wide variety of methods exist for the extraction of statistical
 features from PCG data. These features are used for the creation of
 robust, meaningful representations of the data.\\
@@ -326,9 +326,10 @@ successfully  employed for extracting spectral data for purposes such
 as heart valve disease identification and heart murmur
 detection~\parencite{Quiceno-Manrique2010a, Maglogiannis2009}.\\
 
-In addition to direct analysis on the signal, the ability to segment
-and extract RR values from the signal allows for their statistical
-analysis, both in the time and frequency domain, for use as features.\\
+In addition to direct analysis, the ability to segment and extract RR values
+from the signal allows for their statistical analysis, both in the time and
+frequency domain, for use as features.\\
+- Basic physionet challenge features
 Dash et al.\ use a number of time-based statistical analysis on the RR
 time series for the detection of atrial fibrillation. Statistical
 analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
@@ -347,8 +348,6 @@ sympathetic and parasympathetic contents of the signal, not directly
 detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
 Further in-depth analysis of statistical features for HRV can be found
 in~\parencite{Electrophysiology1996}
-
-\subsection{Classification Models}
 
 % TODO: Revise to include physionet entries
 % TODO: Add section for parameter optimization/feature selection methods
@@ -401,8 +400,59 @@ context~\citeyearpar{Orhan2013}.
 
 
 \subsection{System Performance}\label{performance}
-\subsubsection{Work prior to the Physionet Challenge}
-\subsubsection{Physionet Challenge 2016 Entries}
+\newgeometry{margin=1cm} % modify this if you need even more space
+\begin{table}[htbp]
+    \captionof{table}{Summary of research prior to the Physionet Challenge 2016} \label{PriorWorkTable}
+\scriptsize
+%\centering
+\rowcolors{1}{gray!15}{white}
+\doublespacing
+\begin{tabulary}{\linewidth}{LLLLL}
+\dtoprule
+Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
+Springer et.\ al \citeyearpar{Springer2016} & HSMM, Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds. & $95.63\pm0.85\%$                             & Supervised algorithm.                                                                                                                                                            \\
+Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset                                                                                 \\
+Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full dataset                                                                                                                                \\
+Sun et.\ al \citeyearpar{Sun2014}             & Viola integral envelope extraction, short-time modified Hilbert transform, peak picking        & 6949s of recordings, from 121 patients                                                & $97.37\%\;Ac$                                          & Supervised algorithm. Tolerance for segmentation accuracy not specified                                                                                                          \\
+Sepehri et.\ al \citeyearpar{Sepehri2010}        & Spectral density estimation, auto-regressive parameters, multi-layer perceptron neural network & 120 recording, from 60 patients                                                       & $93.6\%\;Ac$                                           & Supervised algorithm                                                                                                                                                             \\
+Ricke et.\ al \citeyearpar{Ricke2005}    & Shannon energy (and related features), HMM                                                     & 9 recordings, from 9 patients                                                         & $98\%\;Ac$                                             & Supervised algorithm                                                                                                                                                             \\
+Schmidt et.\ al \citeyearpar{Schmidt2015}  & DHMM, Auto-correlation duration features, Homomorphic envelogram                               & 113 recordings, from 113 patients. 8s per recording. 15 abnormal recordings           & $98.8\;Se,\;98.6\;P_+$ on test set                         & All data recorded ``lateral to the sternum in the fourth intercostal space on the left side''. Mix of noisy and clean recordings. 40 recording used for training, 73 for testing \\
+Gill et.\ al \citeyearpar{Gill2005}         & Homomorphic envelogram, Embedded HMMs                                                          & 44 recording, 17 subjects. 30-60s per recording                                       & $98.6\%\;Ac, 96.9\;P_+$ for S1. $98.3\;Ac,\;96.5\;P_+$ for S2 & Recording taken in sub-optimal environments (noisy hospitals, offices etc...)                                                                                                    \\
+Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clustering                                                       & 41 patients, 340 heart cycles. 110 normal,  124 systolic murmur, 106 diastolic murmur & $90.29\%\;Ac$                                          & Unsupervised Algorithm.                                                                                                                                                          \\ \hline
+\dbottomrule\\
+% TODO: Add footnote explanation for Ac = Accuracy
+% TODO: Add citeyearpar references to authors
+\end{tabulary}
+\end{table}
+\restoregeometry
+
+\newgeometry{margin=1cm} % modify this if you need even more space
+\begin{landscape}
+\begin{table}[htbp]
+    \captionof{table}{Summary of research prior to the Physionet Challenge 2016} \label{PriorWorkTable}
+\scriptsize
+%\centering
+\rowcolors{1}{gray!15}{white}
+\doublespacing
+\begin{tabulary}{\linewidth}{LLLLL}
+\dtoprule
+Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
+Springer et.\ al \citeyearpar{Springer2016} & HSMM, Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds. & $95.63\pm0.85\%$                             & Supervised algorithm.                                                                                                                                                            \\
+Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset                                                                                 \\
+Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full dataset                                                                                                                                \\
+Sun et.\ al \citeyearpar{Sun2014}             & Viola integral envelope extraction, short-time modified Hilbert transform, peak picking        & 6949s of recordings, from 121 patients                                                & $97.37\%\;Ac$                                          & Supervised algorithm. Tolerance for segmentation accuracy not specified                                                                                                          \\
+Sepehri et.\ al \citeyearpar{Sepehri2010}        & Spectral density estimation, auto-regressive parameters, multi-layer perceptron neural network & 120 recording, from 60 patients                                                       & $93.6\%\;Ac$                                           & Supervised algorithm                                                                                                                                                             \\
+Ricke et.\ al \citeyearpar{Ricke2005}    & Shannon energy (and related features), HMM                                                     & 9 recordings, from 9 patients                                                         & $98\%\;Ac$                                             & Supervised algorithm                                                                                                                                                             \\
+Schmidt et.\ al \citeyearpar{Schmidt2015}  & DHMM, Auto-correlation duration features, Homomorphic envelogram                               & 113 recordings, from 113 patients. 8s per recording. 15 abnormal recordings           & $98.8\;Se,\;98.6\;P_+$ on test set                         & All data recorded ``lateral to the sternum in the fourth intercostal space on the left side''. Mix of noisy and clean recordings. 40 recording used for training, 73 for testing \\
+Gill et.\ al \citeyearpar{Gill2005}         & Homomorphic envelogram, Embedded HMMs                                                          & 44 recording, 17 subjects. 30-60s per recording                                       & $98.6\%\;Ac, 96.9\;P_+$ for S1. $98.3\;Ac,\;96.5\;P_+$ for S2 & Recording taken in sub-optimal environments (noisy hospitals, offices etc...)                                                                                                    \\
+Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clustering                                                       & 41 patients, 340 heart cycles. 110 normal,  124 systolic murmur, 106 diastolic murmur & $90.29\%\;Ac$                                          & Unsupervised Algorithm.                                                                                                                                                          \\ \hline
+\dbottomrule\\
+% TODO: Add footnote explanation for Ac = Accuracy
+% TODO: Add citeyearpar references to authors
+\end{tabulary}
+\end{table}
+\end{landscape}
+\restoregeometry
 
 % TODO: Insert table of previous research methods, datasets and results
 

@@ -143,24 +143,24 @@ section~\ref{performance}
 
 \subsection{Signal Preprocessing}
 There are a large number of factors that lead to variation in quality of PCG
-recordings: stethoscope type, make and model, its microphone/sensors used for
-recording of the data, the position used to record (i.e.\ lower left sternal
-border, apex, pulmonic area, aortic area), built in filters/signal processing
-used by the stethoscope (i.e.\ noise filters, anti-tremor filters), medication that
-a patient may be taking, as well as many other factors that may influence the
-recorded signal~\parencite[p.4]{Pavlopoulos2004}. This presents a significant
-issue when attempting to analyse and compare a dataset of signals, as
-variations in recordings and artefacts caused by factors other than heart
-sounds will most likely interfere with analysis and comparison methods. To
-account for this, pre-processing methods are widely used, aiming to standardize
-a dataset. This is also used as a way to accentuate features of the data that
-are expected to be relevant during classification.\\
+recordings: stethoscope type, make and model, its microphone/sensors, the
+position used to record (i.e.\ lower left sternal border, apex, pulmonic area,
+aortic area), built in filters/signal processing used by the stethoscope (i.e.\
+noise filters, anti-tremor filters), medication that a patient may be taking,
+as well as many other factors that may influence the recorded
+signal~\parencite[p.4]{Pavlopoulos2004}. This presents a significant issue when
+attempting to analyse and compare a dataset of signals, as variations in
+recordings and artefacts caused by factors other than heart sounds will most
+likely interfere with analysis and comparison methods. To account for this,
+pre-processing methods are widely used, aiming to standardize a dataset. This
+is also used as a way to accentuate features of the data that are expected to
+be relevant for classification.\\
 
 A common method employed is the use of decimation and a static filter to remove
 unwanted spectral content that is most likely noise~\parencite{Liang1997a,
 Homsi2016, Springer2016, Gupta2007}. This helps reduce higher frequency noise
 such as speech, microphone movement, breething and other interference caused
-externally.  Decimation tends to downsample to around 1--4KHz, with
+externally. Signals are commonly downsampled to around 1--4KHz, with
 anti-aliasing filter specifications varying across the literature. Generally,
 highpass chebychev or butterworth filters are favoured with cutoff frequencies
 ranging from 400--750Hz.\\
@@ -224,9 +224,9 @@ A variety of machine learning methods have been implemented with reasonable
 success. Gupta et.\ al present a method that applies $k$-means clustering to
 replace standard threshold based methods for determining peak classification in
 a standard envelope based segmentation algorithm~\citeyearpar{Gupta2007}. This achieved a reported
-accuracy of 90.29\%. Due to the standard envelope based method for feature
-extraction, this method is still suceptible to noise and artefacts that occur
-within the frequency bands of the heart sounds.\\
+accuracy of 90.29\%. Due to the envelope based method for feature extraction,
+this method is still suceptible to noise and artefacts that occur within the
+frequency bands of the heart sounds.\\
 
 Sepehri et.\ al propose a method that combines neural networks with Power
 Spectral Density (PSD) estimates~\citeyearpar{Sepehri2010}. This method
@@ -236,7 +236,7 @@ other sounds and murmurs. This method achieves a reported 93.6\% accuracy on a
 significantly larger database than other methods detailed.\\
 
 Most significant success in segmentation algorithms has been observed through use
-of probabilistic Models such as Hidden Markov Models (HMMs). Early research
+of probabilistic models such as Hidden Markov Models (HMMs). Early research
 using these models by Ricke et.\ al utilized embedded HMMs to model the 4
 states of the PCG and their transitions~\citeyearpar{Ricke2005}. MFCCs and
 Shannon Energy are used as feature vectors for the models. Results of
@@ -253,7 +253,7 @@ of a duration-dependent hidden Markov (DHMM)~\citeyearpar{Schmidt2015}. The
 DHMM is a modified HMM that considers the duration of the current state when
 calculating the probability of transition to another state. This modification
 scored a reported sensitivity of 98.8\% and a positive predictivity of
-98.8\%.\\
+98.6\%.\\
 Building on previous work using HMMs, Springer et.\ al presents a segmentation
 algorithm by using hidden semi-markov models (HSMMs) in combination with
 logistic regression~\citeyearpar{Springer2016}. Use of Hidden semi markov model
@@ -262,8 +262,8 @@ in probability calculation of the subsequent state. In this case, the knowlege
 that there is an upper and lower limit on the duration of each component is
 used in calculation of transition probabilities.  A modified viterbi algorithm
 is then used to calculate the most likely set of transitions based on observed
-features. Logistic regression is then used to improve discrimination between
-state features when compared to discriminatory methods used by previous work.
+features. Logistic regression is used to improve discrimination between state
+features when compared to discriminatory methods used by previous work.
 Performance was evaluated on a significantly larger database than previous
 methods and achieved a reported accuracy of $95.63\% \pm 0.85\%$. Due to it's
 rigorous evaluation and high accuracy, this method is currently considered the
@@ -306,100 +306,48 @@ Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clus
 
 \subsection{Classification Models}
 
-A wide variety of methods exist for the extraction of statistical
-features from PCG data. These features are used for the creation of
-robust, meaningful representations of the data.\\
-The use of spectral representations for PCG data are prominent in the
-literature. The ability to separate activity across the frequency
-spectrum reveals patterns that may not be attainable by analysing the
-time domain signal alone.\\
-Due to the need for low frequency analysis and the high noise levels
-found in PCG signals, it has been found that the traditional FFT
-method for extracting spectral information may not be
-suitable~\parencite{Akay1990}. For this reason, parametric methods for
-spectral estimation have been a popular choice for extraction of such information.
-Methods such as AR, ARMA, AR-HOS and MUSIC have been shown to provide spectral
-representations suitable for analysis and classification of heart
-sound~\parencite{Ergen2001, Schmidt2015}.\\
-Other methods such as Wavelet Decomposition and MFCCs have also been
-successfully  employed for extracting spectral data for purposes such
-as heart valve disease identification and heart murmur
-detection~\parencite{Quiceno-Manrique2010a, Maglogiannis2009}.\\
+A wide variety of methods exist for the extraction of statistical features and
+classification of PCG data. Most notably, the recent Physionet/Computing in
+Cardiology Challenge 2016 has prompted the development of a range of methods
+that have improved the quality of abnormality classification in noisy signals.
+The challenge was assembled to provide researchers with a large database of PCG
+signals of varying quality. This enabled the development of algorithms that
+could be evaluated on a significant database, in order to determine performance
+across a range of conditions/signal qualities~\parencite{Clifford2016}. This
+section first details significant work produced prior to the challenge, and
+then highlights key works produced for the challenge to outline the breadth of
+methods for robust heart sound analysis.
 
-In addition to direct analysis, the ability to segment and extract RR values
-from the signal allows for their statistical analysis, both in the time and
-frequency domain, for use as features.\\
-- Basic physionet challenge features
-Dash et al.\ use a number of time-based statistical analysis on the RR
-time series for the detection of atrial fibrillation. Statistical
-analyses such as RMSSD, Shannon Entropy and Turning-point Ratio are
-used as feature vectors for classification of
-signals~\citeyearpar{Dash2009}.  A similar approach is used by Yaghouby
-et al.\ for the generalized classification of heart abnormality. Here,
-a selection of linear and non-linear features are used for
-classification with promising results~\citeyearpar{Yaghouby2009}.\\
-Frequency domain analysis of RR values are also used by calculating the
-PSD of the RR values via  approaches such as VFCDM.\ This form of
-approach allows for higher resolution time-frequency representations of
-the RR data than approaches such as the FFT or wavelet transform~\parencite{Wang2006}.
-From a spectral representations such as this, Yaghouby et al.\
-demonstrate the use of such descriptors for the discrimination between
-sympathetic and parasympathetic contents of the signal, not directly
-detectable through time domain analysis~\citeyearpar{Yaghouby2009}.\\
-Further in-depth analysis of statistical features for HRV can be found
-in~\parencite{Electrophysiology1996}
+\subsubsection{Work prior to the Physionet challenge}
+Work prior to the Physionet challenge was conducted predominantly with the aim
+of classifying specific heart conditions. Until recently, little research had
+been produced with regards to general abnormality detection, with many projects
+choosing to focus on specific conditions such as murmurs, atrial fibrillation
+and flutter, and heart valve disease. This section outlines some key research
+into these areas, alongside initial research into general abnormality
+detection.
 
-% TODO: Revise to include physionet entries
-% TODO: Add section for parameter optimization/feature selection methods
-Classification of signals for diagnostic purposes.  The aim being to
-distinguish healthy signals from those with certain heart
-conditions/abnormality. This is most commonly achieved by extracting
-sets of features vectors from PCG signals, followed by their
-classification, most commonly using machine learning algorithms for
-automatic classification. The features extracted and classification
-algorithms applied vary across the literature based on factors such as
-the diagnostic aims of the classification and computing performance
-requirements.\\
+- SVM classifier for heart valve diseas~\parencite{Maglogiannis2009}
+- Threshold classifier for atrial fibrillation and flutter~\parencite{Dash2009}
+- k-NN Classifier for murmur detection~\parencite{Quiceno-Manrique2010a}
+- Feature analysis specifically for coronary artery
+diseas~\parencite{Schmidt2015}
+- GDA and MLP Neural-net classification of general abnormalities~\parencite{Yaghouby2009}
+- SVM, k-NN and Bayesian classifier of general abnormalities~\parencite{Lubaib2016}
 
-Artificial neural networks and support vector machines have proven to
-be popular choices for classification. Much success has been seen in
-employing these machine learning techniques for classification across
-both PCG and ECG data for conditions such as chronic heart failure,
-atrial fibrillation and flutter, diastolic murmurs, and for general
-pathology detection~\parencite{Cathers1995, Wu1995, Bung2000,
-Lubaib2016, Maji2014, Ari2010, Maglogiannis2009}. Results do vary based
-on the combination of features and exact classification methods used.
-However, encouraging results are presented with highly accurate
-classifications for general abnormality detection and for more specific
-pathological condition detection.\\
-
-However, there is a lack of research into other machine learning
-techniques such as bayesian classification~\parencite{Lubaib2016},
-$k$-Nearest Neighbour~\parencite{Quiceno-Manrique2010a, Lubaib2016} and
-Linear Regression~\parencite{Orhan2013}. Studies that utilize these
-methods for classification have generated promising results.  There is
-therefore the potential for further research into exploiting the
-benefits of these techniques for heart abnormality detection.\\
-
-The selection of features used for classification also depends
-predominantly on the aims for the classification. For general
-abnormality classification, spectral representations such as wavelet
-transformations, VFCMD, FFTs and MFCCs are a popular
-choice~\parencite{Bung2000, Wu1995, Yaghouby2009, Dash2009}. Their
-multi-dimensional representation of the data reveals details in the
-signal that cannot be seen through a 1 dimensional time series alone,
-allowing for more accurate classification. Higher-level statistical
-methods are also widely used for both time and spectral
-representations~\parencite{Bung2000, Quiceno-Manrique2010a,
-Schmidt2015, Dash2009, Yaghouby2009}. These allow for the
-classification based on more specific statistical properties of the
-data. It is highlighted by Orhan that Higher level statistical methods
-may add considerable complexity to computations, and so care should be
-taken, particularly when considering systems in a real-time
-context~\citeyearpar{Orhan2013}.
+\subsubsection{Physionet challenge entries}
+scoring method
+- Benchmark classifier~\parencite{Liu2016}
+- 100+ features and nested ensemble classifiers~\parencite{Homsi2016}
+- Rnage of features using Adaboost classifier~\parencite{Potes2016}
+- Ensemble of NNs, bootstrapping, range of features~\parencite{Zabihi2016}
+- Classification through probability based methods~\parencite{Plesinger2017}
+- Wavelet, MFCC and inter-beat neural network classifier~\parencite{Kay2017}
+- Large number of features, tensor based feature reduction and
+K-NN~\parencite{Bobillo2016}
+- Convolutional neural networks, MFCCs~\parencite{Rubin2016}
 
 
-\subsection{System Performance}\label{performance}
 \newgeometry{margin=1cm} % modify this if you need even more space
 \begin{table}[htbp]
     \captionof{table}{Summary of research prior to the Physionet Challenge 2016} \label{PriorWorkTable}

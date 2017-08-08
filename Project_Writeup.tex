@@ -19,7 +19,7 @@
 \usepackage{booktabs}
 \usepackage{tabulary}
 
-\usepackage[pass]{geometry}
+\usepackage[margin=1.0in]{geometry}
 \usepackage{pdflscape}
 \usepackage{graphicx}
 
@@ -399,11 +399,11 @@ as a classifier to provide a final accuracy score of 73\%.\\
 \begin{tabulary}{\linewidth}{LLLLLL}
 \dtoprule
 Author                   & Pre-processing/segmentation                                                                                                               & Features                                                                                                        & Classification Method & Dataset                                                                                                                 & Reported Accuracy                                  \\ \hline
-Maglogiannis et.\ al     & Wavelet decomposition, Shannon energy peak picking                                                                                        & Features derived from wavelet decomposition and PCG segmentations                                               & SVM                   & 198 recordings, 38 normal, 41 AS systolic murmur, 43 MR systolic murmur, 38 AR diastolic murmur, 38 MS diastolic murmur & $91.43\%\;Ac$                                      \\
-Ari et.\ al              & Amplitude envelope peak picking~\parencite{Ari2007}                                                                                       & Wavelet based features                                                                                          & LSSVM                 & 64 patients, 64 recordings, 512 cycles                                                                                  & $88.750-100\%\;Ac$ (dependant on abnormality type) \\
-Quiceno-Manrique et.\ al & Downsampled to 4KHz, Normalised to maximum of signal, ECG assisted QRS complex detection algorithm used for segmentation                  & Spectral features derived from STFT, Wavelet decomposition and quadratic energy distributions                   & $k$-NN                & 22 patients, 16 normal, 6 abnormal, 8 recordings (12s) per patient                                                      & $98\%\;Ac$                                         \\
-Schmidt et.\ al          & Signal filtered into frequency bands, Segmented by HMM based method+hand corrected, removal of high variance sub-segments to remove noise & Parametric spectral features (AR, ARMA and Music), Instantaneous frequency and amplitude, Power in octave bands & QDA                   & 435 Recordings, 133 patients, 70 normal, 63 abnormal                                                                    & $73\%\;Ac$                                         \\
-Reed et.\ al             & ---                                                                                                                                       & Wavelet decomposition coefficients, Manual feature reduction                                                    & ANN                   & 5 patients, 4 cycles per patient                                                                                        & $100\%\;Ac$                                        \\
+Maglogiannis et.~al \citeyearpar{Maglogiannis2009}     & Wavelet decomposition, Shannon energy peak picking                                                                                        & Features derived from wavelet decomposition and PCG segmentations                                               & SVM                   & 198 recordings, 38 normal, 41 AS systolic murmur, 43 MR systolic murmur, 38 AR diastolic murmur, 38 MS diastolic murmur & $91.43\%\;Ac$                                      \\
+Ari et.~al \citeyearpar{Ari2010}              & Amplitude envelope peak picking~\parencite{Ari2007}                                                                                       & Wavelet based features                                                                                          & LSSVM                 & 64 patients, 64 recordings, 512 cycles                                                                                  & $88.750-100\%\;Ac$ (dependant on abnormality type) \\
+Quiceno-Manrique et.~al \citeyearpar{Quiceno-Manrique2010a}& Downsampled to 4KHz, Normalised to maximum of signal, ECG assisted QRS complex detection algorithm used for segmentation                  & Spectral features derived from STFT, Wavelet decomposition and quadratic energy distributions                   & $k$-NN                & 22 patients, 16 normal, 6 abnormal, 8 recordings (12s) per patient                                                      & $98\%\;Ac$                                         \\
+Schmidt et.~al \citeyearpar{Schmidt2015}          & Signal filtered into frequency bands, Segmented by HMM based method+hand corrected, removal of high variance sub-segments to remove noise & Parametric spectral features (AR, ARMA and Music), Instantaneous frequency and amplitude, Power in octave bands & QDA                   & 435 Recordings, 133 patients, 70 normal, 63 abnormal                                                                    & $73\%\;Ac$                                         \\
+Reed et.~al \citeyearpar{Reed2004}             & ---                                                                                                                                       & Wavelet decomposition coefficients, Manual feature reduction                                                    & ANN                   & 5 patients, 4 cycles per patient                                                                                        & $100\%\;Ac$                                        \\
 \dbottomrule\\
 % TODO: Add footnote explanation for Ac = Accuracy
 % TODO: Add citeyearpar references to authors
@@ -491,13 +491,13 @@ commonly used features in previous PCG related literature such as wavelet
 decomposition based features, MFCCs and Shannon Energy. The system also uses a
 total of 40 classifiers, 20 for signals labeled to be `standard' and 20 for
 thos labeled as `atypical'. A mixture of Random Forrest, LogitBoost and
-Cost-Sensitive Classifiers are used to classify signals in parallel. Final
+Cost-Sensitive Classifiers (CSC) are used to classify signals in parallel. Final
 results are combined using a rule based decision, designed through manual
 experimentation.\\
 % TODO: Read into accuracy results for this method more closely
 
 Potes et.\ al present a similar approach to that of Homsi et.\
-al~\citeyearpar{Potes2016}. 124 similar time-frequency features are extracted
+al~\citeyearpar{Potes2016}. 124 similar time-frequency ($t-f$) features are extracted
 and used as vectors for an AdaBoost classifier. This was combined with a deep
 learning approach using a Convolutional Neural Network (CNN) classifier. The
 signal was decomposed into 4 frequency bands and segmented, to provide input to
@@ -508,8 +508,8 @@ set for the challenge at 86.02\%.\\
 Zabihi et.\ al take an alternative approach by choosing not to segment PCG data
 in the pre-processing stage~\citeyearpar{Zabihi2016}. This is with the intention of reducing
 computational complexity of the resulting algorithm. In addition, the proposed
-method utilizes a wrapper method for feature selection (sequential forward
-feature selection) and Linear Predictive Coefficients (LPC) for the reduction
+method utilizes a wrapper sequential forward
+feature selection (SFS) and Linear Predictive Coefficients (LPC) for the reduction
 of features used for classification. This benefits the system by removing correlated and irrelevant
 features, Thus reducing computational complexity and removing irellevant noise
 from feature vectors prior to training.
@@ -528,40 +528,41 @@ estimated classification of a new data point. From the 228 extracted features,
 scores using generated histograms. This allowed for the training scores to be
 automatically optimized by the algorithm.\\
 
-- Wavelet, MFCC and inter-beat neural network classifier~\parencite{Kay2017}
+Kay et.\ al present a method using ANNs, a wide variety of features and PCA for
+feature reduction. The algorithm scores well on the test set. However, this
+work is most noteable for it's rigurous evaluation by authors, using leave on
+out cross validation for a clearer understanding of  the generalisation of the
+algorithm, as well as highlighting issues with the underlying dataset that are
+discussed in Section~\ref{Dataset}
+
 - Large number of features, tensor based feature reduction and
 K-NN~\parencite{Bobillo2016}
 - Convolutional neural networks, MFCCs~\parencite{Rubin2016}
 
 
 
-\newgeometry{margin=1cm} % modify this if you need even more space
-\begin{landscape}
-\begin{table}[htbp]
-    \captionof{table}{Summary of research prior to the Physionet Challenge 2016} \label{PriorWorkTable}
+\begin{table}[H]
+    \captionof{table}{Summary of Physionet Challenge 2016 entries} \label{PriorWorkTable}
 \scriptsize
 %\centering
 \rowcolors{1}{gray!15}{white}
 \doublespacing
-\begin{tabulary}{\linewidth}{LLLLL}
+\begin{tabulary}{\linewidth}{CCCCC}
 \dtoprule
-Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
-Springer et.\ al \citeyearpar{Springer2016} & HSMM, Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds. & $95.63\pm0.85\%$                             & Supervised algorithm.                                                                                                                                                            \\
-Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset                                                                                 \\
-Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full dataset                                                                                                                                \\
-Sun et.\ al \citeyearpar{Sun2014}             & Viola integral envelope extraction, short-time modified Hilbert transform, peak picking        & 6949s of recordings, from 121 patients                                                & $97.37\%\;Ac$                                          & Supervised algorithm. Tolerance for segmentation accuracy not specified                                                                                                          \\
-Sepehri et.\ al \citeyearpar{Sepehri2010}        & Spectral density estimation, auto-regressive parameters, multi-layer perceptron neural network & 120 recording, from 60 patients                                                       & $93.6\%\;Ac$                                           & Supervised algorithm                                                                                                                                                             \\
-Ricke et.\ al \citeyearpar{Ricke2005}    & Shannon energy (and related features), HMM                                                     & 9 recordings, from 9 patients                                                         & $98\%\;Ac$                                             & Supervised algorithm                                                                                                                                                             \\
-Schmidt et.\ al \citeyearpar{Schmidt2015}  & DHMM, Auto-correlation duration features, Homomorphic envelogram                               & 113 recordings, from 113 patients. 8s per recording. 15 abnormal recordings           & $98.8\;Se,\;98.6\;P_+$ on test set                         & All data recorded ``lateral to the sternum in the fourth intercostal space on the left side''. Mix of noisy and clean recordings. 40 recording used for training, 73 for testing \\
-Gill et.\ al \citeyearpar{Gill2005}         & Homomorphic envelogram, Embedded HMMs                                                          & 44 recording, 17 subjects. 30-60s per recording                                       & $98.6\%\;Ac, 96.9\;P_+$ for S1. $98.3\;Ac,\;96.5\;P_+$ for S2 & Recording taken in sub-optimal environments (noisy hospitals, offices etc...)                                                                                                    \\
-Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clustering                                                       & 41 patients, 340 heart cycles. 110 normal,  124 systolic murmur, 106 diastolic murmur & $90.29\%\;Ac$                                          & Unsupervised Algorithm.                                                                                                                                                          \\ \hline
+Author            & Features                                                            & Classification Method                                    & Reported Scores & Challenge Score \\ \midrule
+Potes et.~al     & 124 $t-f$ features                                                  & Combined AdaBoost/ANN                                    &                 & 86.02\%         \\
+Zabihi et.~al    & 40 temporal, spectral and $t-f$ features, reduced using SFS and LPC & 2 ensembles of neural networks                           &                 & 85.90\%         \\
+Kay et.~al       & CWT, MFCCs, complexity measures, Inter-beat features, PCA           & ANNs                                                     &                 & 85.20\%         \\
+Bobillo           & MFCCs and WPD, reduced using tensor decomposition                   & $k$-NN                                                   &                 & 84.54\%         \\
+Homsi et.~al     & 131 time domain, STFT based andwavelet based features               & Combined ensembles of LogitBoost, Random Forrest and CSC &                 & 84.48\%         \\
+Maknickas et.~al &                                                                     &                                                          &                 & 84.15\%         \\
+Plesinger et.~al &                                                                     &                                                          &                 & 84.11\%         \\
+Rubin et.~al     &                                                                     &                                                          &                 & 83.99\%         \\
 \dbottomrule\\
 % TODO: Add footnote explanation for Ac = Accuracy
 % TODO: Add citeyearpar references to authors
 \end{tabulary}
 \end{table}
-\end{landscape}
-\restoregeometry
 
 % TODO: Insert table of previous research methods, datasets and results
 

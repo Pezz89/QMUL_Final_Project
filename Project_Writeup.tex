@@ -7,6 +7,7 @@
 \usepackage{caption}
 %\restylefloat{table}
 \usepackage[table]{xcolor}
+\usepackage{multirow}
 \usepackage{perpage}
 \MakePerPage{footnote}
 \usepackage{abstract}
@@ -135,9 +136,9 @@ I'd like to thanks anyone and everyone...
 There are currently a wide variety of methods employed for the analysis and
 classification of PCG signals. Current methods can typically be divided into 3
 areas, each of which are combined to create full classification system. These
-areas are: signal preprocessing, signal segmentation, and classification.  The
-performance and evaluation of complete systems are also discussed in
-section~\ref{performance}
+areas are: signal preprocessing, signal segmentation, and feature
+extraction/classification. The performance and evaluation of complete systems
+are also discussed in section~\ref{Classification}
 % TODO: Make flow diagram of 3 stages
 
 
@@ -177,7 +178,7 @@ temporal events in the resulting decomposition~\parencite[p.93]{Ari2008}.
 This may be used for analysis of transient events such as murmurs, that may
 consist of higher frequency components than normal heart sounds.
 
-\subsection{Signal Segmentation}
+\subsection{Signal Segmentation}\label{Segmentation}
 Algorithms for the segmentation of PCG data aim to  extract the structure of
 the signal over time. This is a key stage in the analysis of PCG signals as the
 structure and relationships between the fundamental heart sounds (FHSs) form
@@ -304,11 +305,11 @@ Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clus
 
 \doublespacing
 
-\subsection{Classification Models}
+\subsection{Feature extraction/Classification Models}\label{Classification}
 
 A wide variety of methods exist for the extraction of statistical features and
 classification of PCG data. Most notably, the recent Physionet/Computing in
-Cardiology Challenge 2016 has prompted the development of a range of methods
+Cardiology (CinC) Challenge 2016 has prompted the development of a range of methods
 that have improved the quality of abnormality classification in noisy signals.
 The challenge was assembled to provide researchers with a large database of PCG
 signals of varying quality. This enabled the development of algorithms that
@@ -327,22 +328,40 @@ and flutter, and heart valve disease. This section outlines some key research
 into these areas, alongside initial research into general abnormality
 detection.\\
 
+Reed et.\ al implement a simple general classification algorithm using artificial
+neural networks (ANNs) and wavelet decomposition~\citeyearpar{Reed2004}. As
+initial work into this field, preprocessing such as segmentation is not
+performed and features remain relatively simple when compared to more recent
+methods. Also, due to the comparitively small sample size used for training (1
+patient per abnormality, 4 cycles per patient), a reported accuracy of 100\%
+would likely generalise poorly. Thsi does however, serve as an early example of
+limited success in general heart sound classification.\\
+
 Maglogiannis et.\ al present a classifier for discrimination of heart valve
-disease from regular heart sounds using an SVM
-classifier~\citeyearpar{Maglogiannis2009}.
-Roughly 100 features were extracted from the signal, based on direct analysis
-of each heart cycle component (S1, Systole, S2, Diastole) and the average
-shannon energy envelope of these components. 
-A database of 198 heart sounds was curated for the project, acquired from 8
-sources, such as medical CDs and pre-existing databases.
-An accuracy of 91.43\% is reported using 10-fold stratified cross-validation.
-In addition, the project aimed to classify individual abnormalities in a 3 step
+disease from regular heart sounds using an SVM (Support Vector Machine)
+classifier~\citeyearpar{Maglogiannis2009}.  Roughly 100 features were extracted
+from the signal, based on direct analysis of each heart cycle component (S1,
+Systole, S2, Diastole) and the average shannon energy envelope of these
+components.  A database of 198 heart sounds was curated for the project,
+acquired from 8 sources, such as medical CDs and pre-existing databases.  An
+accuracy of 91.43\% is reported using 10-fold stratified cross-validation.  In
+addition, the project aimed to classify individual abnormalities in a 3 step
 process, by distinguishing between systolic or diastolic murmurs, and then
 distinguishing between aortic or mitral diseases. The classifier achieved
-accuracy between 90-97\% for these classifications.\\
+accuracy between 90-97\% for these classifications. This approach demonstrates
+the potential for a system to accurately distinguish between normal and
+abnormal heart sounds in a generalisable way, given carefully selected
+features.\\
 
 Ari et.\ al also propose an SVM based method for abnormality
-classification~\citeyearpar{Ari2010}.\\
+classification~\citeyearpar{Ari2010}. A modified Least-squares SVM (LSSVM) is
+used in order to improve separability between normal and abnormal datapoints
+during training. 32 wavelet based features from previous literature are use as
+feature vectors for a modified LSSVM, un-modified LSSVM and a standard SVM.
+Comparison of the system shows that the proposed technique performs
+significantly better on all test sets with an accuracy of between 86\% and
+100\%, dependent on database. This research highlights the importance of
+choosing an appropriate classification method for achieving accurate results.\\
 
 Quiceno-Manrique et.\ al demonstrate the use of various time frequency
 representations (TFR) such as short-time fourier transform, wavelet transforms,
@@ -368,12 +387,6 @@ Given the large number of features calculated, PCA is used to retain only the
 most relevant information. Quadratic discriminant analysis (QDA) is then used
 as a classifier to provide a final accuracy score of 73\%.\\
 
-General abnormality detection algorithms are significantly less common prior to
-the challenge. Reed et.\ al implement a simple classification using artificial
-neural networks (ANNs) and wavelet decomposition~\citeyearpar{Reed2004}.
-However, due to the comparitively small sample size used for training (1
-patient per abnormality, 4 cycles per patient), a reported accuracy of 100\%
-would likely generalise poorly.
 
 \newgeometry{margin=1cm} % modify this if you need even more space
 \begin{landscape}
@@ -385,12 +398,12 @@ would likely generalise poorly.
 \doublespacing
 \begin{tabulary}{\linewidth}{LLLLLL}
 \dtoprule
-Author                   & Pre-processing/segmentation                                                                                                               & Features                                                                                                        & Classification Method & Dataset                                                                                                                 & Reported Accuracy                                  \\ \midrule
+Author                   & Pre-processing/segmentation                                                                                                               & Features                                                                                                        & Classification Method & Dataset                                                                                                                 & Reported Accuracy                                  \\ \hline
 Maglogiannis et.\ al     & Wavelet decomposition, Shannon energy peak picking                                                                                        & Features derived from wavelet decomposition and PCG segmentations                                               & SVM                   & 198 recordings, 38 normal, 41 AS systolic murmur, 43 MR systolic murmur, 38 AR diastolic murmur, 38 MS diastolic murmur & $91.43\%\;Ac$                                      \\
 Ari et.\ al              & Amplitude envelope peak picking~\parencite{Ari2007}                                                                                       & Wavelet based features                                                                                          & LSSVM                 & 64 patients, 64 recordings, 512 cycles                                                                                  & $88.750-100\%\;Ac$ (dependant on abnormality type) \\
 Quiceno-Manrique et.\ al & Downsampled to 4KHz, Normalised to maximum of signal, ECG assisted QRS complex detection algorithm used for segmentation                  & Spectral features derived from STFT, Wavelet decomposition and quadratic energy distributions                   & $k$-NN                & 22 patients, 16 normal, 6 abnormal, 8 recordings (12s) per patient                                                      & $98\%\;Ac$                                         \\
 Schmidt et.\ al          & Signal filtered into frequency bands, Segmented by HMM based method+hand corrected, removal of high variance sub-segments to remove noise & Parametric spectral features (AR, ARMA and Music), Instantaneous frequency and amplitude, Power in octave bands & QDA                   & 435 Recordings, 133 patients, 70 normal, 63 abnormal                                                                    & $73\%\;Ac$                                         \\
-Reed et.\ al             &                                                                                                                                           & Wavelet decomposition coefficients, PCA feature reduction                                                       & ANN                   & 5 patients, 4 cycles per patient                                                                                        & $100\%\;Ac$                                        \\
+Reed et.\ al             & ---                                                                                                                                       & Wavelet decomposition coefficients, Manual feature reduction                                                    & ANN                   & 5 patients, 4 cycles per patient                                                                                        & $100\%\;Ac$                                        \\
 \dbottomrule\\
 % TODO: Add footnote explanation for Ac = Accuracy
 % TODO: Add citeyearpar references to authors
@@ -400,10 +413,98 @@ Reed et.\ al             &                                                      
 \restoregeometry
 
 \subsubsection{Physionet challenge entries}
-scoring method
-- Benchmark classifier~\parencite{Liu2016}
-- 100+ features and nested ensemble classifiers~\parencite{Homsi2016}
-- Rnage of features using Adaboost classifier~\parencite{Potes2016}
+\doublespacing
+The 2016 Physionet/CinC Challenge aimed to encourage development of heart
+abnormality detection algorithms by providing a large open database of PCG
+signal recordings, sourced from a variety of both clinical and non-clinical
+environments. (Further details on the provided database are provided in
+section~\ref{Dataset} and it is described in full by Liu et.\
+al~\citeyearpar{Liu2016}). In addition, participants were provided with a
+state-of-the-art heart sound segmentation algorithm, as proposed by Springer
+et.\ al in Section~\ref{Segmentation}. Participants were then tasked with the
+creation of a classification algorithm that could robustly discriminate between
+healthy and unhealthy heart sound samples. The challenge recieved 348 entries
+in total, each of which was scored on a hidden test dataset
+using a Modified accuracy measure ($MAcc$) as defined by Clifford et.
+al~\citeyearpar{Clifford2016}:
+\begin{table}[H]
+\centering
+\caption{Output Classification}
+\label{OutputClassification}
+\doublespacing
+\begin{tabular}{llccc}
+\hline
+                              &                 & \multicolumn{3}{c}{Algorithm's Output}                                                    \\ \hline
+                              &                 & \multicolumn{1}{l}{Normal} & \multicolumn{1}{l}{Uncertain} & \multicolumn{1}{l}{Abnormal} \\
+\multirow{4}{*}{Ground Truth} & Normal, clean   & $Nn_1$                     & $Nq_1$                        & $Na_1$                       \\
+                              & Normal, noisy   & $Nn_2$                     & $Nq_2$                        & $Na_2$                       \\
+                              & Abnormal, clean & $An_1$                     & $Aq_1$                        & $Aa_1$                       \\
+                              & Abnormal, noisy & $An_2$                     & $Aq_2$                        & $Aa_2$                       \\ \hline
+\end{tabular}
+\end{table}
+
+\doublespacing
+
+Weights are calculated as:
+\begin{table}[H]
+\centering
+\doublespacing
+\begin{tabular}{ll}
+$Wa_1 = \frac{\text{Clean abnormal recordings}}{\text{Total abnormal recordings}}$ & $Wa_2 = \frac{\text{Noisy abnormal recordings}}{\text{Total abnormal recordings}}$ \\
+$Wn_1 = \frac{\text{Clean normal recordings}}{\text{Total normal recordings}}$     & $Wn_2 = \frac{\text{Noisy normal recordings}}{\text{Total normal recordings}}$    
+\end{tabular}
+\end{table}
+
+Modified sensitivity ($Se$), specificity ($Sp$) and overall accuracy ($MAcc$) are then calculated as:
+
+\begin{align*}
+    &Se=Wa_1\frac{Aa_1}{Aa_1+Aq_1+An_1}+Wa_2\frac{Aa_2+Aq_2}{Aa_2+Aq_2+An_2} \\
+    &Sp=Wn_1\frac{Nn_1}{Na_1+Nq_1+Nn_1}+Wn_2\frac{Nn_2+Nq_2}{Na_2+Nq_2+Nn_2} \\
+    &MAcc=\frac{Se+Sp}{2}
+\end{align*}
+
+This section summarises some of the key works presented for the challenge,
+including the some of the most accurate models, and a baseline classifier
+provided to participants as a starting point.\\
+
+A simple baseline classifier was provided to participants, in order to
+demonstrate the basic structure of systems expected for
+entries~\parencite{Liu2016}. The classifier extracted a selection of 20 basic
+features primarily focused on relative timings and amplitudes of heart sounds.
+A binary logistic regression model is chosen for classification. From the 20
+extracted features, 13 were selected based on their statistical significance
+(measured using foreward liklihood ratio selection). The system achieved a
+reported score of 66\% on the test set, giving a baseline score for challengers to build on.
+In addition, the system was trained using leave-one-out cross validation. By
+removing a single training database on each fold, the generalisation of the algorithm
+trained on all other databases could then be evaluated. Results showed that
+performance decreased significantly when training via this method, giving an
+average accuracy of 59\%, with Training database $b$ scoring as low as 47\%.
+This could suggest that individual databases in the dataset are not sufficiently
+represented by other databases, or that features do not model abnormalities
+sufficiently.\\
+
+Homsi et.\ al proposed a system that utilised 131 time domain, STFT based and
+wavelet based features, combined with nested ensemble classifiers to produce an
+accuracy score of 84.48\%~\citeyearpar{Homsi2017}. Notably this algorithm
+proposes the most features used for classification, combining many commonly
+used features in previous PCG related literature such as wavelet decomposition
+based features, MFCCs and Shannon Energy. The system also uses a total of 40
+classifiers, 20 for signals labeled to be `standard' and 20 for thos labeled as
+`atypical'. A mixture of Random Forrest, LogitBoost and Cost-Sensitive
+Classifiers are used to classify signals in parallel. Final results are
+combined using a rule based decision, designed through manual experimentation.\\
+% TODO: Read into accuracy results for this method more closely
+
+Potes et.\ al present a similar approach to that of Homsi et.\
+al~\citeyearpar{Potes2016}. 124 similar time-frequency features are extracted
+and used as vectors for an AdaBoost classifier. This was combined with a deep
+learning approach using a Convolutional Neural Network (CNN) classifier. The
+signal was decomposed into 4 frequency bands and segmented, to provide input to
+the CNN. Results from both AdaBoost and CNN classifiers were then combined
+using a set descision rule.  This method produced the highest score on the test
+set for the challenge at 86.02\%.\\
+
 - Ensemble of NNs, bootstrapping, range of features~\parencite{Zabihi2016}
 - Classification through probability based methods~\parencite{Plesinger2017}
 - Wavelet, MFCC and inter-beat neural network classifier~\parencite{Kay2017}
@@ -443,7 +544,7 @@ Gupta et.\ al \citeyearpar{Gupta2007}    & Homomorphic filtering, $k$-means clus
 
 % TODO: Insert table of previous research methods, datasets and results
 
-\section{Dataset}
+\section{Dataset}\label{Dataset}
 
 \section{Design}
 The system aims to provide robust heart abnormality detection for PCG signals,

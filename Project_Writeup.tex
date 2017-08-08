@@ -486,14 +486,14 @@ sufficiently.\\
 
 Homsi et.\ al proposed a system that utilised 131 time domain, STFT based and
 wavelet based features, combined with nested ensemble classifiers to produce an
-accuracy score of 84.48\%~\citeyearpar{Homsi2017}. Notably this algorithm
-proposes the most features used for classification, combining many commonly
-used features in previous PCG related literature such as wavelet decomposition
-based features, MFCCs and Shannon Energy. The system also uses a total of 40
-classifiers, 20 for signals labeled to be `standard' and 20 for thos labeled as
-`atypical'. A mixture of Random Forrest, LogitBoost and Cost-Sensitive
-Classifiers are used to classify signals in parallel. Final results are
-combined using a rule based decision, designed through manual experimentation.\\
+accuracy score of 84.48\%~\citeyearpar{Homsi2017}. This algorithm combines many
+commonly used features in previous PCG related literature such as wavelet
+decomposition based features, MFCCs and Shannon Energy. The system also uses a
+total of 40 classifiers, 20 for signals labeled to be `standard' and 20 for
+thos labeled as `atypical'. A mixture of Random Forrest, LogitBoost and
+Cost-Sensitive Classifiers are used to classify signals in parallel. Final
+results are combined using a rule based decision, designed through manual
+experimentation.\\
 % TODO: Read into accuracy results for this method more closely
 
 Potes et.\ al present a similar approach to that of Homsi et.\
@@ -505,8 +505,29 @@ the CNN. Results from both AdaBoost and CNN classifiers were then combined
 using a set descision rule.  This method produced the highest score on the test
 set for the challenge at 86.02\%.\\
 
-- Ensemble of NNs, bootstrapping, range of features~\parencite{Zabihi2016}
-- Classification through probability based methods~\parencite{Plesinger2017}
+Zabihi et.\ al take an alternative approach by choosing not to segment PCG data
+in the pre-processing stage~\citeyearpar{Zabihi2016}. This is with the intention of reducing
+computational complexity of the resulting algorithm. In addition, the proposed
+method utilizes a wrapper method for feature selection (sequential forward
+feature selection) and Linear Predictive Coefficients (LPC) for the reduction
+of features used for classification. This benefits the system by removing correlated and irrelevant
+features, Thus reducing computational complexity and removing irellevant noise
+from feature vectors prior to training.
+Final classifications are determined through cascaded ensembles of ANNs. The
+signal is first classified as either of high or low sound quality, and then as
+normal or abnormal. The system achieved a final score of 85.9\% on the hidden
+test set.\\
+
+Plesinger et.\ al opted to develop a new for of machine learning algorithm
+based on probability assesment~\citeyearpar{Plesinger2017}. In this method,
+features are mapped to histograms and thought of as probability distributions.
+weights are applied based on number of occurences of each feature, and a
+probability function is generated. This can then be used to calculate the
+estimated classification of a new data point. From the 228 extracted features,
+53 features were then selected based on calculated sensitivity and specificity
+scores using generated histograms. This allowed for the training scores to be
+automatically optimized by the algorithm.\\
+
 - Wavelet, MFCC and inter-beat neural network classifier~\parencite{Kay2017}
 - Large number of features, tensor based feature reduction and
 K-NN~\parencite{Bobillo2016}

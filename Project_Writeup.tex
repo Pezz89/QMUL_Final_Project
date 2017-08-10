@@ -32,6 +32,27 @@
 \graphicspath{{./resources/}}
 \addbibresource{~/Documents/library.bib}
 
+% Fix for medeley's rubbish underscore handeling in generated bib files
+\DeclareSourcemap{
+    \maps{
+        \map{ % Replaces '{\_}', '{_}' or '\_' with just '_'
+            \step[fieldsource=url,
+                  match=\regexp{\{\\\_\}|\{\_\}|\\\_},
+                  replace=\regexp{\_}]
+        }
+        \map{ % Replaces '{'$\sim$'}', '$\sim$' or '{~}' with just '~'
+            \step[fieldsource=url,
+                  match=\regexp{\{\$\\sim\$\}|\{\~\}|\$\\sim\$},
+                  replace=\regexp{\~}]
+        }
+        \map{ % Replaces '{\_}', '{_}' or '\_' with just '_'
+            \step[fieldsource=url,
+                  match=\regexp{\{\\\#\}|\{\#\}|\\\#},
+                  replace=\regexp{\#}]
+        }
+    }
+}
+
 %\newsavebox{\abstractbox}
 %\renewenvironment{abstract}
 %  {\begin{lrbox}{0}\begin{minipage}{\textwidth}
@@ -97,7 +118,7 @@
     &
     {\vspace{1.2cm} \large Sound and Music Computing \newline Project Report \the\year \par}\\
 
-    & {\vspace{0.5cm} \Large \textbf{Extraction of Statistical Features from PCG Signals for the
+    & {\vspace{0.5cm} \Large \textbf{Extraction of Audio Features from PCG Signals for the
 Classification of Heart Abnormalities} \par}\\
 
     \vspace{0.4\textheight}
@@ -131,25 +152,29 @@ I'd like to thank anyone and everyone...
 \section{Introduction}
 Cardiovascular diseases are the most prevalent cause of death in Europe,
 accounting for 37.5\% of all deaths in 2013~\parencite{Eurostat2016}.
-Traditionally, Heart auscultation has been performed manually using a standard
-stethoscope, with the aim of detecting heart defects aurally. However,
-auscultation is a difficult skill that requires training and can only usually be
-performed by a trained healthcare professional, such as a GP. 
-Due to recent advancements in technology, research into the automation of such
-detection has shown promise, focusing primarily on analysis of
-Electrocardiogram (ECG) signals. Although useful for detecting pathologies, ECG
-equipment requires a trained professional for use and also remains expensive.
-Therefore it is not currently feasible for developing countries and rural areas
-there may be low numbers of physicians for the size of the population.
-A comparatively affordable alternative is the Phonocardiogram (PCG). 
-It is a widely used and inexpensive means of detecting conditions such as heart
-valve disorders.
-Automation auscultation could provide an initial diagnosis for heart defects
-without the need for a trained medical health practitioner. This would allow
+Traditionally, cardiac auscultation has been performed manually using a standard
+stethoscope, with the aim of detecting heart defects aurally. This has been a
+fundamental method for detecting heart valve disorders for over a century.
+However, auscultation is a skill that requires training and can only usually be
+performed by a medial professional, such as a GP. As a result, manual
+auscultation is significantly susceptible to human error~\parencite{Hanna2002}.
+Automation of this method using technology may be provide a solution, and
+recent research has shown promise in this area. A large amount of research has
+focused on analysis of Electrocardiogram (ECG) signals.  Although useful for
+detecting pathologies, ECG equipment is expensive and requires a trained
+professional for use. Therefore it is not currently feasible for developing
+countries and rural areas where there may be few physicians available. A
+comparatively affordable and non-invasive alternative is the Phonocardiogram
+(PCG)~\parencite[p.130]{Reed2004}. Typically recorded using an electronic
+stethoscope, a PCG signal is a recording of sound made as the heart contracts,
+analogous to the sound heard by physicians when performing cardiac auscultation
+manually. Automated auscultation could provide an initial diagnosis for heart
+defects without the need for a trained medical professional. This would allow
 relatively cheap equipment to analyse a patient's heart sound, and
-automatically recommend further inspection based on analysis. This could have
-significant benefit in a number of situations, particularly in the developing
-world and rural environments, where 
+automatically recommend further inspection based on analysis.  By providing
+earlier diagnosis of conditions that may have otherwise been overlooked, this
+technology could have a significant impact on reducing mortality rates as a
+result of heart conditions.
 % TODO: Write brief overview of history of PCG signal analysis
 % TODO: Explain fundamental heart sounds
 
@@ -171,10 +196,10 @@ aortic area), built in filters/signal processing used by the stethoscope (i.e.\
 noise filters, anti-tremor filters), medication that a patient may be taking,
 as well as many other aspects that may influence the recorded
 signal~\parencite[p.4]{Pavlopoulos2004}. This presents a significant issue when
-attempting to analyse and compare a dataset of signals, as variations in
+attempting to analyse and compare a database of signals, as variations in
 recordings and artefacts caused by factors other than heart sounds will most
 likely interfere with analysis and comparison methods. To account for this,
-pre-processing methods are widely used, aiming to standardize a dataset. This
+pre-processing methods are widely used, aiming to standardize a database. This
 is also used as a way to accentuate features of the data that are expected to
 be relevant for classification.\\
 
@@ -219,7 +244,7 @@ first extracting the envelope, then applying adaptive rule based thresholds, to
 determine peaks corresponding to segmentation points. When comparing results to
 hand annotated ground truth data, the system achieved a reported accuracy score
 of 84\%. However, due to the small sample size, and potential lack of noise in
-the dataset used, this may not translate to a larger dataset recorded in
+the database used, this may not translate to a larger database recorded in
 sub-optimal conditions.\\
 More recent methods used spectral representations to assist in the splitting of
 the FHSs, in particular using wavelet decomposition. These methods tend to
@@ -231,7 +256,7 @@ of envelope extraction and peak picking to each frequency band, the best
 estimate of all frequency bands is then chosen as the final result. Criterion
 for this choice is based on the number of S1s and S2s detected, and the number
 of artefacts discarded for each frequency band. This method achieved an
-improved accuracy of 93\% across a larger dataset of 77 recordings. This
+improved accuracy of 93\% across a larger database of 77 recordings. This
 suggests that the algorithm is as robust if not more so than previous work by
 Liang et\ al.\\
 
@@ -306,10 +331,10 @@ segmentation, please refer to Liu et.\ al~\citeyearpar{Liu2016}
 \doublespacing
 \begin{tabulary}{\linewidth}{LLLLL}
 \dtoprule
-Author                 & Method                                                                                         & Datasets                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
+Author                 & Method                                                                                         & databases                                                                                       & \mbox{Reported} Results         & Notes                                                                                            \\ \bottomrule
 Springer et.\ al \citeyearpar{Springer2016} & HSMM, Logistic regression                                                                       & 10,172s of recordings from 112 patients. 12,181 first and 11,627 second heart sounds. & $95.63\pm0.85\%$                             & Supervised algorithm.                                                                                                                                                            \\
-Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  Dataset consists entirely of child recording. Optimized on full dataset                                                                                 \\
-Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full dataset                                                                                                                                \\
+Huiying et.\ al \citeyearpar{Liang1997b} & Normalised average Shannon energy envelope, peak picking                                        & 37 recordings, 14 pathological murmurs and 23 physiological murmurs. 515 cycles       & $91.03\%\;Ac$                                          & Unsupervised Algorithm.  database consists entirely of child recording. Optimized on full database                                                                                 \\
+Vepa et.\ al \citeyearpar{Vepa2008}     & Wavelet decomposition, energy and simplicity measurement                                       & 160 heart cycles collected from a variety of sources (training CDs, web resources)    & $84\%\;Ac$                                             & Unsupervised Algorithm, Optimized on full database                                                                                                                                \\
 Sun et.\ al \citeyearpar{Sun2014}             & Viola integral envelope extraction, short-time modified Hilbert transform, peak picking        & 6949s of recordings, from 121 patients                                                & $97.37\%\;Ac$                                          & Supervised algorithm. Tolerance for segmentation accuracy not specified                                                                                                          \\
 Sepehri et.\ al \citeyearpar{Sepehri2010}        & Spectral density estimation, auto-regressive parameters, multi-layer perceptron neural network & 120 recording, from 60 patients                                                       & $93.6\%\;Ac$                                           & Supervised algorithm                                                                                                                                                             \\
 Ricke et.\ al \citeyearpar{Ricke2005}    & Shannon energy (and related features), HMM                                                     & 9 recordings, from 9 patients                                                         & $98\%\;Ac$                                             & Supervised algorithm                                                                                                                                                             \\
@@ -392,7 +417,7 @@ Wigner-Ville distribution etc\ldots, with a $k$-nearest neighbour classifier
 work highlights the effectiveness of alternative TFRs to traditional fourier
 methods. This method also employs Principle Component Analysis (PCA) for the
 mapping of a high dimensional feature space to a lower dimension, for the
-benefit of computational performance. Features were evaluated using a dataset
+benefit of computational performance. Features were evaluated using a database
 of of 22 patients, 6 of which were labeled as having a systolic murmur. The
 highest reported accuracy was achieved using MFCCs as the primary feature
 vector achieving a 98\% accuracy on 10-fold cross validation.\\
@@ -410,7 +435,8 @@ Quadratic discriminant analysis (QDA) is then used as a classifier to provide a
 final accuracy score of 73\%.\\
 
 An overview of significant research prior to the Physionet challenge is
-provided in table~\ref{SumPrior}.
+provided in table~\ref{SumPrior}. It is also noted that none of the databases
+used for prior research are publicly available.
 
 
 \newgeometry{margin=1cm} % modify this if you need even more space
@@ -424,7 +450,7 @@ provided in table~\ref{SumPrior}.
 \doublespacing
 \begin{tabulary}{\linewidth}{LLLLLL}
 \dtoprule
-Author                   & Pre-processing/segmentation                                                                                                               & Features                                                                                                        & Classification Method & Dataset                                                                                                                 & Reported Accuracy                                  \\ \hline
+Author                   & Pre-processing/segmentation                                                                                                               & Features                                                                                                        & Classification Method & Database                                                                                                                 & Reported Accuracy                                  \\ \hline
 Maglogiannis et.~al \citeyearpar{Maglogiannis2009}     & Wavelet decomposition, Shannon energy peak picking                                                                                        & Features derived from wavelet decomposition and PCG segmentations                                               & SVM                   & 198 recordings, 38 normal, 41 AS systolic murmur, 43 MR systolic murmur, 38 AR diastolic murmur, 38 MS diastolic murmur & $91.43\%\;Ac$                                      \\
 Ari et.~al \citeyearpar{Ari2010}              & Amplitude envelope peak picking~\parencite{Ari2007}                                                                                       & Wavelet based features                                                                                          & LSSVM                 & 64 patients, 64 recordings, 512 cycles                                                                                  & $88.750-100\%\;Ac$ (dependant on abnormality type) \\
 Quiceno-Manrique et.~al \citeyearpar{Quiceno-Manrique2010a}& Downsampled to 4KHz, Normalised to maximum of signal, ECG assisted QRS complex detection algorithm used for segmentation                  & Spectral features derived from STFT, Wavelet decomposition and quadratic energy distributions                   & $k$-NN                & 22 patients, 16 normal, 6 abnormal, 8 recordings (12s) per patient                                                      & $98\%\;Ac$                                         \\
@@ -444,13 +470,13 @@ The 2016 Physionet/CinC Challenge aimed to encourage development of heart
 abnormality detection algorithms by providing a large open database of PCG
 signal recordings, sourced from a variety of both clinical and non-clinical
 environments. (Further details on the database can be found in
-section~\ref{Dataset}. The complete specification is presented by Liu et.\
+section~\ref{Database}. The complete specification is presented by Liu et.\
 al~\citeyearpar{Liu2016}). In addition, participants were provided with a
 state-of-the-art heart sound segmentation algorithm, as proposed by Springer
 et.\ al in Section~\ref{Segmentation}. Participants were then tasked with the
 creation of a classification algorithm that could robustly discriminate between
 healthy and unhealthy heart sound samples. The challenge recieved 348 entries
-in total, each of which was scored on a hidden test dataset
+in total, each of which was scored on a hidden test database
 using a Modified accuracy measure ($MAcc$) as defined by Clifford et.
 al~\citeyearpar{Clifford2016}:
 \begin{table}[htbp]
@@ -507,7 +533,7 @@ generalisation of the algorithm trained on all other databases could then be
 evaluated. Results showed that performance decreased significantly when
 training via this method, giving an average accuracy of 59\%, with training
 database $b$ scoring as low as 47\%.  This could suggest that individual
-databases in the dataset are not sufficiently represented by other databases,
+databases in the database are not sufficiently represented by other databases,
 or that features do not model abnormalities sufficiently.\\
 
 Homsi et.\ al proposed a system that utilised 131 time domain, STFT based and
@@ -558,14 +584,15 @@ Kay et.\ al present a method using ANNs, a wide variety of features and PCA for
 feature reduction. The algorithm scores well on the test set. However, this
 work is most noteable for it's rigurous evaluation by authors, using leave on
 out cross validation for a clearer understanding of  the generalisation of the
-algorithm, as well as highlighting issues with the underlying dataset that are
-discussed in Section~\ref{Dataset}
+algorithm, as well as highlighting issues with the underlying database that are
+discussed in Section~\ref{Database}
 
 
 \newgeometry{margin=1cm} % modify this if you need even more space
 \begin{landscape}
 \begin{table}[H]
-    \captionof{table}{Summary of top 10 Physionet Challenge 2016 entries} \label{PriorWorkTable}
+    \captionof{table}{Summary of top 10 Physionet Challenge 2016 entries}
+    \label{PhysionetTable}
 \scriptsize
 %\centering
 \rowcolors{1}{gray!15}{white}
@@ -585,45 +612,143 @@ Jiayu (paper not submitted)                      & --                           
 Abdollahpur et.~al \citeyearpar{Abdolahpur2017} & time, TFR and perceptual features, reduced using Fisher's discriminant analysis & Combined ANNs                                            & Training accuracy: 91.6\%, 87\%, 84.55\% (prior to ANN combination method)                           & 82.63\%\\
 \dbottomrule\\
 % TODO: Add footnote explanation for Ac = Accuracy
-% TODO: Add citeyearpar references to authors
 
 \end{tabulary}
 \end{table}
 \end{landscape}
 \restoregeometry
+% TODO: Summary of the way projects were evaluated in general, and what could be improved
 
-% TODO: Insert table of previous research methods, datasets and results
+\section{Database}\label{Database}
+%TODO: Briefly describe what is needed from a database for this project
+A database representative of real-world PCG signals was needed to train models
+and evaluate the proposed method effectively.  A number of criteria were
+identified as necessary for the success of the proposed project:
+\begin{itemize}
+    \item It was required that the database contained sufficient PCG data, so
+        that a model trained to discriminate between said signals would
+        in theory generalise to new PCG data. 
+    \item A theme present in almost all previous research is that of noise. As
+        real-world classification would likely be performed in sub-optimal
+        conditions the database should contain a mixture of clean and noisy
+        signals that represent a variety of real world situation. If this is
+        not possible, noise could potentially be added to clean signals to
+        simulate this.
+    \item As this project aims to provide a general abnormality detection
+        algorithm, it must be able to differentiate healthy signals from a
+        variety of individual pathologies. This should be reflected in the
+        database through inclusion of a variety of signals representing
+        different pathological heart conditions.
+    \item Reliably labeled data is key for generating a reliable model
+        (paticularly when using machine learning methods, as in the proposed
+        project). Labels should ideally be verified by a trained professional.
+\end{itemize}
+\noindent
+Two viable options were then considered based on the above criteria:
+\begin{enumerate}
+    \item The Physionet challenge database
+    \item Generation of a synthetic dataset via methods such as that proposed
+    by Almasi et.\ al~\citeyearpar{Almasi2011}
+\end{enumerate}
 
-\section{Dataset}\label{Dataset}
+Generation of synthetic data was considered as few well formed alternative
+databases exist other than the Physionet challenge data. The database curated
+for the Physionet challenge was selected for this project, as it fulfilled the
+criteria sufficiently and posed less of a risk in terms of signal quality, due
+to all signals being produced in real-world environments.  However, synthesis
+of PCG data remains an interesting possibility for improving evaluation of
+classification systems and is discussed in Section~\ref{FurtherWork}.
+
+\subsection{Database Summary}
+The selected database is significantly larger and contains a wider variety of
+signal conditions than any database used for previous research (as detailed in
+table~\ref{PriorWorkTable}). It is released as an open-source resource and is
+documented in significant detail by Liu et.\ al~\citeyearpar{Liu2016}. The lack
+of any alternative databases, comparable in size or variety of content, perhaps
+makes this resource the current standard for PCG analysis projects. In
+addition, by replicating the conditions of the Physionet challenge, results can
+also be directly compared with those of the challenge participant's, with the
+aim of understanding how the proposed algorithm compares to the current state
+of PCG analysis.
+
+\begin{itemize}
+    \item The database consists of 6 sub-databases, labeled $a$ to $f$.
+    \item These sub-databases have been sourced from a variety of professionals,
+        over the course of a decade.
+    \item A total of 3,126 recordings are included, created using varying equipment.
+    \item 2575 recordings are labeled as normal, 665 are labeled as abnormal.
+    \item All samples have been resampled to 2KHz
+    \item Samples were recorded in a range of enviroments, both clinical and
+        non-clinical.
+    \item Many recordings are corrupted with environmental noise, such as
+        microphone friction, breathing, talking etc\ldots
+    \item Sections of silence are present in some recordings, most
+        significantly in database $e$
+\end{itemize}
+
+\subsection{Considerations}\label{DBCons}
+There are a number of issues with the acquired database that have been
+highlighted, both through previous literature and through development of the
+project. These have been considered throughout development and evaluation of
+the project.\\
+A significant issue highlighted by Liu et.\ al is the large number of normal
+recordings compared to pathological recordings. This creates a clear class
+imbalance issue that can result in over-inflated classification
+results. This is considered in
+Section~\ref{Resample}.\\
+Another key issue is the difference between the databases used by participants of the
+Physionet challenge, and the available data that was acquired for this project.
+For unknown reasons, information such as patient labels and signal quality
+labels used for training many of the challenge participant's
+models have not been made available publicly and so could not be
+used in this project. A solution to the lack of signal quality labels is
+proposed in Section~\ref{Quality}.\\
+The lack of access to the hidden test set used for evaluating challenge entries
+also had a significant impact on evaluation. An alternative method for
+evaluating using only the data provided has been proposed in
+Section~\ref{Eval}.\\
+Finally, an issue is highlighted by Bobillo with regards to database
+$e$~\citeyearpar{Bobillo2016}. The recording of normal and pathological signals using
+separate devices is likely to cause issues and is discussed in
+Section~\ref{Eval}
 
 \section{Design}
 The system aims to provide robust heart abnormality detection for PCG signals,
 such that use of the system could reliably recommend further medical attention
 when neccesary.
-\subsection{Signal Segmentation}
+\subsection{Preprocessing}
+\subsubsection{Resampling}\label{Resample}
+Solution ref~\parencite[p.278]{Muller2016}
+\subsubsection{Signal Segmentation}
 Choice of springer algorithm allows for direct comparison with Physionet
 entries
-\subsection{Choice of features}
+- lack of time to hand correct segmentations
+
+\subsection{Features}
 
 Augmentation of features using 2nd order polynomial features
 - Dangers of overfitting with higher order features
 \subsubsection{Wavelet Decomposition}
 % TODO: Insert wavelet diagram here
-\subsection{Feature selection method}
+\subsubsection{Feature selection/reduction}
 PCA/KPCA
 Sequential forward feature selection
-\subsection{Classification Model Selection/Optimization}
-Particle Swarm Optimization
+\subsection{Classification Models}
 Individual model structures used in optimization
+\subsubsection{Signal quality classification}\label{Quality}
+\subsubsection{Selection/Optimization}
+Particle Swarm Optimization
 
 \section{Implementation}
-\section{Evaluation}
+\section{Evaluation}\label{Eval}
 Group cross-validation
 Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
 challenge
 Comparison with T-Pot
-\section{Conclusion}
+\section{Further Work}\label{FurtherWork}
+Handle silent sections of audio such as those highlighted by Goda et.\
+al~\citeyearpar{Goda2016}
 
 
 

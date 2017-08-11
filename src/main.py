@@ -169,7 +169,7 @@ def main():
     # FIXME: Paralellization has been disabled due to incompatability with
     # librosa library used for MFCC calculations. This is a bug that needs to
     # be filed with the librosa team
-    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=False, reanalyse=args.reanalyse)
+    features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=parallelize, reanalyse=args.reanalyse)
     features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)

@@ -2,7 +2,6 @@ from __future__ import division
 import numpy as np
 import pysndfile
 import matplotlib.pyplot as plt
-import ipdb
 import logging
 from pathos.multiprocessing import Pool, cpu_count
 from scipy.stats import skew, tvar, kurtosis, moment
@@ -142,7 +141,6 @@ def calculateFeatures(name, audioPath, segPath):
 
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # mean value of diastole intervals
     features['mean_IntDia'] = np.round(np.mean((np.roll(segs[:,0],-1)-segs[:,3])[:-1])) # SD value of diastole intervals
-
 
 
     # =========================================================================
@@ -446,15 +444,6 @@ def calculateFeatures(name, audioPath, segPath):
     features['TotD1s2Shan']  = entropy(D1[s2Slices]**2)
     features['TotD1diaShan'] = entropy(D1[diaSlices]**2)
 
-    # =========================================================================
-    # Global MFCC Features
-    # =========================================================================
-
-    mel = mfcc(y=audioData, sr=audioSamplerate, n_mfcc=13, hop_length=int(np.round(audioSamplerate * 0.010)))
-    mel = mel.T
-    features['meanMinMFCC'] = np.mean(np.min(mel, axis=1))
-    features['maxMomMFCC'] = np.abs(moment(np.max(mel, axis=1), 4, 0, nan_policy='raise'))**(1/4.)
-    features['skewMomMFCC'] = np.abs(moment(skew(mel, axis=1), 4, 0, nan_policy='raise'))**(1/4.)
 
     # Average all per-segment features and store as output features
     for key in perSegFeatures.keys():

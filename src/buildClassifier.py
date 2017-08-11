@@ -107,7 +107,10 @@ def scoreOptimizedModel(train_features, test_features, train_classifications, te
     groups = generateGroups(train_features)
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
-        latestIteration = max(iterations)
+        try:
+            latestIteration = max(iterations)
+        except ValueError:
+            raise ValueError("Models have not been optimized, please run with the --optimize flag")
         latestSolution = hdf["/solution{}".format(latestIteration)]
         latestFeatures = pd.Index(hdf["/bestFeatures{}".format(latestIteration)])
     latestSolution = latestSolution.dropna()

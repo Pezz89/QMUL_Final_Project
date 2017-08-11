@@ -126,9 +126,7 @@ def scoreOptimizedModel(train_features, test_features, train_classifications, te
 def group_train_test_split(features, classifications, groups):
     logo = LeaveOneGroupOut()
     # Split data into test and training sets by database
-    lg = logo.split(features, classifications, groups=groups)
-    train_inds, test_inds = lg.next()
-    train_inds, test_inds = lg.next()
+    train_inds, test_inds = logo.split(features, classifications, groups=groups).next()
     train_features = features.ix[train_inds]
     test_features = features.ix[test_inds]
     train_classifications = classifications.ix[train_inds]

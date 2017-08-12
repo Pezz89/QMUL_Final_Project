@@ -103,9 +103,9 @@ def calculateFeatures(name, audioPath, segPath):
     resampleRatio = segmentation['originalSR'] / segmentation['downsampledSR']
     if resampleRatio % 1.0:
         raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
-    audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
-    audioSamplerate = audioSamplerate // resampleRatio
-    audioData = butter_bandpass_filter(audioData, 25, 400, audioSamplerate, order=4)
+    #audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
+    #audioSamplerate = audioSamplerate // resampleRatio
+    audioData = butter_bandpass_filter(audioData, 25, 600, audioSamplerate, order=4)
     segData = segmentation['data']
 
     # Organise segments into a 4*N array, where each column represents the S1,
@@ -450,19 +450,6 @@ def calculateFeatures(name, audioPath, segPath):
         features[key] = np.nanmean(perSegFeatures[key])
 
     return pd.Series(features)
-
-'''
-Scale a pandas DataFrame of features between 0 and 1, maintaining DataFrame
-datatype
-'''
-def normaliseFeatures(features):
-    minmax_scale = preprocessing.MinMaxScaler().fit(features)
-    features = pd.DataFrame(
-        minmax_scale.transform(features),
-        index=features.index,
-        columns=features.columns
-    )
-    return features
 
 
 '''

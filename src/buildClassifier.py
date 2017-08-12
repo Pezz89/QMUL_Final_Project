@@ -2,8 +2,10 @@ from __future__ import division
 from sklearn.model_selection import cross_val_score, GroupKFold
 from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.metrics.scorer import make_scorer
+from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+
+from sklearn.decomposition import KernelPCA as KPCA, PCA
 
 
 # k nearest neighbours
@@ -13,7 +15,10 @@ from sklearn.svm import SVC
 # Naive Bayes
 from sklearn.naive_bayes import GaussianNB
 # Random Forest
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+
+from sklearn.pipeline import Pipeline
+
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 import optunity
 import optunity.search_spaces as search_spaces
@@ -31,41 +36,66 @@ import loggerops
 import logging
 import sys
 import multiprocessing
+import six
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
 
-def buildModel(features, classifications, algorithm, worker_log = logging.getLogger(__name__), n_neighbors=None, n_estimators=None, max_features=None,
-                kernel=None, C=None, gamma=None, degree=None, coef0=None, max_depth=None):
-    worker_log.info("--------------------------------------------------------------------------------------------")
-    if algorithm == 'k-nn':
-        n_neighbors = int(np.round(n_neighbors))
-        worker_log.debug("Building k-NN Model with parameters:".ljust(92))
-        worker_log.debug("n_neighbors={}".format(n_neighbors).ljust(92))
-        model = KNeighborsClassifier(n_neighbors=int(n_neighbors))
-    elif algorithm == 'SVM':
-        worker_log.debug("Building SVM Model with parameters:".ljust(92))
-        worker_log.debug("kernel={0}, C={1}, gamma={2}, degree={3}, coef0={4}".format(kernel, C, gamma, degree, coef0).ljust(92))
-        model = train_svm(kernel, C, gamma, degree, coef0)
-    elif algorithm == 'naive-bayes':
-        worker_log.debug("Building Gaussian NB Model (no parameters)".ljust(92))
-        model = GaussianNB()
-    elif algorithm == 'random-forest':
-        max_features = int(np.round(max_features))
-        n_estimators = int(np.round(n_estimators))
-        max_depth=int(np.round(max_depth))
-        worker_log.debug("Building Random Forest Model with parameters:".ljust(92))
-        worker_log.debug("n_estimators={0}, max_features={1}, max_depth={2}".format(n_estimators, max_features, max_depth).ljust(92))
-        #TODO: Implement max features count
-        model = RandomForestClassifier(n_estimators=int(n_estimators),
-                                    #max_features=int(max_features), random_state=42)
-                                       max_depth=max_depth,
-                                    random_state=42)
-    else:
-        raise ValueError('Unknown algorithm: {}'.format(algorithm))
-    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns])).ljust(92))
+def buildModel(
+    features,
+    classifications,
+    algorithm,
+    worker_log = logging.getLogger(__name__),
+    **kwargs
+):
 
-    return model
+    # Filter out None arguments
+    kwargs = {k:v for k,v in kwargs.iteritems() if v is not None}
+
+    fr_method = kwargs.pop('feature_reduction')
+    # Strip fr prefix substring used for distinguishing reduction parameters
+    # from model parameters in optimization code
+    reduction_parameters = {k.replace('fr_', ''): v.replace('fr_', '') if isinstance(v, six.string_types) else v for k, v in kwargs.iteritems() if 'fr_' in k}
+    model_parameters = {k: v for k, v in kwargs.iteritems() if 'fr_' not in k and k != ''}
+
+    interger_params = ['n_neighbors', 'max_features', 'max_depth', 'n_estimators']
+
+    # Round any float parameters that should be ints
+    for p in set(interger_params).intersection(reduction_parameters):
+        reduction_parameters[p] = int(round(reduction_parameters[p]))
+    for p in set(interger_params).intersection(model_parameters):
+        model_parameters[p] = int(round(model_parameters[p]))
+
+    reduction_methods = {
+        "PCA": PCA,
+        "None": None
+    }
+
+
+    worker_log.info("--------------------------------------------------------------------------------------------")
+    model_methods = {
+        'k-nn': KNeighborsClassifier,
+        'SVM': SVC,
+        'naive-bayes': GaussianNB,
+        'random-forest': RandomForestClassifier,
+        'adaboost': AdaBoostClassifier
+    }
+
+    worker_log.debug("Building model: {}, with parameters:".format(algorithm).ljust(92))
+    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in model_parameters.iteritems()]).ljust(92))
+    # Build model
+    model = model_methods[algorithm](**model_parameters)
+
+    worker_log.debug("Feature reduction method: {}, with parameters:".format(fr_method).ljust(92))
+    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in reduction_parameters.iteritems()]).ljust(92))
+
+
+    pipe_components = [("scaler", preprocessing.MinMaxScaler()), ("model", model)]
+    if reduction_methods[fr_method]:
+        pipe_components.insert(1, ("reduction", reduction_methods[fr_method](**reduction_parameters)))
+    pipe = Pipeline(pipe_components)
+
+    return pipe
 
 
 def modelFeatureSelection(features, classifications, gkf, model, worker_log=logging.getLogger(__name__)):
@@ -173,7 +203,14 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
                     'poly': {'degree': [2, 5], 'C': [0, 50], 'coef0': [0, 1]}
                 }
             },
+            'adaboost': {
+                'n_estimators': [10, 100],
+            },
             'naive-bayes': None,
+        },
+        'feature_reduction': {
+            'PCA': None,
+            'None': None
         }
     }
     '''
@@ -199,7 +236,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
 
     # wrap the decoder and constraints for the internal search space representation
     f = tree.wrap_decoder(optimizationWrapper)
-    f = constraints.wrap_constraints(f, (-sys.float_info.max, pd.Index(['test', 'test2'])), range_oo=box)
+    f = constraints.wrap_constraints(f, -sys.float_info.max, range_oo=box)
 
     # Create solver keyword args based on number of evaluations and box
     # constraints
@@ -229,14 +266,3 @@ def extract_number(f):
     return (int(s[0]) if s else -1,f)
 
 
-def train_svm(kernel, C, gamma, degree, coef0):
-    """A generic SVM training function, with arguments based on the chosen kernel."""
-    if kernel == 'linear':
-        model = SVC(kernel=kernel, C=C, random_state=42)
-    elif kernel == 'poly':
-        model = SVC(kernel=kernel, C=C, degree=degree, coef0=coef0, random_state=42)
-    elif kernel == 'rbf':
-        model = SVC(kernel=kernel, C=C, gamma=gamma, random_state=42)
-    else:
-        raise ArgumentError("Unknown kernel function: %s" % kernel)
-    return model

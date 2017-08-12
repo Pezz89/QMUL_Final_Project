@@ -8,7 +8,7 @@ import loggerops
 import logging
 import pathops
 from subprocess import Popen, PIPE
-from generateFeatures import generateFeatures, normaliseFeatures
+from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
 from buildClassifier import optimizeClassifierModel, scoreOptimizedModel, group_train_test_split
 from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
@@ -170,7 +170,6 @@ def main():
     # librosa library used for MFCC calculations. This is a bug that needs to
     # be filed with the librosa team
     features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=parallelize, reanalyse=args.reanalyse)
-    features = normaliseFeatures(features)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     evaluateFeatures(features, classifications)

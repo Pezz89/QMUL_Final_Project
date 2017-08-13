@@ -182,7 +182,7 @@ def main():
     #train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
-    scoreOptimizedModel(train_features, test_features, train_classifications, test_classifications, parameters_filepath)
+    scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, parameters_filepath)
 
 def apply_pca(train_X, test_X, train_Y, test_Y):
     from sklearn.decomposition import KernelPCA

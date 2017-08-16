@@ -103,9 +103,9 @@ def calculateFeatures(name, audioPath, segPath):
     resampleRatio = segmentation['originalSR'] / segmentation['downsampledSR']
     if resampleRatio % 1.0:
         raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
-    #audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
-    #audioSamplerate = audioSamplerate // resampleRatio
-    audioData = butter_bandpass_filter(audioData, 25, 600, audioSamplerate, order=4)
+    audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
+    audioSamplerate = audioSamplerate // resampleRatio
+    audioData = butter_bandpass_filter(audioData, 25, 400, audioSamplerate, order=4)
     segData = segmentation['data']
 
     # Organise segments into a 4*N array, where each column represents the S1,

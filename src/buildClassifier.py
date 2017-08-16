@@ -40,10 +40,9 @@ import six
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
+np.random.seed(42)
 
 def buildModel(
-    features,
-    classifications,
     algorithm,
     worker_log = logging.getLogger(__name__),
     **kwargs
@@ -77,17 +76,17 @@ def buildModel(
     # Build model
     model = model_methods[algorithm](**model_parameters)
 
-
-
-    pipe_components = [("scaler", preprocessing.MinMaxScaler()), ("model", model)]
+    pipe_components = [("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", model)]
     pipe = Pipeline(pipe_components)
 
     return pipe
+
+
 def parameterReduction(model, worker_log = logging.getLogger(__name__), **kwargs):
     # Filter out None arguments
     kwargs = {k:v for k,v in kwargs.iteritems() if v is not None}
-
     fr_method = kwargs.pop('feature_reduction')
+    #fr_method = kwargs.pop('feature_reduction')
     # Strip fr prefix substring used for distinguishing reduction parameters
     # from model parameters in optimization code
     reduction_parameters = {k.replace('fr_', ''): v.replace('fr_', '') if isinstance(v, six.string_types) else v for k, v in kwargs.iteritems() if 'fr_' in k}
@@ -121,7 +120,8 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
         logger=worker_log
     )
 
-    pipe = parameterReduction(sfs1, worker_log, **kwargs)
+    #pipe = parameterReduction(sfs1, worker_log, **kwargs)
+    pipe = sfs1
 
     worker_log.info("--------------------------------------------------------------------------------------------")
     worker_log.info("Running feature selection...".ljust(92))
@@ -136,16 +136,21 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
     #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
-    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]])).ljust(92))
-    worker_log.info("k-score score:                             {}".format(sfs1.named_steps['model'].k_score_).ljust(92))
+    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
+    worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
 
-    return sfs1.named_steps['model'].k_score_, features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]
+    return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
+
+    #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]])).ljust(92))
+    #worker_log.info("k-score score:                             {}".format(sfs1.named_steps['model'].k_score_).ljust(92))
+    #worker_log.info("--------------------------------------------------------------------------------------------")
+
+    #return sfs1.named_steps['model'].k_score_, features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]
 
 
 def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, **kwargs):
     # load model information from file
-    groups = generateGroups(train_features)
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
         try:
@@ -158,7 +163,7 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     algorithm = latestSolution.pop('algorithm')
     train_features = train_features.ix[:, latestFeatures]
     test_features = test_features.ix[:, latestFeatures]
-    model = buildModel(train_features, train_classifications, algorithm, **latestSolution)
+    model = buildModel(algorithm, **latestSolution)
     model = parameterReduction(model, **latestSolution)
     model.fit(train_features, train_classifications)
     physionetScorer = make_scorer(score)
@@ -168,6 +173,13 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     logging.info("--------------------------------------------------------------------------------------------")
 
     logo = LeaveOneGroupOut()
+    skf = StratifiedKFold(n_splits=10, random_state=42)
+
+    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer, logo)
+
+    logging.info("Final optimized score:    {}".format(logo_scores).ljust(92))
+    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer, skf)
+    logging.info("Final optimized score:    {}".format(np.mean(logo_scores)).ljust(92))
 
 
 
@@ -183,7 +195,7 @@ def group_train_test_split(features, classifications, groups):
     train_classifications = classifications.ix[train_inds]
     test_classifications = classifications.ix[test_inds]
     '''
-    gss = StratifiedShuffleSplit(test_size=0.33, n_splits=10)
+    gss = StratifiedShuffleSplit(test_size=0.33, n_splits=10, random_state=42)
 
     train_features = pd.DataFrame()
     test_features = pd.DataFrame()
@@ -212,11 +224,11 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     #cross_validator = list(GroupKFold(n_splits=3).split(features,classifications,groups))#int(np.max(groups)+1))
     cross_validator = StratifiedKFold(n_splits=10, random_state=42)
 
-    def dummyWrapper(algorithm, **kwargs):
+    def dummyWrapper(algorithm='naive-bayes', **kwargs):
         '''Dummy function created for debugging optimization quickly'''
         return (0.5, pd.Index(['diaCent', 'diaDur', 'diaFlat']))
 
-    def optimizationWrapper(algorithm, **kwargs):
+    def optimizationWrapper(algorithm='naive-bayes', **kwargs):
         process_name = multiprocessing.current_process().name
         worker_log = loggerops.create_logger(
             process_name,
@@ -224,7 +236,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
             use_stream_handler=False
         )
         worker_log.propagate = False
-        model = buildModel(features, classifications, algorithm, worker_log=worker_log, **kwargs)
+        model = buildModel(algorithm, worker_log=worker_log, **kwargs)
         scr, featureLabels = modelFeatureSelection(features, classifications, cross_validator, model, worker_log=worker_log, **kwargs)
         return scr, featureLabels
     # TODO: Used for quickly debugging particle swarm optimization, remove for
@@ -243,7 +255,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
                 }
             },
             'adaboost': {
-                'n_estimators': [10, 100],
+                'n_estimators': [10, 60],
             },
             'naive-bayes': None,
         },
@@ -275,7 +287,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
 
     # wrap the decoder and constraints for the internal search space representation
     f = tree.wrap_decoder(optimizationWrapper)
-    f = constraints.wrap_constraints(f, -sys.float_info.max, range_oo=box)
+    f = constraints.wrap_constraints(f, (-sys.float_info.max, pd.Index(['test', 'test2'])), range_oo=box)
 
     # Create solver keyword args based on number of evaluations and box
     # constraints

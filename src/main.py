@@ -172,7 +172,9 @@ def main():
     features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=parallelize, reanalyse=args.reanalyse)
     classifications = getClassifications(args.test_dir, features)
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
-    evaluateFeatures(features, classifications)
+    features = features.replace(-np.inf, 0)
+    features = features.replace(np.inf, np.nan)
+    #evaluateFeatures(features, classifications)
 
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
     # Split features into training and test set by database
@@ -255,13 +257,18 @@ def getClassifications(referenceLocation, features):
     refLocs = []
     for root, dirs, files in os.walk(referenceLocation):
         for file in files:
-            if file.endswith('.csv'):
+            if file == 'REFERENCE-SQI.csv':
                 refLocs.append(os.path.join(root, file))
     refLocs = sorted(refLocs)
-    classifications = pd.Series([])
+    classifications = pd.DataFrame({'class': [], 'quality': []})
     for refFile in refLocs:
-        classifications = classifications.append(pd.Series.from_csv(refFile))
-    classifications = classifications[features.index]
+        refDF = pd.read_csv(refFile,header=None, index_col=0, names=['class', 'quality'])
+        classifications = classifications.append(refDF)
+    classifications = classifications.ix[features.index]
+    lowQInd = classifications[classifications['quality'] == 0].index
+    classifications.loc[lowQInd, 'class'] = 0
+    classifications = classifications['class']
+
     return classifications
 
 

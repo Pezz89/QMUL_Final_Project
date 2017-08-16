@@ -285,7 +285,8 @@ class ParticleSwarm(Solver):
 
             # Will return scores and best features for saving to file on each
             # iteration
-            fitnesses, featureLabels = zip(*pmap(evaluate, list(map(self.particle2dict, pop))))
+            a = pmap(evaluate, list(map(self.particle2dict, pop)))
+            fitnesses, featureLabels = zip(*a)
             for part, fitness, label in zip(pop, fitnesses, featureLabels):
                 part.fitness = fit * util.score(fitness)
                 if not part.best or part.best_fitness < part.fitness:

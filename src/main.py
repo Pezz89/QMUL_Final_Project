@@ -10,7 +10,7 @@ import pathops
 from subprocess import Popen, PIPE
 from generateFeatures import generateFeatures
 from evaluateFeatures import evaluateFeatures
-from buildClassifier import optimizeClassifierModel, scoreOptimizedModel, group_train_test_split
+from buildClassifier import optimizeClassifierModel, scoreOptimizedModel, group_train_test_split, modelFeatureSelection
 from resample import bootstrapResample, jacknifeResample, combinationResample, groupResample
 from group import generateGroups
 import pandas as pd
@@ -74,6 +74,12 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--select-features",
+        action="store_true",
+        help="Run feature selection algorithm to find best features for model."
+    )
+
+    parser.add_argument(
         "--parameters_fname", type=str,
         default='parameters.pkl',
         help="Specify the name of the file to save generated features to for "
@@ -81,7 +87,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--no_parallel",
+        "--no-parallel",
         "-p",
         action="store_true",
         help="Disable processing in parallel. (Will likely decrease performance "
@@ -184,6 +190,9 @@ def main():
     #train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
+
+    if args.select_features:
+        modelFeatureSelection(train_features, train_classifications, parameters_filepath)
     scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, parameters_filepath)
 
 def apply_pca(train_X, test_X, train_Y, test_Y):

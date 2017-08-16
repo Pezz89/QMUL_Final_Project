@@ -45,7 +45,7 @@ class PrincipalComponentAnalysis(_BaseModel):
         self.n_components = n_components
         self._is_fitted = False
 
-    def fit(self, X):
+    def fit(self, X, y=None):
         """Learn model from training data.
 
         Parameters

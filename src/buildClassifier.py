@@ -95,6 +95,12 @@ def buildModel(
         cl2_parameters['base_estimator'] = DecisionTreeClassifier(max_depth=1, min_samples_leaf=1)
     if cl3_algorithm == 'adaboost':
         cl3_parameters['base_estimator'] = DecisionTreeClassifier(max_depth=1, min_samples_leaf=1)
+    if cl1_algorithm == 'SVM':
+        cl1_parameters['probability'] = True
+    if cl2_algorithm == 'SVM':
+        cl2_parameters['probability'] = True
+    if cl3_algorithm == 'SVM':
+        cl3_parameters['probability'] = True
 
     # Build model
     clf1 = model_methods[cl1_algorithm](**cl1_parameters)
@@ -102,7 +108,7 @@ def buildModel(
     clf3 = model_methods[cl3_algorithm](**cl3_parameters)
     lr = LogisticRegression()
 
-    pipe_components = [("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr))]
+    pipe_components = [("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr, use_probas=True))]
     pipe = Pipeline(pipe_components)
 
     return pipe
@@ -132,26 +138,47 @@ def parameterReduction(model, worker_log = logging.getLogger(__name__), **kwargs
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in reduction_parameters.iteritems()]).ljust(92))
     return pipe
 
-def modelFeatureSelection(features, classifications, gkf, model, worker_log=logging.getLogger(__name__), **kwargs):
+def modelFeatureSelection(features, classifications, optimization_fpath, worker_log=logging.getLogger(__name__), **kwargs):
+    # load model information from file
+    with pd.HDFStore(optimization_fpath) as hdf:
+        iterations = [extract_number(x)[0] for x in hdf.keys()]
+        try:
+            latestIteration = max(iterations)
+        except ValueError:
+            raise ValueError("Models have not been optimized, please run with the --optimize flag")
+        latestSolution = hdf["/solution{}".format(latestIteration)]
+    latestSolution = latestSolution.dropna()
+
+    model = buildModel(**latestSolution)
+    worker_log.info("--------------------------------------------------------------------------------------------")
+    worker_log.info("Running feature selection...".ljust(92))
+    worker_log.info("--------------------------------------------------------------------------------------------")
+
     physionetScorer = make_scorer(score)
 
-    sfs1 = SFS(
+    model = SFS(
         model,
-        k_features=(10, 40),
+        k_features=(1, 2),
         forward=True,
         floating=True,
         verbose=2,
         scoring=physionetScorer,
-        cv=2,#gkf,
-        logger=worker_log
+        cv=3,#gkf,
+        logger=worker_log,
+        n_jobs=-1
     )
 
-    #pipe = parameterReduction(sfs1, worker_log, **kwargs)
-    pipe = sfs1
+    model.fit(features.as_matrix(), classifications.as_matrix())
+    bestLabel = features.columns[np.array(model.k_feature_idx_)]
+    bestLabel.to_series().to_hdf(optimization_fpath, key="bestFeatures")
 
-    worker_log.info("--------------------------------------------------------------------------------------------")
-    worker_log.info("Running feature selection...".ljust(92))
-    worker_log.info("--------------------------------------------------------------------------------------------")
+
+def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogger(__name__), **kwargs):
+
+
+    physionetScorer = make_scorer(score)
+    pipe = model
+
     sfs1 = pipe.fit(features.as_matrix(), classifications.as_matrix())
 
     np.set_printoptions(precision=4)
@@ -162,11 +189,16 @@ def modelFeatureSelection(features, classifications, gkf, model, worker_log=logg
     #logging.info("Specificity:                               {}".format(spec).ljust(92))
     #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
     #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
-    worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
-    worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
+    #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
+    #worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
+    skf = StratifiedKFold(n_splits=10, random_state=42)
+
+    logo_scores = cross_val_score(model, features, classifications, scoring=physionetScorer, cv=skf)
+
+    worker_log.info("k-score score:                             {}".format(np.mean(logo_scores)).ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
 
-    return sfs1.k_score_, features.columns[np.array(sfs1.k_feature_idx_)]
+    return np.mean(logo_scores)
 
     #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]])).ljust(92))
     #worker_log.info("k-score score:                             {}".format(sfs1.named_steps['model'].k_score_).ljust(92))
@@ -184,13 +216,13 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
         except ValueError:
             raise ValueError("Models have not been optimized, please run with the --optimize flag")
         latestSolution = hdf["/solution{}".format(latestIteration)]
-        latestFeatures = pd.Index(hdf["/bestFeatures{}".format(latestIteration)])
+        latestFeatures = pd.Index(hdf["/bestFeatures"])
     latestSolution = latestSolution.dropna()
-    algorithm = latestSolution.pop('algorithm')
+
     train_features = train_features.ix[:, latestFeatures]
     test_features = test_features.ix[:, latestFeatures]
+
     model = buildModel(**latestSolution)
-    model = parameterReduction(model, **latestSolution)
     model.fit(train_features, train_classifications)
     physionetScorer = make_scorer(score)
     finalScore = physionetScorer(model, test_features, test_classifications)
@@ -263,8 +295,8 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         )
         worker_log.propagate = False
         model = buildModel(worker_log=worker_log, **kwargs)
-        scr, featureLabels = modelFeatureSelection(features, classifications, cross_validator, model, worker_log=worker_log, **kwargs)
-        return scr, featureLabels
+        scr = scoreModel(features, classifications, cross_validator, model, worker_log=worker_log, **kwargs)
+        return scr
     # TODO: Used for quickly debugging particle swarm optimization, remove for
     # production
     #optimizationWrapper = dummyWrapper
@@ -275,7 +307,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         'cl1_algorithm': {
             'cl1_SVM': {
                 'cl1_kernel': {
-                    'cl1_linear': {'cl1_C': [0, 2]},
+                    'cl1_linear': {'cl1_C': [0, 10]},
                     'cl1_rbf': {'cl1_gamma': [0, 1], 'cl1_C': [0, 10]},
                     'cl1_poly': {'cl1_degree': [2, 5], 'cl1_C': [0, 50], 'cl1_coef0': [0, 1]}
                 }
@@ -285,7 +317,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         'cl2_algorithm': {
             'cl2_SVM': {
                 'cl2_kernel': {
-                    'cl2_linear': {'cl2_C': [0, 2]},
+                    'cl2_linear': {'cl2_C': [0, 10]},
                     'cl2_rbf': {'cl2_gamma': [0, 1], 'cl2_C': [0, 10]},
                     'cl2_poly': {'cl2_degree': [2, 5], 'cl2_C': [0, 50], 'cl2_coef0': [0, 1]}
                 }
@@ -295,7 +327,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         'cl3_algorithm': {
             'cl3_SVM': {
                 'cl3_kernel': {
-                    'cl3_linear': {'cl3_C': [0, 2]},
+                    'cl3_linear': {'cl3_C': [0, 10]},
                     'cl3_rbf': {'cl3_gamma': [0, 1], 'cl3_C': [0, 10]},
                     'cl3_poly': {'cl3_degree': [2, 5], 'cl3_C': [0, 50], 'cl3_coef0': [0, 1]}
                 }
@@ -304,25 +336,13 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         }
     }
 
-    '''
-    'cl1_adaboost': {
-        'cl1_n_estimators': [10, 40],
-    },
-    '''
-    '''
-            'random-forest': {
-                'n_estimators': [10, 30],
-                'max_features': [5, 20],
-                'max_depth': [1, 10]
-            }
-    '''
 
     if parallelize:
         pmap = optunity.pmap
     else:
         pmap = map
 
-    num_evals=50
+    num_evals=500
     tree = search_spaces.SearchTree(search)
     box = tree.to_box()
 
@@ -348,12 +368,10 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         solutionFPath=optimization_fpath
     )
 
-    # TODO: Remove this...
-    optimal_configuration, info, solverInfo = solution, details, suggestion
 
     # Create dictionary of all parameters that have values
     logging.info("Solution:".ljust(92))
-    for item in optimal_configuration.iteritems():
+    for item in solution.iteritems():
         logging.info("{:20.20}{:72.72}".format(item[0], str(item[1])))
 
 

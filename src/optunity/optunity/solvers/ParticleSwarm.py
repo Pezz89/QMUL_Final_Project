@@ -285,16 +285,14 @@ class ParticleSwarm(Solver):
 
             # Will return scores and best features for saving to file on each
             # iteration
-            a = pmap(evaluate, list(map(self.particle2dict, pop)))
-            fitnesses, featureLabels = zip(*a)
-            for part, fitness, label in zip(pop, fitnesses, featureLabels):
+            fitnesses = pmap(evaluate, list(map(self.particle2dict, pop)))
+            for part, fitness in zip(pop, fitnesses):
                 part.fitness = fit * util.score(fitness)
                 if not part.best or part.best_fitness < part.fitness:
                     part.best = part.position
                     part.best_fitness = part.fitness
                 if not best or best.fitness < part.fitness:
                     best = part.clone()
-                    bestLabel = label
             for part in pop:
                 self.updateParticle(part, best, self.phi1, self.phi2)
 
@@ -307,5 +305,5 @@ class ParticleSwarm(Solver):
 
                 # Create dataframe for solution and feature selection
                 solution.to_hdf(solutionFPath, key="solution{0}".format(ind))
-                bestLabel.to_series().to_hdf(solutionFPath, key="bestFeatures{0}".format(ind))
+                #bestLabel.to_series().to_hdf(solutionFPath, key="bestFeatures{0}".format(ind))
         return dict([(k, v) for k, v in zip(self.bounds.keys(), best.position)]), None

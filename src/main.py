@@ -16,8 +16,6 @@ from group import generateGroups
 import pandas as pd
 import traceback
 
-import pdb
-
 modpath = sys.argv[0]
 modpath = os.path.splitext(modpath)[0]+'.log'
 
@@ -82,6 +80,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        '--max-features',
+        '-m',
+        type=int,
+        default=50,
+        help='Number of evaluation to pass to the particle swarm optimization'
+    )
+
+    parser.add_argument(
         "--select-features",
         action="store_true",
         help="Run feature selection algorithm to find best features for model."
@@ -128,6 +134,7 @@ def parse_arguments():
 
 
     args = parser.parse_args()
+    # Set verbosity of logger output based on argument
     if not args.verbose:
         args.verbose = 20
     else:
@@ -142,129 +149,60 @@ def main():
     # Process commandline arguments
     args = parse_arguments()
 
-    # This code was taken from: https://stackoverflow.com/questions/19425736/how-to-redirect-stdout-and-stderr-to-logger-in-py
-    class LoggerWriter:
-        def __init__(self, level):
-            # self.level is really like using log.debug(message)
-            # at least in my case
-            self.level = level
-
-        def write(self, message):
-            # if statement reduces the amount of newlines that are
-            # printed to the logger
-            mess = [s for s in message.splitlines()]
-            for m in mess:
-                self.level(m.ljust(92))
-
-        def flush(self):
-            # create a flush method so things can be flushed when
-            # the system wants to. Not sure if simply 'printing'
-            # sys.stderr is the correct way to do it, but it seemed
-            # to work properly for me.
-            pass
-            #self.level(sys.stderr)
-
     global logger
     logger = loggerops.create_logger(
         logger_streamlevel=args.verbose,
         log_filename=modpath,
         logger_filelevel=args.verbose
     )
-    #sys.stdout = LoggerWriter(logger.info)
-    #sys.stderr = LoggerWriter(logger.debug)
 
-    #add_custom_print_exception()
+    # Run PCG segmentation using algorithm provided by the Physionet Challenge
+    # 2016, using MATLAB
     if args.segment:
         logger.info("Running MATLAB segmentation...")
         runSpringerSegmentation(args.test_dir, args.output_dir)
+    # Parallel processing defaults to on
     parallelize = not args.no_parallel
+
+    # Search recursively through folders to find PCG data and supporting files
+    # (class labels, noise labels)
     dataFilepaths = getFilepaths(args.test_dir, args.output_dir)
     # Calculate all features for dataset
-    # FIXME: Paralellization has been disabled due to incompatability with
-    # librosa library used for MFCC calculations. This is a bug that needs to
-    # be filed with the librosa team
     features = generateFeatures(dataFilepaths, args.output_dir, args.features_fname, parallelize=parallelize, reanalyse=args.reanalyse)
+
+    # Get classification labels for all loaded files, using filenames stored in
+    # the 'features' DataFrame
     classifications = getClassifications(args.test_dir, features)
+
+    # Resample generated features and classifications to balance dataset, using
+    # a combination of jacknife and bootstrap resampling based on user input
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
+    # Filter any eroneous values from features
     features = features.replace(-np.inf, 0)
     features = features.replace(np.inf, np.nan)
-    #evaluateFeatures(features, classifications)
 
+    # Get filepath for storing model parameters generated in optimization
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
-    # Split features into training and test set by database
+
+    # Group samples by sub-database, for use with Leave-one-out cross
+    # validation
     groups = generateGroups(features)
+
+    # Split features into training and test set by database
     train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
 
-    #train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
+        # Optimize model parameters using particle swarm optimization
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, num_evals=args.eval, parallelize=parallelize)
 
     if args.select_features:
-        modelFeatureSelection(train_features, train_classifications, parameters_filepath)
+        # Run sequential feature selection to select optimal set of features
+        # for training
+        modelFeatureSelection(train_features, train_classifications, parameters_filepath, max_features=args.max_features)
+
+    # Score model using optimized parameters and features
     scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, parameters_filepath)
 
-def apply_pca(train_X, test_X, train_Y, test_Y):
-    from sklearn.decomposition import KernelPCA
-
-    train_rows = train_X.index
-    test_rows = test_X.index
-
-    kpca = KernelPCA()
-    kpca.fit(train_X)
-
-    X_pca = kpca.transform(train_X)
-    import matplotlib.pyplot as plt
-
-
-
-    tot = sum(kpca.lambdas_)
-    var_exp = [(i / tot)*100 for i in sorted(kpca.lambdas_, reverse=True)]
-    cum_var_exp = np.cumsum(var_exp)
-
-    numPC = 110
-
-    if False:
-        with plt.style.context('seaborn-whitegrid'):
-            fig, ax = plt.subplots(figsize=(6, 4))
-            plt.bar(range(X_pca.shape[1]), var_exp, alpha=0.5, align='center',
-                    label='individual explained variance')
-            plt.step(range(X_pca.shape[1]), cum_var_exp, where='mid',
-                    label='cumulative explained variance')
-            plt.ylabel('Explained variance ratio')
-            plt.xlabel('Principal components')
-            plt.xticks(range(X_pca.shape[1]))
-            ax.set_xticklabels(np.arange(1, train_X.shape[1] + 1))
-            plt.legend(loc='best')
-            plt.tight_layout()
-            plt.show()
-            pdb.set_trace()
-
-    train_X = X_pca[:, :numPC]
-
-    X_pca = kpca.transform(test_X)
-
-    tot = sum(kpca.lambdas_)
-    var_exp = [(i / tot)*100 for i in sorted(kpca.lambdas_, reverse=True)]
-    cum_var_exp = np.cumsum(var_exp)
-
-    if False:
-        with plt.style.context('seaborn-whitegrid'):
-            fig, ax = plt.subplots(figsize=(6, 4))
-            plt.bar(range(X_pca.shape[1]), var_exp, alpha=0.5, align='center',
-                    label='individual explained variance')
-            plt.step(range(X_pca.shape[1]), cum_var_exp, where='mid',
-                    label='cumulative explained variance')
-            plt.ylabel('Explained variance ratio')
-            plt.xlabel('Principal components')
-            plt.xticks(range(X_pca.shape[1]))
-            ax.set_xticklabels(np.arange(1, X.shape[1] + 1))
-            plt.legend(loc='best')
-            plt.tight_layout()
-            plt.show()
-
-
-    test_X = X_pca[:, :numPC]
-    return pd.DataFrame(train_X, index=train_rows), pd.DataFrame(test_X, index=test_rows)
 
 '''
 Read classification labels for files in the dataset
@@ -289,6 +227,9 @@ def getClassifications(referenceLocation, features):
     return classifications
 
 
+'''
+Search folder for audio and segment files to be used as samples
+'''
 def getFilepaths(audioLocation, segmentsLocation):
     # Find all segmentation files
     segLocs = []
@@ -317,6 +258,9 @@ def getFilepaths(audioLocation, segmentsLocation):
                 break
     return filepaths
 
+'''
+Run external segmentation algorithm on PCG files
+'''
 def runSpringerSegmentation(dataset_dir, output_root_dir):
     # Run matlab springer segmentation code to generate S1, S2, Systole and
     # Diastole segmentations

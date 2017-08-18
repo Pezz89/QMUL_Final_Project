@@ -126,7 +126,7 @@ def buildModel(
     return pipe
 
 
-def modelFeatureSelection(features, classifications, optimization_fpath, worker_log=logging.getLogger(__name__), **kwargs):
+def modelFeatureSelection(features, classifications, optimization_fpath, max_features=50, worker_log=logging.getLogger(__name__), **kwargs):
     # load model information from file
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
@@ -146,7 +146,7 @@ def modelFeatureSelection(features, classifications, optimization_fpath, worker_
 
     model = SFS(
         model,
-        k_features=(1, 2),
+        k_features=(1, max_features),
         forward=True,
         floating=True,
         verbose=2,
@@ -225,8 +225,6 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     logging.info("Startifier K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
     for line in skf_table.split('\n'):
         logging.info(line.ljust(92))
-
-
 
 
 def group_train_test_split(features, classifications, groups):

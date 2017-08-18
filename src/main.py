@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import sys
 import os
+import glob
 import loggerops
 import logging
 import pathops
@@ -131,6 +132,13 @@ def parse_arguments():
         'the dataset (0=just jacknife, 1=just bootsrap)'
     )
 
+    parser.add_argument(
+        '--keep-logs',
+        action="store_true",
+        help="Remove previously generated logs"
+    )
+
+
 
 
     args = parser.parse_args()
@@ -148,6 +156,9 @@ def parse_arguments():
 def main():
     # Process commandline arguments
     args = parse_arguments()
+    if not args.keep_logs:
+        for log in glob.glob("./*.log"):
+            os.remove(log)
 
     global logger
     logger = loggerops.create_logger(

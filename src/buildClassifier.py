@@ -62,6 +62,11 @@ def buildModel(
     cl2_parameters = {k.replace('cl2_', ''): v.replace('cl2_', '') if isinstance(v, six.string_types) else v for k, v in cl2_parameters.iteritems() if 'cl2_' in k}
     cl3_parameters = {k.replace('cl3_', ''): v.replace('cl3_', '') if isinstance(v, six.string_types) else v for k, v in cl3_parameters.iteritems() if 'cl3_' in k}
     lr_parameters = {k.replace('lr_', ''): v.replace('lr_', '') if isinstance(v, six.string_types) else v for k, v in lr_parameters.iteritems() if 'lr_' in k}
+
+    cl1_algorithm = cl1_parameters.pop('algorithm')
+    cl2_algorithm = cl2_parameters.pop('algorithm')
+    cl3_algorithm = cl3_parameters.pop('algorithm')
+
     # Round any float parameters that should be ints
     for p in set(interger_params).intersection(cl1_parameters):
         cl1_parameters[p] = int(round(cl1_parameters[p]))
@@ -86,16 +91,13 @@ def buildModel(
         'logistic-regression': LogisticRegression
     }
 
-    worker_log.debug("Building model: {}, with parameters:".format('Stacking Classifier').ljust(92))
-    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl1_parameters.iteritems()]).ljust(92))
-    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl2_parameters.iteritems()]).ljust(92))
-    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl3_parameters.iteritems()]).ljust(92))
+    worker_log.debug("Building Stacking Classifier, with parameters:".ljust(92))
+    worker_log.debug("Algorithm: {} ".format(cl1_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl1_parameters.iteritems()]).ljust(92))
+    worker_log.debug("Algorithm: {} ".format(cl2_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl2_parameters.iteritems()]).ljust(92))
+    worker_log.debug("Algorithm: {} ".format(cl3_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl3_parameters.iteritems()]).ljust(92))
     worker_log.debug("Meta-classifier (Logistic regression) parameters:".ljust(92))
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in lr_parameters.iteritems()]).ljust(92))
 
-    cl1_algorithm = cl1_parameters.pop('algorithm')
-    cl2_algorithm = cl2_parameters.pop('algorithm')
-    cl3_algorithm = cl3_parameters.pop('algorithm')
 
     if cl1_algorithm == 'adaboost':
         cl1_parameters['base_estimator'] = DecisionTreeClassifier(max_depth=1, min_samples_leaf=1)

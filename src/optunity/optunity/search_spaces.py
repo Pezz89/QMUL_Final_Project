@@ -276,6 +276,9 @@ class SearchTree(object):
             keylist = k.split(DELIM)
 
             if currently_decoding_nested and len(keylist) >= len(currently_decoding_nested):
+                if currently_decoding_nested[0] != keylist[0]:
+                    currently_decoding_nested = []
+
                 if not all(map(lambda t: t[0] == t[1], zip(currently_decoding_nested, keylist))):
                     # keylist doesnt match what we are currently decoding
                     # and it is longer than what we are decoding

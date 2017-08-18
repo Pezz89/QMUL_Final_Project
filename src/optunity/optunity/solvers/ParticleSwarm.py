@@ -270,6 +270,7 @@ class ParticleSwarm(Solver):
         else:
             fit = -1.0
 
+
         pop = [self.generate() for _ in range(self.num_particles)]
         best = None
 

@@ -47,7 +47,6 @@ def buildModel(
     worker_log = logging.getLogger(__name__),
     **kwargs
 ):
-
     # Filter out None arguments
     kwargs = {k:v for k,v in kwargs.iteritems() if v is not None}
     #fr_method = kwargs.pop('feature_reduction')
@@ -55,12 +54,14 @@ def buildModel(
     cl1_parameters = {k: v for k, v in kwargs.iteritems() if 'cl1_' in k}
     cl2_parameters = {k: v for k, v in kwargs.iteritems() if 'cl2_' in k}
     cl3_parameters = {k: v for k, v in kwargs.iteritems() if 'cl3_' in k}
+    lr_parameters = {k: v for k, v in kwargs.iteritems() if 'lr_' in k}
 
-    interger_params = ['n_neighbors', 'max_features', 'max_depth', 'n_estimators']
+    interger_params = ['n_neighbors', 'max_features', 'max_depth', 'n_estimators', 'penalty']
 
     cl1_parameters = {k.replace('cl1_', ''): v.replace('cl1_', '') if isinstance(v, six.string_types) else v for k, v in cl1_parameters.iteritems() if 'cl1_' in k}
     cl2_parameters = {k.replace('cl2_', ''): v.replace('cl2_', '') if isinstance(v, six.string_types) else v for k, v in cl2_parameters.iteritems() if 'cl2_' in k}
     cl3_parameters = {k.replace('cl3_', ''): v.replace('cl3_', '') if isinstance(v, six.string_types) else v for k, v in cl3_parameters.iteritems() if 'cl3_' in k}
+    lr_parameters = {k.replace('lr_', ''): v.replace('lr_', '') if isinstance(v, six.string_types) else v for k, v in lr_parameters.iteritems() if 'lr_' in k}
     # Round any float parameters that should be ints
     for p in set(interger_params).intersection(cl1_parameters):
         cl1_parameters[p] = int(round(cl1_parameters[p]))
@@ -68,7 +69,11 @@ def buildModel(
         cl2_parameters[p] = int(round(cl2_parameters[p]))
     for p in set(interger_params).intersection(cl3_parameters):
         cl3_parameters[p] = int(round(cl3_parameters[p]))
+    for p in set(interger_params).intersection(lr_parameters):
+        lr_parameters[p] = int(round(lr_parameters[p]))
 
+    penalty_str = ['l1', 'l2']
+    lr_parameters['penalty'] = penalty_str[lr_parameters['penalty']]
 
 
     worker_log.info("--------------------------------------------------------------------------------------------")
@@ -77,13 +82,16 @@ def buildModel(
         'SVM': SVC,
         'naive-bayes': GaussianNB,
         'random-forest': RandomForestClassifier,
-        'adaboost': AdaBoostClassifier
+        'adaboost': AdaBoostClassifier,
+        'logistic-regression': LogisticRegression
     }
 
     worker_log.debug("Building model: {}, with parameters:".format('Stacking Classifier').ljust(92))
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl1_parameters.iteritems()]).ljust(92))
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl2_parameters.iteritems()]).ljust(92))
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in cl3_parameters.iteritems()]).ljust(92))
+    worker_log.debug("Meta-classifier (Logistic regression) parameters:".ljust(92))
+    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in lr_parameters.iteritems()]).ljust(92))
 
     cl1_algorithm = cl1_parameters.pop('algorithm')
     cl2_algorithm = cl2_parameters.pop('algorithm')
@@ -106,7 +114,7 @@ def buildModel(
     clf1 = model_methods[cl1_algorithm](**cl1_parameters)
     clf2 = model_methods[cl2_algorithm](**cl2_parameters)
     clf3 = model_methods[cl3_algorithm](**cl3_parameters)
-    lr = LogisticRegression()
+    lr = LogisticRegression(random_state=42, **lr_parameters)
 
     pipe_components = [("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr, use_probas=True))]
     pipe = Pipeline(pipe_components)
@@ -333,6 +341,11 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
                 }
             },
             'cl3_naive-bayes': None,
+        },
+        'lr_meta_algorithm': {
+            'lr_C': [0.1, 20],
+            'lr_penalty': [0, 1]
+
         }
     }
 

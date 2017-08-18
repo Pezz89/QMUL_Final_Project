@@ -81,8 +81,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        '--max-features',
-        '-m',
+        '--feature-reduction',
         type=int,
         default=50,
         help='Number of evaluation to pass to the particle swarm optimization'
@@ -96,8 +95,15 @@ def parse_arguments():
 
     parser.add_argument(
         "--parameters_fname", type=str,
-        default='parameters.pkl',
+        default='parameters.h5',
         help="Specify the name of the file to save generated features to for "
+        "future use", metavar="OUTFNAME"
+    )
+
+    parser.add_argument(
+        "--fs_fname", type=str,
+        default='feature_selection.h5',
+        help="Specify the name of the file to save generated feature selection model to for "
         "future use", metavar="OUTFNAME"
     )
 
@@ -194,6 +200,7 @@ def main():
 
     # Get filepath for storing model parameters generated in optimization
     parameters_filepath = os.path.join(args.output_dir, args.parameters_fname)
+    fs_filepath = os.path.join(args.output_dir, args.fs_fname)
 
     # Group samples by sub-database, for use with Leave-one-out cross
     # validation
@@ -209,7 +216,7 @@ def main():
     if args.select_features:
         # Run sequential feature selection to select optimal set of features
         # for training
-        modelFeatureSelection(train_features, train_classifications, parameters_filepath, max_features=args.max_features)
+        modelFeatureSelection(train_features, train_classifications, parameters_filepath, fs_filepath, min_features=args.feature_reduction)
 
     # Score model using optimized parameters and features
     scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, parameters_filepath)

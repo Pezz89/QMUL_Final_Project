@@ -296,6 +296,9 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
 
 
 '''
+Create hidden dataset by splitting each sub-dataset, taking an equal number of
+classes (normal, abnormal and unsure) from each database for the test set.
+Without patient labels, it is currently not possible to stratify by patient
 '''
 def group_train_test_split(features, classifications, groups):
     gss = StratifiedShuffleSplit(test_size=0.33, n_splits=10, random_state=42)
@@ -323,6 +326,9 @@ def group_train_test_split(features, classifications, groups):
     return (train_features, test_features, train_classifications, test_classifications, train_groups, test_groups)
 
 
+'''
+Run particle swarm optimization on model to determine the optimal set of hyper-parameters
+'''
 def optimizeClassifierModel(features, classifications, groups, optimization_fpath, num_evals=50, parallelize=False):
     cross_validator = StratifiedKFold(n_splits=10, random_state=42)
 
@@ -331,6 +337,9 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         return (0.5, pd.Index(['diaCent', 'diaDur', 'diaFlat']))
 
     def optimizationWrapper(**kwargs):
+        '''
+        Wraps building and scoring of model for optimization algorithm
+        '''
         process_name = multiprocessing.current_process().name
         worker_log = loggerops.create_logger(
             process_name,
@@ -386,11 +395,15 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     }
 
 
+    # Optimization can be performed in parallel or synchronously based on user
+    # preference
     if parallelize:
         pmap = optunity.pmap
     else:
         pmap = map
 
+    # Optunity library methods used for transforming search space to a format
+    # useable by the optimization algorithm
     tree = search_spaces.SearchTree(search)
     box = tree.to_box()
 
@@ -398,10 +411,10 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     f = tree.wrap_decoder(optimizationWrapper)
     f = constraints.wrap_constraints(f, (-sys.float_info.max, pd.Index(['test', 'test2'])), range_oo=box)
 
-    # Create solver keyword args based on number of evaluations and box
-    # constraints
+    # Create particle swarm object
     suggestion = optunity.suggest_solver(num_evals, "particle swarm", **box)
     solver = optunity.make_solver(**suggestion)
+    # Apply optimization to model using formatted search space
     solution, details = optunity.optimize(
         solver,
         f,
@@ -412,22 +425,26 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         solutionFPath=optimization_fpath
     )
 
-    # Create dictionary of all parameters that have values
+    # Print final optimized solution
     logging.info("Solution:".ljust(92))
     for item in solution.iteritems():
         logging.info("{:20.20}{:72.72}".format(item[0], str(item[1])))
 
 
+'''
+Get number from string. Taken from: https://stackoverflow.com/questions/43074685/find-file-in-directory-with-the-highest-number-in-the-filename
+'''
 def extract_number(f):
     s = re.findall("\d+$",f)
     return (int(s[0]) if s else -1,f)
 
-# Code taken from: https://stackoverflow.com/questions/250357/truncate-a-string-without-ending-in-the-middle-of-a-word
+'''
+Code taken from: https://stackoverflow.com/questions/250357/truncate-a-string-without-ending-in-the-middle-of-a-word
+
+Returns a string of at most `max_length` characters, cutting only at
+word-boundaries. If the string was truncated, `suffix` will be appended.
+'''
 def smart_truncate1(text, max_length=100, suffix='...'):
-    """Returns a string of at most `max_length` characters, cutting
-    only at word-boundaries. If the string was truncated, `suffix`
-    will be appended.
-    """
 
     if len(text) > max_length:
         pattern = r'^(.{0,%d}\S)\s.*' % (max_length-len(suffix)-1)

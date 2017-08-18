@@ -1,4 +1,8 @@
 import numpy as np
+
+'''
+Calculate modified accuracy score as defined by Liu et. al
+'''
 def score(y, y_pred):
     unsure_weight=0.5
     y = np.array(y)
@@ -25,6 +29,9 @@ def score(y, y_pred):
     return macc
 
 
+'''
+Calculate sensitivity score as defined by Liu et. al
+'''
 def sensitivity(y, y_pred):
     unsure_weight=0.5
     y = np.array(y)
@@ -46,6 +53,9 @@ def sensitivity(y, y_pred):
     return se
 
 
+'''
+Calculate specificity score as defined by Liu et. al
+'''
 def specificity(y, y_pred):
     unsure_weight=0.5
     y = np.array(y)

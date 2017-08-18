@@ -1,56 +1,83 @@
 from __future__ import division
+
+################################################################################
+# Generic imports
+################################################################################
 import numpy as np
-import pysndfile
+import pandas as pd
 import matplotlib.pyplot as plt
 import logging
-from pathos.multiprocessing import Pool, cpu_count
-from scipy.stats import skew, tvar, kurtosis, moment
-from scipy.signal import decimate
-from sklearn import preprocessing
 import collections
 import os
-import pandas as pd
-import pathops
-from scipy.stats import entropy
-from pyeeg import samp_entropy
-from librosa.feature import mfcc
 import io
 import functools
 import sys
 
+
+# Improved multiprocessing drop in library to replace Python's multiprocessing
+# library
+from pathos.multiprocessing import Pool, cpu_count
+
+################################################################################
+# Generic imports
+################################################################################
+# Libsndfile interface for hadeling audio files
+import pysndfile
+# SIgnal processing and stats functions for feature generation
+from scipy.stats import skew, tvar, kurtosis, moment, entropy
+from scipy.signal import decimate
+from scipy.signal import butter, lfilter
+from pyeeg import samp_entropy
+
+
+################################################################################
+# Generic imports
+################################################################################
+# Wavelet transform library
 import pywt
+# Mel-frequency cepstrum coefficients feature generation library
+from librosa.feature import mfcc
+
+################################################################################
+# Project imports
+################################################################################
+import pathops
 
 logger = logging.getLogger(__name__)
 
-from scipy.signal import butter, lfilter
 
+'''
+Fix to handle genfromtxt bug in pandas that occurs in Python3
+'''
 genfromtxt_old = np.genfromtxt
 @functools.wraps(genfromtxt_old)
 def genfromtxt_py3_fixed(f, encoding="utf-8", *args, **kwargs):
-  if isinstance(f, io.TextIOBase):
-    if hasattr(f, "buffer") and hasattr(f.buffer, "raw") and \
-    isinstance(f.buffer.raw, io.FileIO):
-      # Best case: get underlying FileIO stream (binary!) and use that
-      fb = f.buffer.raw
-      # Reset cursor on the underlying object to match that on wrapper
-      fb.seek(f.tell())
-      result = genfromtxt_old(fb, *args, **kwargs)
-      # Reset cursor on wrapper to match that of the underlying object
-      f.seek(fb.tell())
+    if isinstance(f, io.TextIOBase):
+        if hasattr(f, "buffer") and hasattr(f.buffer, "raw") and \
+        isinstance(f.buffer.raw, io.FileIO):
+            # Best case: get underlying FileIO stream (binary!) and use that
+            fb = f.buffer.raw
+            # Reset cursor on the underlying object to match that on wrapper
+            fb.seek(f.tell())
+            result = genfromtxt_old(fb, *args, **kwargs)
+            # Reset cursor on wrapper to match that of the underlying object
+            f.seek(fb.tell())
+        else:
+            # Not very good but works: Put entire contents into BytesIO object,
+            # otherwise same ideas as above
+            old_cursor_pos = f.tell()
+            fb = io.BytesIO(bytes(f.read(), encoding=encoding))
+            result = genfromtxt_old(fb, *args, **kwargs)
+        f.seek(old_cursor_pos + fb.tell())
     else:
-      # Not very good but works: Put entire contents into BytesIO object,
-      # otherwise same ideas as above
-      old_cursor_pos = f.tell()
-      fb = io.BytesIO(bytes(f.read(), encoding=encoding))
-      result = genfromtxt_old(fb, *args, **kwargs)
-      f.seek(old_cursor_pos + fb.tell())
-  else:
-    result = genfromtxt_old(f, *args, **kwargs)
-  return result
+        result = genfromtxt_old(f, *args, **kwargs)
+    return result
 
 if sys.version_info >= (3,):
   np.genfromtxt = genfromtxt_py3_fixed
 
+# Butterworth filter implementation, adapted from:
+# https://stackoverflow.com/questions/12093594/how-to-implement-band-pass-butterworth-filter-with-scipy-signal-butter
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
     low = lowcut / nyq
@@ -65,11 +92,13 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 
+'''
+Parse segmentation file values generated in Matlab
+
+Returns a dictionary with elements for each header value in csv file and a
+data element for segmentation values, stored in a numpy array
+'''
 def parse_segmentation_file(segPath):
-    '''
-    Returns a dictionary with elements for each header value in csv file and a
-    data element for segmentation values, stored ina numpy array
-    '''
     with io.open(segPath, 'r') as csvfile:
         originalSR, downsampledSR, heartRate = np.genfromtxt(csvfile, delimiter=",", max_rows=1, dtype=float, unpack=True)
         csvData = np.genfromtxt(csvfile, delimiter=",",  dtype=int)
@@ -81,6 +110,11 @@ def parse_segmentation_file(segPath):
         }
 
 
+'''
+An implementation of Matlab's wrcoef function for convenience
+
+Used to reconstruct individual levels of a wavelet decomposition
+'''
 def wrcoef(X, coef_type, coeffs, wavename, level):
     N = np.array(X).size
     a, ds = coeffs[0], list(reversed(coeffs[1:]))
@@ -93,18 +127,30 @@ def wrcoef(X, coef_type, coeffs, wavename, level):
         raise ValueError("Invalid coefficient type: {}".format(coef_type))
 
 
+'''
+Calculate all audio features for a single PCG signal
+return a pandas Series of labelled features
+'''
 def calculateFeatures(name, audioPath, segPath):
     logger.debug("Calculating features for: {0}".format(os.path.relpath(audioPath)))
+    # Get segmentations from segmentation file generated in Matlab
     segmentation = parse_segmentation_file(segPath)
-    # Get audio data from PCG file
+    # Read audio data from PCG file
     audioFile = pysndfile.PySndfile(audioPath, 'r')
     audioData = audioFile.read_frames()
     audioSamplerate = audioFile.samplerate()
+    # Calculate the ratio between samplerate used for segmentation and tyhe
+    # file's original sample rate
     resampleRatio = segmentation['originalSR'] / segmentation['downsampledSR']
     if resampleRatio % 1.0:
         raise ValueError("Resample ratio is not an integer for audio file {0}".format(audioPath))
+    # Resample audio to segmentation samplerate
     audioData = decimate(audioData, int(resampleRatio), zero_phase=True)
+    # Set variable for the resampled rate
     audioSamplerate = audioSamplerate // resampleRatio
+    # Apply a bandpass filter with a lower cutoff of 25Hz and an upper cutoff
+    # of 400Hz to filter any noise outside the typical frequency range of PCG
+    # data
     audioData = butter_bandpass_filter(audioData, 25, 400, audioSamplerate, order=4)
     segData = segmentation['data']
 
@@ -123,6 +169,7 @@ def calculateFeatures(name, audioPath, segPath):
     # Global Features - Calculated over entire signal
     # =========================================================================
 
+    # Features are added to this dictionary dynamically as they are created
     features = collections.defaultdict(lambda: None)
 
     # Get heart rate feature calculated during segmentation
@@ -300,8 +347,7 @@ def calculateFeatures(name, audioPath, segPath):
         # MFCC Features
         # =====================================================================
 
-
-
+        # Calculate MFCCs for each segment type
         n_mfcc = 13
         s1Mel = np.hstack(mfcc(y=s1, sr=audioSamplerate, n_mfcc=n_mfcc, hop_length=s1.size+1))
         for ind, m in enumerate(s1Mel):
@@ -515,6 +561,8 @@ def generateFeatures(dataFilepaths, output_dir, filename=None, parallelize=True,
     keys = [x['name'] for x in dataFilepaths if x['name'] in features.index]
     features = features.ix[keys]
 
+    # Run feature extraction synchronously or in parallel based on user
+    # preference
     if parallelize:
         pool = Pool(cpu_count())
         results = pool.map(calculateFeatures_helper, args)
@@ -532,3 +580,5 @@ def generateFeatures(dataFilepaths, output_dir, filename=None, parallelize=True,
         raise ValueError("Some features contain Nan values.")
 
     return features
+
+

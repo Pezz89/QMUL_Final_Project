@@ -4,6 +4,9 @@ import pdb
 
 from group import generateGroups
 
+'''
+Resample input data using a mix of bootstrap and jacknife resampling
+'''
 def groupResample(features, classification, mix=0.5):
     groups = generateGroups(features)
     resampledFeatures = []

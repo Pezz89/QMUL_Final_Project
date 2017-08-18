@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-cd ./src/
-./main.py ../validation_dataset ../out_debug -vvvvv --segment -o run_classifier_segment_debug.pkl

@@ -39,6 +39,7 @@ import logging
 import sys
 import multiprocessing
 import six
+import textwrap
 
 logger = logging.getLogger(__name__)
 random_state = np.random.RandomState(42)
@@ -169,7 +170,6 @@ def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogg
     np.set_printoptions(precision=4)
 
     worker_log.info("--------------------------------------------------------------------------------------------")
-    #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
     skf = StratifiedKFold(n_splits=10, random_state=42)
     logo_scores = cross_val_score(model, features, classifications, scoring=physionetScorer, cv=skf)
 
@@ -200,6 +200,9 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     finalScore = physionetScorer(model, test_features, test_classifications)
     logging.info("--------------------------------------------------------------------------------------------")
     logging.info("Final optimized score:                      {}".format(finalScore).ljust(92))
+    logging.info("Selected features:".ljust(92))
+    for line in textwrap.fill(" ".join([str(x) for x in features.columns]), width=89).split('\n'):
+        logging.info(line.ljust(92))
     logging.info("--------------------------------------------------------------------------------------------")
 
     logo = LeaveOneGroupOut()
@@ -227,16 +230,6 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
 
 
 def group_train_test_split(features, classifications, groups):
-    '''
-    logo = LeaveOneGroupOut()
-    # Split data into test and training sets by database
-    train_inds, test_inds = logo.split(features, classifications, groups=groups).next()
-
-    train_features = features.ix[train_inds]
-    test_features = features.ix[test_inds]
-    train_classifications = classifications.ix[train_inds]
-    test_classifications = classifications.ix[test_inds]
-    '''
     gss = StratifiedShuffleSplit(test_size=0.33, n_splits=10, random_state=42)
 
     train_features = pd.DataFrame()
@@ -263,7 +256,6 @@ def group_train_test_split(features, classifications, groups):
 
 
 def optimizeClassifierModel(features, classifications, groups, optimization_fpath, num_evals=50, parallelize=False):
-    #cross_validator = list(GroupKFold(n_splits=3).split(features,classifications,groups))#int(np.max(groups)+1))
     cross_validator = StratifiedKFold(n_splits=10, random_state=42)
 
     def dummyWrapper(**kwargs):
@@ -281,7 +273,7 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         model = buildModel(worker_log=worker_log, **kwargs)
         scr = scoreModel(features, classifications, cross_validator, model, worker_log=worker_log, **kwargs)
         return scr
-    # TODO: Used for quickly debugging particle swarm optimization, remove for
+    # FIXME: Used for quickly debugging particle swarm optimization, remove for
     # production
     #optimizationWrapper = dummyWrapper
 
@@ -334,10 +326,6 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     tree = search_spaces.SearchTree(search)
     box = tree.to_box()
 
-    # we need to position the call log here
-    # because the function signature used later on is internal logic
-    #f = optunity.functions.logged(optimizationWrapper)
-
     # wrap the decoder and constraints for the internal search space representation
     f = tree.wrap_decoder(optimizationWrapper)
     f = constraints.wrap_constraints(f, (-sys.float_info.max, pd.Index(['test', 'test2'])), range_oo=box)
@@ -356,7 +344,6 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
         solutionFPath=optimization_fpath
     )
 
-
     # Create dictionary of all parameters that have values
     logging.info("Solution:".ljust(92))
     for item in solution.iteritems():
@@ -367,4 +354,15 @@ def extract_number(f):
     s = re.findall("\d+$",f)
     return (int(s[0]) if s else -1,f)
 
+# Code taken from: https://stackoverflow.com/questions/250357/truncate-a-string-without-ending-in-the-middle-of-a-word
+def smart_truncate1(text, max_length=100, suffix='...'):
+    """Returns a string of at most `max_length` characters, cutting
+    only at word-boundaries. If the string was truncated, `suffix`
+    will be appended.
+    """
 
+    if len(text) > max_length:
+        pattern = r'^(.{0,%d}\S)\s.*' % (max_length-len(suffix)-1)
+        return re.sub(pattern, r'\1' + suffix, text)
+    else:
+        return text

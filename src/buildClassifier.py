@@ -28,6 +28,7 @@ import optunity.constraints as constraints
 from multiscorer import multiscorer as ms
 from physionetscore import score, sensitivity, specificity
 from group import generateGroups
+from tabulate import tabulate
 
 import re
 import numpy as np
@@ -92,9 +93,9 @@ def buildModel(
     }
 
     worker_log.debug("Building Stacking Classifier, with parameters:".ljust(92))
-    worker_log.debug("Algorithm: {} ".format(cl1_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl1_parameters.iteritems()]).ljust(92))
-    worker_log.debug("Algorithm: {} ".format(cl2_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl2_parameters.iteritems()]).ljust(92))
-    worker_log.debug("Algorithm: {} ".format(cl3_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl3_parameters.iteritems()]).ljust(92))
+    worker_log.debug(("Algorithm: {} ".format(cl1_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl1_parameters.iteritems()])).ljust(92))
+    worker_log.debug(("Algorithm: {} ".format(cl2_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl2_parameters.iteritems()])).ljust(92))
+    worker_log.debug(("Algorithm: {} ".format(cl3_algorithm) + " ".join(['{0}: {1}'.format(k, v) for k, v in cl3_parameters.iteritems()])).ljust(92))
     worker_log.debug("Meta-classifier (Logistic regression) parameters:".ljust(92))
     worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in lr_parameters.iteritems()]).ljust(92))
 
@@ -123,30 +124,6 @@ def buildModel(
 
     return pipe
 
-
-def parameterReduction(model, worker_log = logging.getLogger(__name__), **kwargs):
-    # Filter out None arguments
-    kwargs = {k:v for k,v in kwargs.iteritems() if v is not None}
-    #fr_method = kwargs.pop('feature_reduction')
-    #fr_method = kwargs.pop('feature_reduction')
-    # Strip fr prefix substring used for distinguishing reduction parameters
-    # from model parameters in optimization code
-    reduction_parameters = {k.replace('fr_', ''): v.replace('fr_', '') if isinstance(v, six.string_types) else v for k, v in kwargs.iteritems() if 'fr_' in k}
-    interger_params = ['n_neighbors', 'max_features', 'max_depth', 'n_estimators']
-    for p in set(interger_params).intersection(reduction_parameters):
-        reduction_parameters[p] = int(round(reduction_parameters[p]))
-
-    #reduction_methods = {
-    #    "PCA": None,
-    #    "None": None
-    #}
-    pipe_components = [("model", model)]
-    #if reduction_methods[fr_method]:
-    #    pipe_components.insert(0, ("reduction", reduction_methods[fr_method](n_components=40, **reduction_parameters)))
-    pipe = Pipeline(pipe_components)
-    worker_log.debug("Feature reduction method: {}, with parameters:".format(fr_method).ljust(92))
-    worker_log.debug(" ".join(['{0}: {1}'.format(k, v) for k, v in reduction_parameters.iteritems()]).ljust(92))
-    return pipe
 
 def modelFeatureSelection(features, classifications, optimization_fpath, worker_log=logging.getLogger(__name__), **kwargs):
     # load model information from file
@@ -184,8 +161,6 @@ def modelFeatureSelection(features, classifications, optimization_fpath, worker_
 
 
 def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogger(__name__), **kwargs):
-
-
     physionetScorer = make_scorer(score)
     pipe = model
 
@@ -194,27 +169,14 @@ def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogg
     np.set_printoptions(precision=4)
 
     worker_log.info("--------------------------------------------------------------------------------------------")
-    #logging.info("Cross-validation scores:                   {}".format(scr).ljust(92))
-    #logging.info("Sensitivity:                               {}".format(sens).ljust(92))
-    #logging.info("Specificity:                               {}".format(spec).ljust(92))
-    #logging.info("Average Cross-validation score:            {}".format(np.mean(scr)).ljust(92))
-    #logging.info("Standard-dev Cross-validation score:       {}".format(np.std(scr)).ljust(92))
     #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.k_feature_idx_)]])).ljust(92))
-    #worker_log.info("k-score score:                             {}".format(sfs1.k_score_).ljust(92))
     skf = StratifiedKFold(n_splits=10, random_state=42)
-
     logo_scores = cross_val_score(model, features, classifications, scoring=physionetScorer, cv=skf)
 
-    worker_log.info("k-score score:                             {}".format(np.mean(logo_scores)).ljust(92))
+    worker_log.info("Score:                             {}".format(np.mean(logo_scores)).ljust(92))
     worker_log.info("--------------------------------------------------------------------------------------------")
 
     return np.mean(logo_scores)
-
-    #worker_log.info("Selected features: {}".format(" ".join([str(x) for x in features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]])).ljust(92))
-    #worker_log.info("k-score score:                             {}".format(sfs1.named_steps['model'].k_score_).ljust(92))
-    #worker_log.info("--------------------------------------------------------------------------------------------")
-
-    #return sfs1.named_steps['model'].k_score_, features.columns[np.array(sfs1.named_steps['model'].k_feature_idx_)]
 
 
 def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, **kwargs):
@@ -245,9 +207,21 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
 
     logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer, logo)
 
-    logging.info("Final optimized score:    {}".format(logo_scores).ljust(92))
-    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer, skf)
-    logging.info("Final optimized score:    {}".format(np.mean(logo_scores)).ljust(92))
+    table_header = ['a', 'b', 'c', 'd', 'e', 'f', 'Mean']
+    logo_scores = np.append(logo_scores, np.mean(logo_scores))
+    logo_table = tabulate(list([logo_scores]), headers=table_header, tablefmt='grid', floatfmt=".4f")
+    logging.info("Leave-one-out cross-validation score:".format(logo_scores).ljust(92))
+    for line in logo_table.split('\n'):
+        logging.info(line.ljust(92))
+
+    table_header = list(np.arange(1, 11))
+    table_header.append('Mean')
+    skf_scores = cross_val_score(model, features, classifications, groups, physionetScorer, skf)
+    skf_scores = np.append(skf_scores, np.mean(skf_scores))
+    skf_table = tabulate(list([skf_scores]), headers=table_header, tablefmt='grid', floatfmt=".4f")
+    logging.info("Startifier K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
+    for line in skf_table.split('\n'):
+        logging.info(line.ljust(92))
 
 
 
@@ -288,7 +262,7 @@ def group_train_test_split(features, classifications, groups):
     return (train_features, test_features, train_classifications, test_classifications, train_groups, test_groups)
 
 
-def optimizeClassifierModel(features, classifications, groups, optimization_fpath, parallelize=False):
+def optimizeClassifierModel(features, classifications, groups, optimization_fpath, num_evals=50, parallelize=False):
     #cross_validator = list(GroupKFold(n_splits=3).split(features,classifications,groups))#int(np.max(groups)+1))
     cross_validator = StratifiedKFold(n_splits=10, random_state=42)
 
@@ -357,7 +331,6 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     else:
         pmap = map
 
-    num_evals=500
     tree = search_spaces.SearchTree(search)
     box = tree.to_box()
 

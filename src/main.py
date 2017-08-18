@@ -54,7 +54,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--features_fname", "-o", type=str,
+        "--features-fname", "-o", type=str,
         default='features.pkl',
         help="Specify the name of the file to save generated features to for "
         "future use", metavar="OUTFNAME"
@@ -71,6 +71,14 @@ def parse_arguments():
         action="store_true",
         help="Run optimization algorithm to find best model and parameters "
         "for classifier"
+    )
+
+    parser.add_argument(
+        '--eval',
+        '-e',
+        type=int,
+        default=50,
+        help='Number of evaluation to pass to the particle swarm optimization'
     )
 
     parser.add_argument(
@@ -109,10 +117,10 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        '--resample_mix',
+        '--resample-mix',
         '-r',
         type=float,
-        default=0.5,
+        default=0.0,
         help='Mix between bootstrap and jacknife resampling used to balance '
         'the dataset (0=just jacknife, 1=just bootsrap)'
     )
@@ -189,7 +197,7 @@ def main():
 
     #train_features, test_features = apply_pca(train_features, test_features, train_classifications, test_classifications)
     if args.optimize:
-        optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, parallelize=parallelize)
+        optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, num_evals=args.eval, parallelize=parallelize)
 
     if args.select_features:
         modelFeatureSelection(train_features, train_classifications, parameters_filepath)

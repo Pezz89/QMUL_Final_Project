@@ -288,6 +288,7 @@ def runSpringerSegmentation(dataset_dir, output_root_dir):
         'matlab',
         '-nosplash',
         '-nodesktop',
+        '-nojvm',
         '-r',
         'try addpath(\'./SpringerExtraction\');'
         'main(\'{0}\', \'{1}\');'

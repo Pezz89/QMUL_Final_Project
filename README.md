@@ -54,12 +54,16 @@ performance using metrics described in the report.
 run_optimized_model_demo.sh 
 Scoring of properly trained model: An optimized model generated during
 development has been included and will be scored on the demo dataset. Again
-this is purely a demonstration of correct operation, not performance.
+this is purely a quick demonstration of correct operation, not performance.
 
 run_optimized_model.sh
-Scores an optimized model on the full dataset. Assumes the full database exists
-in ./PCG_Physionet_Dataset in the project directory (Not included due to size
-limitations).
+Scores an optimized model on the full dataset. This should run in a reasonable
+amount of time, as features and models are already computed.
+
+run_optimized_model_full.sh
+Train a model from scratch on the full dataset. This will take a considerable
+amount of time and requires significant computing power. This demonstrates the
+method used for development of the final algorithm.
 
 ./src/main.py --help
 The underlying interface used for training, optimization and scoring of models.

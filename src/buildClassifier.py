@@ -57,6 +57,7 @@ import optunity.constraints as constraints
 from physionetscore import score, sensitivity, specificity
 from group import generateGroups
 import loggerops
+from multiscorer import MultiScorer
 
 
 logger = logging.getLogger(__name__)
@@ -179,8 +180,13 @@ def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpa
     worker_log.info("--------------------------------------------------------------------------------------------")
 
     # Create a scorer object using the custom Physionet challenge scoring
-    # metric
-    physionetScorer = make_scorer(score, custom_y=classifications)
+    # metrics
+    physionetScorer = MultiScorer({
+        'score' : (score, {'custom_y': classifications}),
+        'sensitivity' : (sensitivity, {'custom_y': classifications}),
+        'specificity' : (specificity, {'custom_y': classifications})
+    })
+
     classifications = filterNoiseSamples(classifications)
 
     if backward:
@@ -217,8 +223,12 @@ Uses stratified 10-fold cross validation to calculate model performance
 '''
 def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogger(__name__), **kwargs):
     # Create a scorer object using the custom Physionet challenge scoring
-    # metric
-    physionetScorer = make_scorer(score, custom_y=classifications)
+    # metrics
+    physionetScorer = MultiScorer({
+        'score' : (score, {'custom_y': classifications}),
+        'sensitivity' : (sensitivity, {'custom_y': classifications}),
+        'specificity' : (specificity, {'custom_y': classifications})
+    })
     classifications = filterNoiseSamples(classifications)
 
     # Set precision of floats printed to logger
@@ -263,10 +273,25 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
         test_features = test_features.ix[:, latestFeatures]
         features = features.ix[:, latestFeatures]
 
+    # Generate scorers for each metric
+    physionetScorer = MultiScorer({
+        'score' : (score, {'custom_y': classifications}),
+        'sensitivity' : (sensitivity, {'custom_y': classifications}),
+        'specificity' : (specificity, {'custom_y': classifications})
+    })
+    physionetScorer2 = MultiScorer({
+        'score' : (score, {'custom_y': classifications}),
+        'sensitivity' : (sensitivity, {'custom_y': classifications}),
+        'specificity' : (specificity, {'custom_y': classifications})
+    })
+    physionetScorer3 = MultiScorer({
+        'score' : (score, {'custom_y': classifications}),
+        'sensitivity' : (sensitivity, {'custom_y': classifications}),
+        'specificity' : (specificity, {'custom_y': classifications})
+    })
     # Rebuild model from saved parameters
     # TODO: Replace rebuilding with pickling of original model builds, so that
     # they can be directly loaded back from file
-    physionetScorer = make_scorer(score, custom_y=classifications)
     train_classifications = filterNoiseSamples(train_classifications)
     test_classifications = filterNoiseSamples(test_classifications)
     classifications = filterNoiseSamples(classifications)
@@ -277,8 +302,15 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
 
     # Score model on hidden test set using custom Physionet metric
     finalScore = physionetScorer(model, test_features, test_classifications)
+    results = physionetScorer.get_results()
+    sens = results['sensitivity'][0]
+    spec = results['specificity'][0]
+
     logging.info("--------------------------------------------------------------------------------------------")
-    logging.info("Final optimized score:                      {}".format(finalScore).ljust(92))
+    logging.info("Hidden test set results:".ljust(92))
+    logging.info("Score:                        {}".format(finalScore).ljust(92))
+    logging.info("Sensitivity:                  {}".format(sens).ljust(92))
+    logging.info("Specificity:                  {}".format(spec).ljust(92))
     logging.info("Selected features:".ljust(92))
     for line in textwrap.fill(" ".join([str(x) for x in test_features.columns]), width=89).split('\n'):
         logging.info(line.ljust(92))
@@ -288,21 +320,47 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     skf = StratifiedKFold(n_splits=10, random_state=42)
 
     # Evaluate model using leav-one-out and startified 10-fold cross-validation
-    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer, logo)
+    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer2, logo)
+    results = physionetScorer2.get_results().copy()
+    logo_sens = results['sensitivity']
+    logo_sens = np.append(logo_sens, np.mean(logo_sens))
+    logo_spec = results['specificity']
+    logo_spec = np.append(logo_spec, np.mean(logo_spec))
     logo_scores = np.append(logo_scores, np.mean(logo_scores))
-    skf_scores = cross_val_score(model, features, classifications, groups, physionetScorer, skf)
-    skf_scores = np.append(skf_scores, np.mean(skf_scores))
+
 
     # Pretty print results to logger
-    table_header = ['a', 'b', 'c', 'd', 'e', 'f', 'Mean']
-    logo_table = tabulate(list([logo_scores]), headers=table_header, tablefmt='grid', floatfmt=".4f")
+    table_header = [' ', 'a', 'b', 'c', 'd', 'e', 'f', 'Mean']
+
+    row1 = list(logo_scores)
+    row1.insert(0, 'Score')
+    row2 = list(logo_spec)
+    row2.insert(0, 'Specificity')
+    row3 = list(logo_sens)
+    row3.insert(0, 'Sensitivity')
+
+    logo_table = tabulate([row1, row2, row3], headers=table_header, tablefmt='grid', floatfmt=".4f")
     logging.info("Leave-one-out cross-validation score:".format(logo_scores).ljust(92))
     for line in logo_table.split('\n'):
         logging.info(line.ljust(92))
 
+    skf_scores = cross_val_score(model, features, classifications, groups, physionetScorer3, skf)
+    skf_results = physionetScorer3.get_results().copy()
+    skf_sens = skf_results['sensitivity']
+    skf_sens = np.append(skf_sens, np.mean(skf_sens))
+    skf_spec = skf_results['specificity']
+    skf_spec = np.append(skf_spec, np.mean(skf_spec))
+    skf_scores = np.append(skf_scores, np.mean(skf_scores))
+
     table_header = list(np.arange(1, 11))
     table_header.append('Mean')
-    skf_table = tabulate(list([skf_scores]), headers=table_header, tablefmt='grid', floatfmt=".4f")
+    row1 = list(skf_scores)
+    row1.insert(0, 'Score')
+    row2 = list(skf_spec)
+    row2.insert(0, 'Specificity')
+    row3 = list(skf_sens)
+    row3.insert(0, 'Sensitivity')
+    skf_table = tabulate([row1, row2, row3], headers=table_header, tablefmt='grid', floatfmt=".4f")
     logging.info("Stratified K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
     for line in skf_table.split('\n'):
         logging.info(line.ljust(92))

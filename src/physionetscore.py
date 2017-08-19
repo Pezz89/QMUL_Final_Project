@@ -1,17 +1,21 @@
 import numpy as np
+from sklearn.metrics.scorer import make_scorer as MS
 
 '''
 Calculate modified accuracy score as defined by Liu et. al
 '''
-def score(y, y_pred):
+def score(y, y_pred, custom_y):
+    custom_y = custom_y[~custom_y.index.duplicated(keep='first')]
     unsure_weight=0.5
+    inds = y.index
+    y = custom_y.ix[inds, 'class']
     y = np.array(y)
-    truePositive = np.sum(np.logical_and((y==y_pred), (y==1)))
-    falsePositive= np.sum(np.logical_and((y!=y_pred), (y==-1)))
-    trueNegative = np.sum(np.logical_and((y==y_pred), (y==-1)))
-    falseNegative= np.sum(np.logical_and((y!=y_pred), (y==1)))
-    positiveUnsure = np.sum(np.logical_and((y==0), (y_pred==1)))
-    negativeUnsure = np.sum(np.logical_and((y==0), (y_pred==-1)))
+    truePositive = np.sum(np.logical_and((y_pred==1), (y==1)))
+    trueNegative = np.sum(np.logical_and((y_pred==-1), (y==-1)))
+    falseNegative= np.sum(np.logical_and((y_pred==-1), (y==1)))
+    falsePositive= np.sum(np.logical_and((y_pred==1), (y==-1)))
+    positiveUnsure = np.sum(np.logical_and((y==1), (y_pred==0)))
+    negativeUnsure = np.sum(np.logical_and((y==-1), (y_pred==0)))
 
     truePositive+=unsure_weight*positiveUnsure
     trueNegative+=unsure_weight*negativeUnsure

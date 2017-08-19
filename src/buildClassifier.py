@@ -180,7 +180,8 @@ def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpa
 
     # Create a scorer object using the custom Physionet challenge scoring
     # metric
-    physionetScorer = make_scorer(score)
+    physionetScorer = make_scorer(score, custom_y=classifications)
+    classifications = filterNoiseSamples(classifications)
 
     # Wrap generated model in a sequential feature selection algorithm, for
     # dynamic feature reduction
@@ -212,7 +213,8 @@ Uses stratified 10-fold cross validation to calculate model performance
 def scoreModel(features, classifications, gkf, model, worker_log=logging.getLogger(__name__), **kwargs):
     # Create a scorer object using the custom Physionet challenge scoring
     # metric
-    physionetScorer = make_scorer(score)
+    physionetScorer = make_scorer(score, custom_y=classifications)
+    classifications = filterNoiseSamples(classifications)
 
     # Set precision of floats printed to logger
     np.set_printoptions(precision=4)
@@ -259,9 +261,15 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     # Rebuild model from saved parameters
     # TODO: Replace rebuilding with pickling of original model builds, so that
     # they can be directly loaded back from file
+    physionetScorer = make_scorer(score, custom_y=classifications)
+    train_classifications = filterNoiseSamples(train_classifications)
+    test_classifications = filterNoiseSamples(test_classifications)
+    classifications = filterNoiseSamples(classifications)
+
     model = buildModel(**latestSolution)
     model.fit(train_features, train_classifications)
-    physionetScorer = make_scorer(score)
+
+
     # Score model on hidden test set using custom Physionet metric
     finalScore = physionetScorer(model, test_features, test_classifications)
     logging.info("--------------------------------------------------------------------------------------------")
@@ -305,8 +313,8 @@ def group_train_test_split(features, classifications, groups):
 
     train_features = pd.DataFrame()
     test_features = pd.DataFrame()
-    train_classifications = pd.Series()
-    test_classifications = pd.Series()
+    train_classifications = pd.DataFrame(columns=['class', 'quality'])
+    test_classifications = pd.DataFrame(columns=['class', 'quality'])
     train_groups = np.array([])
     test_groups = np.array([])
     for i in xrange(np.max(groups)+1):
@@ -432,6 +440,13 @@ def optimizeClassifierModel(features, classifications, groups, optimization_fpat
     logging.info("Solution:".ljust(92))
     for item in solution.iteritems():
         logging.info("{:20.20}{:72.72}".format(item[0], str(item[1])))
+
+def filterNoiseSamples(classification):
+    lowQInd = classification[classification['quality'] == 0].index
+    classification.ix[lowQInd, 'class'] = 0
+    classification = classification['class']
+
+    return classification
 
 
 '''

@@ -117,10 +117,5 @@ def combinationResample(features, classification, mix=0.5):
     # Get classification for all resampled features
     classification = classification.ix[resampled_features.index]
 
-    #
-    lowQInd = classification[classification['quality'] == 0].index
-    classification.ix[lowQInd, 'class'] = 0
-    classification = classification['class']
-
     return resampled_features, classification
 

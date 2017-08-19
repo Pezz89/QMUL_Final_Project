@@ -6,13 +6,16 @@ GCC=${args[0]}
 
 pip install numpy
 pip install -r ./src/requirements.txt
-marg="try; mex -v GCC='$GCC' viterbi_Springer.c; catch; end; quit"
-echo "Running: matlab -nodesktop -nosplash -r $marg"
-cd ./src/SpringerExtraction/
-matlab -nodesktop -nosplash -nojvm -r "$marg"
-matlab -nodesktop -nosplash -nojvm -r "try; a=challenge('../../demo_dataset/training-a/a0001'); if a==-1; disp('MEX completed successfully'); end; catch; disp('MEX failed'); end; quit"
+pip install tables
 
-cd ../
+cd ./src
 pip install -e ./pyeeg
 pip install -e ./optunity
 pip install -e ./mlxtend
+
+marg="try; mex -v GCC='$GCC' viterbi_Springer.c; catch; end; quit"
+echo "Running: matlab -nodesktop -nosplash -r $marg"
+cd ./SpringerExtraction/
+matlab -nodesktop -nosplash -nojvm -r "$marg"
+matlab -nodesktop -nosplash -nojvm -r "try; a=challenge('../../demo_dataset/training-a/a0001'); if a==-1; disp('MEX completed successfully'); end; catch; disp('MEX failed'); end; quit"
+

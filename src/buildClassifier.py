@@ -314,7 +314,10 @@ def group_train_test_split(features, classifications, groups):
         g_class = classifications.ix[groups == i]
         g_group = groups[groups == i]
 
-        train_inds, test_inds = gss.split(g_feat, g_class, g_group).next()
+        try:
+            train_inds, test_inds = gss.split(g_feat, g_class, g_group).next()
+        except ValueError:
+            raise ValueError("A database in the dataset has too few samples, at least 3 should be provided per sub-database")
 
         train_features = train_features.append(g_feat.ix[train_inds])
         test_features = test_features.append(g_feat.ix[test_inds])

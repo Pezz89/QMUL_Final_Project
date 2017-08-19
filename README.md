@@ -10,7 +10,8 @@ homebrew:
 - MATLAB 2017a (it is also assumed that the 'matlab' command has been symlinked
 to the user's path and is accessible from the commandline)
 - libsndfile                    ([sudo] apt-get install libsndfile1-dev | brew install libsndfile)
-- GCC >= 4.9.X                  ([sudo] apt-get install gcc-4.9 | brew install gcc)
+- GCC >= 4.9.X                  ([sudo] apt-get install gcc-4.9 | brew install gcc@4.9)
+- G++ >= 4.9.X                  ([sudo] apt-get install g++-4.9 | brew install gcc@4.9)
 - Python 2.7.11                 ([sudo] apt-get install python | brew install python)
 - Pip (Python's package manager - not always included with python distribution)
 
@@ -25,7 +26,7 @@ running on virtualbox 5.1.26.
 
 Providing all prerequisite packages are installed correctly, running:
 
-./install.sh /path/to/GCC-4.9
+[sudo] ./install.sh /path/to/GCC-4.9
 
 from the project directory should install all python dependencies
 automatically. An absolute path to a version of GCC compatible with Matlab's

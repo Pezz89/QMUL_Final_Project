@@ -11,3 +11,8 @@ echo "Running: matlab -nodesktop -nosplash -r $marg"
 cd ./src/SpringerExtraction/
 matlab -nodesktop -nosplash -nojvm -r "$marg"
 matlab -nodesktop -nosplash -nojvm -r "try; a=challenge('../../demo_dataset/training-a/a0001'); if a==-1; disp('MEX completed successfully'); end; catch; disp('MEX failed'); end; quit"
+
+cd ../
+pip install -e ./pyeeg
+pip install -e ./optunity
+pip install -e ./mlxtend

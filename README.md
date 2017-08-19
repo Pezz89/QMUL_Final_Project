@@ -47,13 +47,19 @@ not a demonstration of it's performance. Performance will be demonstrated in the
 The included scripts are:
 
 run_demo.sh
-Trains a model on the demo_dataset, optimizes for to evaluation, picks 3
-features and scores performance using metrics described in the report.
+Complete run of system from start to finish: Trains a model on the
+demo_dataset, optimizes for to evaluation, picks 3 features and scores
+performance using metrics described in the report.
 
-score__optimized_model.sh 
-An optimized model generated during development has been included and will be
-scored on the demo dataset. Again this is purely a demonstration of correct
-operation, not performance.
+run_optimized_model_demo.sh 
+Scoring of properly trained model: An optimized model generated during
+development has been included and will be scored on the demo dataset. Again
+this is purely a demonstration of correct operation, not performance.
+
+run_optimized_model.sh
+Scores an optimized model on the full dataset. Assumes the full database exists
+in ./PCG_Physionet_Dataset in the project directory (Not included due to size
+limitations).
 
 ./src/main.py --help
 The underlying interface used for training, optimization and scoring of models.

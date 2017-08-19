@@ -245,7 +245,7 @@ Model is evaluated using the following methods:
     database (a-f) for each fold
     - Run standard stratified 10-fold cross validation
 '''
-def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, feature_selection=True, **kwargs):
+def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, feature_selection=50, **kwargs):
     # load model information from file
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
@@ -257,7 +257,7 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
         latestFeatures = pd.Index(hdf["/bestFeatures"])
     latestSolution = latestSolution.dropna()
 
-    if feature_selection:
+    if feature_selection >= 0:
         # Use features selected by sequential feature selection algorithm
         train_features = train_features.ix[:, latestFeatures]
         test_features = test_features.ix[:, latestFeatures]
@@ -303,7 +303,7 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     table_header = list(np.arange(1, 11))
     table_header.append('Mean')
     skf_table = tabulate(list([skf_scores]), headers=table_header, tablefmt='grid', floatfmt=".4f")
-    logging.info("Startifier K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
+    logging.info("Stratified K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
     for line in skf_table.split('\n'):
         logging.info(line.ljust(92))
 

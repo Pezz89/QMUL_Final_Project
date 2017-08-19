@@ -87,7 +87,9 @@ def parse_arguments():
         help="Run feature selection algorithm to find best features for model, "
         "either selecting or reducing features by the integer specified. This "
         "depends on use of --backward flag, to determine forward or backward "
-        "feature selection. (a value of zero skips feature selection entirely)"
+        "feature selection. (a value of 0 skips feature selection entirely, "
+        "using previously generated features if available. A value less than 0 "
+        "uses all available features.)"
     )
 
     parser.add_argument(
@@ -217,7 +219,7 @@ def main():
         # Optimize model parameters using particle swarm optimization
         optimizeClassifierModel(train_features, train_classifications, train_groups, parameters_filepath, num_evals=args.eval, parallelize=parallelize)
 
-    if args.select_features:
+    if args.select_features > 0:
         # Run sequential feature selection to select optimal set of features
         # for training
         modelFeatureSelection(train_features, train_classifications, parameters_filepath, fs_filepath, feature_count=args.select_features, backward=args.backward)

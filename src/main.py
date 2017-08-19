@@ -238,9 +238,6 @@ def getClassifications(referenceLocation, features):
         refDF = pd.read_csv(refFile,header=None, index_col=0, names=['class', 'quality'])
         classifications = classifications.append(refDF)
     classifications = classifications.ix[features.index]
-    lowQInd = classifications[classifications['quality'] == 0].index
-    classifications.loc[lowQInd, 'class'] = 0
-    classifications = classifications['class']
 
     return classifications
 

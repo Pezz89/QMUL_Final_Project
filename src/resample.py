@@ -87,17 +87,17 @@ def combinationResample(features, classification, mix=0.5):
     if not 0.0 <= mix <= 1.0:
         raise ValueError("mix must be in range 0.0-1.0. mix={0}".format(mix))
     # Count number of abnormal classifications
-    abnormal_n = np.sum(classification == 1)
+    abnormal_n = np.sum(classification['class'] == 1)
 
     # Count number of normal classifications
-    normal_n = np.sum(classification == -1)
+    normal_n = np.sum(classification['class'] == -1)
 
     diff = normal_n - abnormal_n
 
     n = int(abnormal_n + (diff * mix))
     # Get features for all abnormal records
-    features1 = features.ix[classification[classification == 1].keys()]
-    features2 = features.ix[classification[classification == -1].keys()]
+    features1 = features.ix[classification[classification['class'] == 1].index]
+    features2 = features.ix[classification[classification['class'] == -1].index]
 
     if features1.shape[0] < features2.shape[0]:
         # Resample all abnormal samples with replacement to balance the dataset
@@ -115,6 +115,12 @@ def combinationResample(features, classification, mix=0.5):
     # Sort records in-place
     resampled_features.sort_index(inplace=True)
     # Get classification for all resampled features
-    classification = classification[resampled_features.index]
+    classification = classification.ix[resampled_features.index]
+
+    #
+    lowQInd = classification[classification['quality'] == 0].index
+    classification.ix[lowQInd, 'class'] = 0
+    classification = classification['class']
+
     return resampled_features, classification
 

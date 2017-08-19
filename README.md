@@ -35,4 +35,33 @@ MEX command is required for compilation of segmentation scripts
 If this is successful, the program should exit, stating the MEX command ran
 successfully.
 
+## Running the program
 
+Scripts and a small demo dataset are provided to demonstrate the operation of the system.
+To allow for reasonable running time, the dataset has been reduced
+significantly from that used for training/testing of models during development.
+Iterations of optimisation algorithms have also been reduced significantly. As a
+result, these scripts simply demonstrate that the system run correctly, and are
+not a demonstration of it's performance. Performance will be demonstrated in the Viva.
+
+The included scripts are:
+
+run_demo.sh
+Trains a model on the demo_dataset, optimizes for to evaluation, picks 3
+features and scores performance using metrics described in the report.
+
+score__optimized_model.sh 
+An optimized model generated during development has been included and will be
+scored on the demo dataset. Again this is purely a demonstration of correct
+operation, not performance.
+
+./src/main.py --help
+The underlying interface used for training, optimization and scoring of models.
+Running the help flag displays a list of all arguments available to the user.
+This can be used for the generation of new models on any dataset (however, it
+is highly recommended that the full Physionet dataset is used for best results:
+https://physionet.org/physiobank/database/challenge/2016/)
+
+Although this script is fully functional, with documented argument parser, it
+was not intended for use by anyone other than the author. As such, errors as a
+result of unexpected user input are likely and may not be handled gracefully

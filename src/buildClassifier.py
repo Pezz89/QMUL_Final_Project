@@ -159,7 +159,7 @@ def buildModel(
     return pipe
 
 
-def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpath, min_features=50, worker_log=logging.getLogger(__name__), **kwargs):
+def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpath, feature_count=50, worker_log=logging.getLogger(__name__), backward=False, **kwargs):
     # load model information from file
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
@@ -183,12 +183,17 @@ def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpa
     physionetScorer = make_scorer(score, custom_y=classifications)
     classifications = filterNoiseSamples(classifications)
 
+    if backward:
+        k_features=(features.shape[1]-feature_count, features.shape[1])
+    else:
+        k_features=(1, feature_count)
+
     # Wrap generated model in a sequential feature selection algorithm, for
     # dynamic feature reduction
     model = SFS(
         model,
-        k_features=(features.shape[1]-min_features, features.shape[1]),
-        forward=False,
+        k_features=k_features,
+        forward=~backward,
         floating=True,
         verbose=2,
         scoring=physionetScorer,
@@ -240,7 +245,7 @@ Model is evaluated using the following methods:
     database (a-f) for each fold
     - Run standard stratified 10-fold cross validation
 '''
-def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, **kwargs):
+def scoreOptimizedModel(features, classifications, groups, train_features, test_features, train_classifications, test_classifications, optimization_fpath, feature_selection=True, **kwargs):
     # load model information from file
     with pd.HDFStore(optimization_fpath) as hdf:
         iterations = [extract_number(x)[0] for x in hdf.keys()]
@@ -252,7 +257,7 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
         latestFeatures = pd.Index(hdf["/bestFeatures"])
     latestSolution = latestSolution.dropna()
 
-    if True:
+    if feature_selection:
         # Use features selected by sequential feature selection algorithm
         train_features = train_features.ix[:, latestFeatures]
         test_features = test_features.ix[:, latestFeatures]

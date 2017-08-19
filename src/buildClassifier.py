@@ -196,7 +196,7 @@ def modelFeatureSelection(features, classifications, optimization_fpath, sfs_fpa
         logger=worker_log,
         n_jobs=-1
     )
-    model.fit(features.as_matrix(), classifications.as_matrix())
+    model.fit(features, classifications)
 
     # Save feature selection wrapped model for generation of plots
     joblib.dump(model, sfs_fpath)

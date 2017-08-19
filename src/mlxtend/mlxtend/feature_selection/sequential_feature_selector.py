@@ -26,7 +26,7 @@ from sklearn.externals.joblib import Parallel, delayed
 def _calc_score(selector, X, y, indices):
     if selector.cv:
         scores = cross_val_score(selector.est_,
-                                 X[:, indices], y,
+                                 X.iloc[:, np.array(indices)], y,
                                  cv=selector.cv,
                                  scoring=selector.scorer,
                                  n_jobs=1,

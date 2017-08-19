@@ -19,8 +19,8 @@ def score(y, y_pred, custom_y):
 
     truePositive+=unsure_weight*positiveUnsure
     trueNegative+=unsure_weight*negativeUnsure
-    truePositive+=negativeUnsure-(unsure_weight*negativeUnsure)
-    trueNegative+=positiveUnsure-(unsure_weight*positiveUnsure)
+    falsePositive+=negativeUnsure-(unsure_weight*negativeUnsure)
+    falseNegative+=positiveUnsure-(unsure_weight*positiveUnsure)
 
     # Sensitivity
     se = truePositive/(truePositive+falseNegative)

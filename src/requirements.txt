@@ -170,12 +170,6 @@ nose == 1.3.7
 # resample.py: 1
 numpy == 1.13.1
 
-# optunity/notebooks/opencv_utility_functions.py: 30
-opencv-contrib-python == 3.3.0.9
-
-# optunity/notebooks/opencv_utility_functions.py: 30
-opencv-python == 3.3.0.9
-
 # buildClassifier.py: 8
 # generateFeatures.py: 7
 # main.py: 17

@@ -1,24 +1,4 @@
 ### Getting things set up.
-Compiling the RR extraction matlab code:
-
-tested using Matlab 2017a
-try running (from the ./src/RR_Extraction/ folder):
-
->> mex viterbi_Springer.c
-
-if running on a mac this may produce an error about not being able to find a
-compiler. If so, follow instructions by Ken Atwell here: https://uk.mathworks.com/matlabcentral/answers/243868-mex-can-t-find-compiler-after-xcode-7-update-r2015b
-
-Having completed this run the mex command withut exiting matlab and the C file
-should compile to a mex file. from here, run:
-
-challenge('../../validation_dataset/a0001')
-
-this should return:
-
-ans =
-
-    -1
 
 ## Prerequisite
 
@@ -29,12 +9,13 @@ homebrew:
 
 - MATLAB 2017a (it is also assumed that the 'matlab' command has been symlinked
 to the user's path and is accessible from the commandline)
-- libsndfile
-- Python 2.7.11
+- libsndfile                    ([sudo] apt-get install libsndfile1-dev | brew install libsndfile)
+- GCC >= 4.9.X                  ([sudo] apt-get install gcc-4.9 | brew install gcc)
+- Python 2.7.11                 ([sudo] apt-get install python | brew install python)
+- Pip (Python's package manager - not always included with python distribution)
 
 (It is likely that code will run on other versions than those stated, however
 this is not guaranteed)
-
 
 
 ## Installation Instructions
@@ -42,5 +23,15 @@ this is not guaranteed)
 This installation guide was written using a clean install of Ubuntu 17.04,
 running on virtualbox 5.1.26.
 
+Providing all prerequisite packages are installed correctly, running:
+
+./install.sh /path/to/GCC-4.9
+
+from the project directory should install all python dependencies
+automatically. An absolute path to a version of GCC compatible with Matlab's
+MEX command is required for compilation of segmentation scripts
+
+If this is successful, the program should exit, stating the MEX command ran
+successfully.
 
 

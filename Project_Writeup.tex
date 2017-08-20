@@ -849,7 +849,7 @@ Features such as:
 segments of the heart cycles. It was thought that these features would be
 useful in capturing irregularities caused by conditions such as arrhythmias,
 atrial septal defect and other conditions that are likely to affect relative
-timing of heart sounds~\parencite[p.29, 64, 127]{Brown2008}.\\
+timing of heart sounds, such as Mitral valve prolapse or regurgitation.
 Many conditions that can be detected by traditional auscultation are
 characterised by an increase in loudness of the S1 and/or S2 heart
 sounds~\parencite{Brown2008}. This suggests that features relating to human
@@ -928,10 +928,25 @@ impact when detecting conditions such as Coronary
 Stenoses~\parencite{Ergen2001, Akay1990}
 
 \subsubsection{Wavelet decomposition features}
-The 
+The wavelet transform has been used effectively as an alternative
+time-frequency representation to fourier methods. The fundamental concept of
+the wavelet transform is to represent an input signal as a set of scaled and
+shifted finite oscillations. By comparing the signal with each scale of wavelet
+at all points in time, a set of $N\times A$ (Where $A$ is the number of scales)
+coefficients are generated that represent the scale and position needed for
+each wavelet in order to fully reconstruct the signal (For further details,
+refer to~\parencite{Polikar1994}) The benefit of this transform is that it is
+well localized in both time and frequency. This allows for accurate
+representation of transient events such as clicks and snaps that are
+characteristic of heart conditions such as Mitral valve prolapse or
+stenosis~\parencite{Brown2008}.\\
+For the proposed system, a 5 level DWT using debauchies-4 mother wavelet was
+used for decomposition and reconstruction. Statistical features such as entropy
+were then calculated, both on the reconstructed signal and directly on
+coefficients to attain a total of 48 features.
 % TODO: Insert wavelet diagram here
 
-\subsubsection{Scaling and Imputing}
+\subsubsection{Feature Scaling and Imputing}
 particularly when using methods
 that are sensitive to such as SVMs described in section
 

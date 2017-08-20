@@ -795,24 +795,77 @@ noted that this method does result in a significant loss of information,
 reducing the dataset size from 3240 samples to 944.
 
 \subsubsection{Signal Segmentation}
-% TODO: Insert segmentation diagram
-Choice of springer algorithm allows for direct comparison with Physionet
-entries
-- lack of time to hand correct segmentations
+%TODO: Generate segmentation plot
+With one notable exception~\parencite{Langley2016}, previous classification
+algorithms rely heavily on the ability to segment signals into the four
+fundamental heart sounds. This is a key prerequisite to the extraction of
+relevant features. The defining of signal structure allows for the
+relationships between it's components to be analysed as described in
+Section~\ref{featEx}. To faciliatate the development of robust agorithms for
+the Physionet challenge, participants were provided with an implementation of
+Springer's HSMM based segmentation algorithm. As the highest scoring algorithm
+in the literature, it was clearly the most suitable algorithm to use for the
+proposed system. In addition to the high accuracy of segmentation, the wide
+adoption of this algorithm is beneficial for comparison with other algorithms
+submitted to the challenge. Results produced by the proposed system will
+generally not be coloured by the differences in quality of segmentation
+algorithms, allowing for more direct comparison of classification methods.
+However, it is noted that despite the high performance of the algorithm, errors
+in segmentation will still occur that may have a negative impact on feature
+quality. As methods proposed by previous literature such as hand correction by
+a professional~\parencite[p.2203]{Liu2016} are not feasible in this context,
+and considering the low number of erroneous results produced by the
+algorithm~\parencite[p.2]{Goda2016} it was decided that these errors would not
+pose a significant problem.
+
+
+\subsection{Feature Extraction}\label{featEx}
+The extraction of feature vectors from data is a fundamental component of most
+machine learning based systems. The aim is to construct meaningful
+representations of the data that emphasize information relevant to the
+classification problem. In the proposed project, 188 features were extracted
+from the data, procuring feature extraction techniques from a wide range of
+previous literature, as well as using novel perceptual features commonly found
+in audio/music analysis (See Sections~\ref{FFT} and~\ref{Time}).
+There are also potential issues that can occur when using large sets of
+features for training. The method proposed for addressing these issues is
+discussed in section~\ref{SFS}
+
+\subsubsection{Time-domain features}\label{Time}
+A range of features were generated, based directly on the time series data.
+Features such as:
+\begin{itemize}
+    \item Average and standard-deviation of segment intervals, for all heart
+        sounds and complete heart cycles
+    \item Ratio of systolic and diastolic period to total heart cycle period
+    \item A range of statistical features such as skewness and variance for
+        each heart sound
+    \item A selection of envelope based features for each heart sound
+\end{itemize}
+
+18 feature provided by the Physionet challenge focused on timings between
+segments of the heart cycles. It was thought that these features would be
+useful in capturing irregularities caused by conditions such as arrhythmias,
+atrial septal defect and other conditions that are likely to affect relative
+timing of heart sounds~\parencite[p.29, 64, 127]{Brown2008}.\\
+Many conditions that can be detected by traditional auscultation are
+characterised by an increase in loudness of the S1 and/or S2 heart
+sounds~\parencite{Brown2008}. This suggests that features relating to
+human perception of loudness may aid in the detection of such conditions.
+Simple envelope based features such as RMS, peak loudness and the Shannon
+energy envelope, popular in previous literature, were extracted for this
+reason~\parencite[p.73-77]{Lerch2012}.
+
+\subsubsection{FFT-based features}\label{FFT}
+MFCC features
+Spectral features
+
+\subsubsection{Wavelet decomposition features}
+% TODO: Insert wavelet diagram here
 
 \subsubsection{Scaling and Imputing}
 particularly when using methods
 that are sensitive to such as SVMs described in section
-
-\subsection{Feature Extraction}\label{featEx}
-
-\subsubsection{Time-domain features}
-
-\subsubsection{FFT-based features}
-MFCC features
-
-\subsubsection{Wavelet decomposition features}
-% TODO: Insert wavelet diagram here
 
 \subsection{Stacking Classifier with Cross-Validation}\label{class}
 This meta-learning approach
@@ -833,7 +886,8 @@ tasks~\parencite[p.498]{Tobergte2013a}.For this reason it was chosen
 
 \subsection{Model Optimization}\label{optimise}
 
-\subsubsection{Sequential Feature Selection}
+\subsubsection{Sequential Feature Selection}\label{SFS}
+A wrapper method
 
 \subsubsection{Particle Swarm Hyperparameter Optimisation}
 Would ideally be placed inside feature selection

@@ -829,7 +829,9 @@ previous literature, as well as using novel perceptual features commonly found
 in audio/music analysis (See Sections~\ref{FFT} and~\ref{Time}).
 There are also potential issues that can occur when using large sets of
 features for training. The method proposed for addressing these issues is
-discussed in section~\ref{SFS}
+discussed in section~\ref{SFS}. This section provides a summary of the main
+feature categories. Please refer to appendix~\ref{appendixA} for a full
+breakdown of all features.
 
 \subsubsection{Time-domain features}\label{Time}
 A range of features were generated, based directly on the time series data.
@@ -838,7 +840,7 @@ Features such as:
     \item Average and standard-deviation of segment intervals, for all heart
         sounds and complete heart cycles
     \item Ratio of systolic and diastolic period to total heart cycle period
-    \item A range of statistical features such as skewness and variance for
+    \item A range of statistical features such as entropy, skewness and variance for
         each heart sound
     \item A selection of envelope based features for each heart sound
 \end{itemize}
@@ -850,17 +852,83 @@ atrial septal defect and other conditions that are likely to affect relative
 timing of heart sounds~\parencite[p.29, 64, 127]{Brown2008}.\\
 Many conditions that can be detected by traditional auscultation are
 characterised by an increase in loudness of the S1 and/or S2 heart
-sounds~\parencite{Brown2008}. This suggests that features relating to
-human perception of loudness may aid in the detection of such conditions.
-Simple envelope based features such as RMS, peak loudness and the Shannon
-energy envelope, popular in previous literature, were extracted for this
-reason~\parencite[p.73-77]{Lerch2012}.
+sounds~\parencite{Brown2008}. This suggests that features relating to human
+perception of loudness may aid in the detection of such conditions.  Simple
+envelope based features such as RMS, peak loudness and the Shannon energy
+envelope (Equation~\ref{ShanEQ}, popular in previous literature, were extracted
+for this reason~\parencite[p.73-77]{Lerch2012}. In addition, statistical
+features such as sample entropy and skewness (Equation ~\ref{SkewEQ}) were used
+to evaluate the distribution of samples for each heart sound, these were
+selected to provide a representation of the temporal ``shape'' of each sound.
+
+\begin{equation}\label{ShanEQ}
+    SE = \frac{-1}{N}\sum\limits_{n=0}^N x(n)^2\cdot \log{x(n)^2}
+\end{equation}
+\begin{equation}\label{SkewEQ}
+    S=\frac{E(x-\mu)^3}{\sigma^3}
+\end{equation}
+Where:\\
+$x(n)$ is the input signal\\
+$E(t)$ is the expected value\\
+$\mu$ is the mean of the signal\\
+$\sigma^2$ is the variance of the signal
 
 \subsubsection{FFT-based features}\label{FFT}
-MFCC features
-Spectral features
+It was recognised that a time domain representation alone was unlikely to
+provide a sufficient representation for discerning a wide variety of
+conditions. Using a time-frequency representation to characterise the spectral
+components of the signal has proven effective in the majority of literature.
+The classic method for producing a spectral representation of a signal is the
+Fourier transform (as defined in Equation~\ref{FFTEQ}) over a sliding window of size
+$N$. By decomposing the signal into a series of sine and cosine
+waves, a representation of the signal across a range of frequency bands is
+produced. This can be used for further analysis of heart sounds
+based on their spectral characteristics.
+\begin{equation}\label{FFTEQ}
+X(k)=\sum\limits_{n=0}^{N}x(n)e^{\frac{-j2\pi kn}{N}}
+\end{equation}
+Where $x(n)$ is the input signal\\
+Features generated using this representation would, in theory, be useful for
+identifying conditions that reside in specific frequency bands, such as
+murmurs, for example~\parencite{Sepehri2010}.\\
+
+An example of such features are Mel-Frequency Cepstrum Coefficients (MFCCs).
+Popular in speech processing, MFCCs provide a compact representation of a
+signal's spectral shape. MFCCs are calculated by first applying $N$ (a
+user-defined parameter) triangular filter banks, spaced using the mel scale to
+the magnitude spectrum. Applying a discrete cosine transform to the log of the
+filterbank outputs provides the final set of coefficients (for further details,
+please refer to~\parencite{Lerch2012}). This representation
+creates a perceptually relevant representation of spectral shape, in effect
+mimicking the way in which humans might perceive the spectral shape of heart
+sounds. The reasoning for this is that, as the aim is to provide a system with
+performance better than, or equal to to that of a human, features that mimick
+what a human percieves may prove effective at distinguishing conditions in the
+way that a human does. This has shown to be effective in previous literature,
+with multiple systems utilising perceptual features with
+success~\parencite{Ortiz2016, Rubin2016, Quiceno-Manrique2010a}. 13 MFCCs were
+calculated for each heart sound and averaged per sample to provide 13 features
+per sample.\\
+%TODO: Generate MFCC spectum
+
+In addition to MFCCs, other statistical features were extracted from the
+spectrum such as spread, skewness, kurtosis and flatness. These features aim to
+provide alternate spectral measurements to MFCCs, in a similar way to their
+temporal counterparts as described in Section~\ref{Time}.
+
+Although the Fourier representation of PCG signals has proven effective in many
+cases, there are drawbacks of this representation that must be considered. One
+key issue that is inherent of fourier transforms is the time-frequency
+tradeoff. An increase in frequency resolution will always result in a decrease
+in temporal resolution. This poses a problem, as it is not possible to localize
+transient events accurately in the frequency domain using this method. This
+method may also suffer in the presence of background noise common in PCG
+signals. Previous studies have shown that these factors may have a significant
+impact when detecting conditions such as Coronary
+Stenoses~\parencite{Ergen2001, Akay1990}
 
 \subsubsection{Wavelet decomposition features}
+The 
 % TODO: Insert wavelet diagram here
 
 \subsubsection{Scaling and Imputing}
@@ -940,7 +1008,7 @@ al~\parencite{Goda2016}
 \section*{Appendices}
 \addcontentsline{toc}{section}{Appendices}
 \renewcommand{\thesubsection}{\Alph{subsection}}
-\subsection{Table of Features}
+\subsection{Table of Features}\label{appendixA}
 \subsection{Commandline Interface}
 \begin{lstlisting}[numbers=none]
 usage: main.py [-h] [--features-fname OUTFNAME] [--segment] [--optimize]

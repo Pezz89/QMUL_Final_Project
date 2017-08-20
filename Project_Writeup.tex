@@ -1,4 +1,5 @@
 \documentclass[titlepage, 12pt]{scrartcl} \usepackage{enumitem}
+
 \usepackage[british]{babel}
 \usepackage[style=apa, backend=biber]{biblatex}
 \DeclareLanguageMapping{british}{british-apa}
@@ -103,6 +104,28 @@
    showspaces=false,
    showstringspaces=false}
 \usepackage[shortcuts]{extdash}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+   keywords={},
+    numberstyle=\tiny,
+    basicstyle=\scriptsize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
 
 \begin{document}
 \newgeometry{lmargin=1.5cm}
@@ -236,10 +259,10 @@ A number of methods exist for the extraction of FHSs. Traditional methods rely
 on direct extraction of peaks from amplitude envelopes in the time domain to
 determine the structure of a signal.  These methods perform various
 processing/transformations in order to accentuate the transient events with the
-intention of isolating them.\\ 
+intention of isolating them.\\
 Early work in this area by Liang et.\ al described a method using the popular
 Shannon energy envelope, achieving good accuracy across 37 recordings of
-children~\citeyearpar{Liang1997b}. The algorithm aimed to segment the data by
+children~\parencite{Liang1997b}. The algorithm aimed to segment the data by
 first extracting the envelope, then applying adaptive rule based thresholds, to
 determine peaks corresponding to segmentation points. When comparing results to
 hand annotated ground truth data, the system achieved a reported accuracy score
@@ -248,10 +271,10 @@ the database used, this may not translate to a larger database recorded in
 sub-optimal conditions.\\
 More recent methods used spectral representations to assist in the splitting of
 the FHSs, in particular using wavelet decomposition. These methods tend to
-perform more robustly on signals of varying conditions.\\ 
+perform more robustly on signals of varying conditions.\\
 Building on previous work, Liang et.\ al presented an improved method, using the
 discrete wavelet transform to decompose and reconstruct the signal into 7
-distinct frequency bands~\citeyearpar{Liang1997a}. Applying a similar method
+distinct frequency bands~\parencite{Liang1997a}. Applying a similar method
 of envelope extraction and peak picking to each frequency band, the best
 estimate of all frequency bands is then chosen as the final result. Criterion
 for this choice is based on the number of S1s and S2s detected, and the number
@@ -261,7 +284,7 @@ suggests that the algorithm is as robust if not more so than previous work by
 Liang et\ al.\\
 
 Vepa et.\ al proposed a wavelet decomposition based method that uses a
-combination of simplicity and envelope features~\citeyearpar{Vepa2008}. This
+combination of simplicity and envelope features~\parencite{Vepa2008}. This
 approach attempts to improve robustness when analysing signals of varying
 quality by using multiple complimentary features. This allows the method to base
 decisions on a variety of statistical properties. Evaluating the algorithm on a
@@ -271,13 +294,13 @@ of 84\% was achieved.\\
 More recently, a variety of machine learning methods have been implemented with reasonable
 success. Gupta et.\ al presented a method that applies $k$-means clustering to
 replace standard threshold based methods for determining peak classification in
-a standard envelope based segmentation algorithm~\citeyearpar{Gupta2007}. This achieved a reported
+a standard envelope based segmentation algorithm~\parencite{Gupta2007}. This achieved a reported
 accuracy of 90.29\%. Due to the envelope based method for feature extraction,
 this method is still suceptible to noise and artefacts that occur within the
 frequency bands of the heart sounds.\\
 
 Sepehri et.\ al proposed a method that combines neural networks with Power
-Spectral Density (PSD) estimates~\citeyearpar{Sepehri2010}.  By exploiting the
+Spectral Density (PSD) estimates~\parencite{Sepehri2010}.  By exploiting the
 periodic nature of S1 and S2 heart sounds, combined with their narrow frequency
 range, a neural network is trained to separate these sounds from other events,
 such as noise and murmurs. This method achieved a reported 93.6\% accuracy on a
@@ -286,25 +309,25 @@ significantly larger database than previous methods detailed.\\
 Most significant success in segmentation algorithms has been observed through use
 of probabilistic models such as Hidden Markov Models (HMMs). Early research
 using these models by Ricke et.\ al utilised embedded HMMs to model the 4
-states of the PCG and their transitions~\citeyearpar{Ricke2005}. MFCCs and
+states of the PCG and their transitions~\parencite{Ricke2005}. MFCCs and
 Shannon Energy were used as feature vectors for the models. Results of
 98\% accuracy were reported, although this was tested on only a small database
 of signals.\\
 Gill et.\ al achieved similar results, most notably with specific consideration
-for the duration of each state in the HMM~\citeyearpar{Gill2005}. This is
+for the duration of each state in the HMM~\parencite{Gill2005}. This is
 handled through the extraction of 6 duration features based primarily on peaks.
 These features form vectors for training the HMM. Results of 98.6\%
 sensitivity, 96.9\% positive predictivity for S1 sounds and 98.3\% sensitivity,
 96.5\% positive predictivity for S2 sounds is reported.
 The issue of state duration was further addressed by Schmidt et.\ al through use
-of a duration-dependent hidden Markov (DHMM)~\citeyearpar{Schmidt2015}. The
+of a duration-dependent hidden Markov (DHMM)~\parencite{Schmidt2015}. The
 DHMM is a modified HMM that considers the duration of the current state when
 calculating the probability of transition to another state. This modification
 scored a reported sensitivity of 98.8\% and a positive predictivity of
 98.6\%.\\
 Building on previous work using HMMs, Springer et.\ al presented a segmentation
 algorithm by using hidden semi-markov models (HSMMs) in combination with
-logistic regression~\citeyearpar{Springer2016}. Use of Hidden semi markov model
+logistic regression~\parencite{Springer2016}. Use of Hidden semi markov model
 allows for a priori information on the duration of the current state to be used
 in probability calculation of the subsequent state. In this case, the knowlege
 that there is an upper and lower limit on the duration of each component is
@@ -319,7 +342,7 @@ state-of-the-art for PCG signal segmentation.\\
 
 Table~\ref{SegmentationTable} provides a brief overview of significant research
 into PCG segmentation. For a more complete summary of the current state of PCG
-segmentation, please refer to Liu et.\ al~\citeyearpar{Liu2016}
+segmentation, please refer to Liu et.\ al~\parencite{Liu2016}
 
 \newgeometry{margin=1cm} % modify this if you need even more space
 \begin{landscape}
@@ -376,7 +399,7 @@ into these areas, alongside initial research into general abnormality
 detection.\\
 
 Reed et.\ al implemented a simple general classification algorithm using artificial
-neural networks (ANNs) and wavelet decomposition~\citeyearpar{Reed2004}. As
+neural networks (ANNs) and wavelet decomposition~\parencite{Reed2004}. As
 initial work into this field, preprocessing such as segmentation is not
 performed and features remain relatively simple when compared to more recent
 methods. Also, due to the comparitively small sample size used for training (1
@@ -386,7 +409,7 @@ limited success in general heart sound classification.\\
 
 Maglogiannis et.\ al presented a classifier for discrimination of heart valve
 disease from regular heart sounds using an SVM (Support Vector Machine)
-classifier~\citeyearpar{Maglogiannis2009}.  Roughly 100 features were extracted
+classifier~\parencite{Maglogiannis2009}.  Roughly 100 features were extracted
 from the signal, based on direct analysis of each heart cycle component (S1,
 Systole, S2, Diastole) and the average shannon energy envelope of these
 components.  A database of 198 heart sounds was curated for the project,
@@ -401,7 +424,7 @@ abnormal heart sounds in a generalisable way, given carefully selected
 features.\\
 
 Ari et.\ al also proposed an SVM based method for abnormality
-classification~\citeyearpar{Ari2010}. A modified Least-squares SVM (LSSVM) is
+classification~\parencite{Ari2010}. A modified Least-squares SVM (LSSVM) is
 used in order to improve separability between normal and abnormal datapoints
 during training. 32 wavelet based features from previous literature are used as
 feature vectors for a modified LSSVM, un-modified LSSVM and a standard SVM.
@@ -413,7 +436,7 @@ choosing an appropriate classification method for achieving accurate results.\\
 Quiceno-Manrique et.\ al demonstrate the use of various time frequency
 representations (TFR) such as short-time fourier transform, wavelet transforms,
 Wigner-Ville distribution etc\ldots, with a $k$-nearest neighbour classifier
-(k-NN) for systolic murmur detection~\citeyearpar{Quiceno-Manrique2010a}. This
+(k-NN) for systolic murmur detection~\parencite{Quiceno-Manrique2010a}. This
 work highlights the effectiveness of alternative TFRs to traditional fourier
 methods. This method also employs Principle Component Analysis (PCA) for the
 mapping of a high dimensional feature space to a lower dimension, for the
@@ -424,7 +447,7 @@ vector achieving a 98\% accuracy on 10-fold cross validation.\\
 
 Schmidt et.\ al aimed to find features that could be used for classification of
 coronary artery disease through detection of small
-murmurs~\citeyearpar{Schmidt2015}. A large number of features are 
+murmurs~\parencite{Schmidt2015}. A large number of features are
 calculated to provide vectors for classification; Parametric spectral features
 such as ARMA are used, alongside instantaneous frequency and octave power
 measurements. Complexity features such as sample entropy and simplicity are
@@ -471,14 +494,14 @@ abnormality detection algorithms by providing a large open database of PCG
 signal recordings, sourced from a variety of both clinical and non-clinical
 environments. (Further details on the database can be found in
 section~\ref{Database}. The complete specification is presented by Liu et.\
-al~\citeyearpar{Liu2016}). In addition, participants were provided with a
+al~\parencite{Liu2016}). In addition, participants were provided with a
 state-of-the-art heart sound segmentation algorithm, as proposed by Springer
 et.\ al in Section~\ref{Segmentation}. Participants were then tasked with the
 creation of a classification algorithm that could robustly discriminate between
 healthy and unhealthy heart sound samples. The challenge recieved 348 entries
 in total, each of which was scored on a hidden test database
 using a Modified accuracy measure ($MAcc$) as defined by Clifford et.
-al~\citeyearpar{Clifford2016}:
+al~\parencite{Clifford2016}:
 \begin{table}[htbp]
 \centering
 \caption{Output Classification}
@@ -503,7 +526,7 @@ Weights are calculated as:
 \doublespacing
 \begin{tabular}{ll}
 $Wa_1 = \frac{\text{Clean abnormal recordings}}{\text{Total abnormal recordings}}$ & $Wa_2 = \frac{\text{Noisy abnormal recordings}}{\text{Total abnormal recordings}}$ \\
-$Wn_1 = \frac{\text{Clean normal recordings}}{\text{Total normal recordings}}$     & $Wn_2 = \frac{\text{Noisy normal recordings}}{\text{Total normal recordings}}$    
+$Wn_1 = \frac{\text{Clean normal recordings}}{\text{Total normal recordings}}$     & $Wn_2 = \frac{\text{Noisy normal recordings}}{\text{Total normal recordings}}$
 \end{tabular}
 \end{table}
 
@@ -538,7 +561,7 @@ or that features do not model abnormalities sufficiently.\\
 
 Homsi et.\ al proposed a system that utilised 131 time domain, STFT based and
 wavelet based features, combined with nested ensemble classifiers to produce an
-accuracy score of 84.48\%~\citeyearpar{Homsi2017}. This algorithm combines many
+accuracy score of 84.48\%~\parencite{Homsi2017}. This algorithm combines many
 commonly used features in previous PCG related literature such as wavelet
 decomposition based features, MFCCs and Shannon Energy. The system also uses a
 total of 40 classifiers, 20 for signals labeled to be `standard' and 20 for
@@ -549,7 +572,7 @@ experimentation.\\
 % TODO: Read into accuracy results for this method more closely
 
 Potes et.\ al present a similar approach to that of Homsi et.\
-al~\citeyearpar{Potes2016}. 124 similar TFR features are extracted
+al~\parencite{Potes2016}. 124 similar TFR features are extracted
 and used as vectors for an AdaBoost classifier. This was combined with a deep
 learning approach using a Convolutional Neural Network (CNN) classifier. The
 signal was decomposed into 4 frequency bands and segmented, to provide input to
@@ -558,7 +581,7 @@ using a set descision rule.  This method produced the highest score on the test
 set for the challenge at 86.02\%.\\
 
 Zabihi et.\ al take an alternative approach by choosing not to segment PCG data
-in the pre-processing stage~\citeyearpar{Zabihi2016}. This is with the intention of reducing
+in the pre-processing stage~\parencite{Zabihi2016}. This is with the intention of reducing
 computational complexity of the resulting algorithm. In addition, the proposed
 method utilizes a wrapper sequential forward
 feature selection (SFS) and Linear Predictive Coefficients (LPC) for the reduction
@@ -571,7 +594,7 @@ normal or abnormal. The system achieved a final score of 85.9\% on the hidden
 test set.\\
 
 Plesinger et.\ al opted to develop a new for of machine learning algorithm
-based on probability assesment~\citeyearpar{Plesinger2017}. In this method,
+based on probability assesment~\parencite{Plesinger2017}. In this method,
 features are mapped to histograms and thought of as probability distributions.
 weights are applied based on number of occurences of each feature, and a
 probability function is generated. This can then be used to calculate the
@@ -618,7 +641,7 @@ Abdollahpur et.~al \citeyearpar{Abdolahpur2017} & time, TFR and perceptual featu
 \end{landscape}
 \restoregeometry
 % TODO: Summary of the way projects were evaluated in general, and what could be improved
-
+\doublespacing
 \section{Database}\label{Database}
 %TODO: Briefly describe what is needed from a database for this project
 A database representative of real-world PCG signals was needed to train models
@@ -627,7 +650,7 @@ identified as necessary for the success of the proposed project:
 \begin{itemize}
     \item It was required that the database contained sufficient PCG data, so
         that a model trained to discriminate between said signals would
-        in theory generalise to new PCG data. 
+        in theory generalise to new PCG data.
     \item A theme present in almost all previous research is that of noise. As
         real-world classification would likely be performed in sub-optimal
         conditions the database should contain a mixture of clean and noisy
@@ -648,7 +671,7 @@ Two viable options were then considered based on the above criteria:
 \begin{enumerate}
     \item The Physionet challenge database
     \item Generation of a synthetic dataset via methods such as that proposed
-    by Almasi et.\ al~\citeyearpar{Almasi2011}
+    by Almasi et.\ al~\parencite{Almasi2011}
 \end{enumerate}
 
 Generation of synthetic data was considered as few well formed alternative
@@ -663,7 +686,7 @@ classification systems and is discussed in Section~\ref{FurtherWork}.
 The selected database is significantly larger and contains a wider variety of
 signal conditions than any database used for previous research (as detailed in
 table~\ref{PriorWorkTable}). It is released as an open-source resource and is
-documented in significant detail by Liu et.\ al~\citeyearpar{Liu2016}. The lack
+documented in significant detail by Liu et.\ al~\parencite{Liu2016}. The lack
 of any alternative databases, comparable in size or variety of content, perhaps
 makes this resource the current standard for PCG analysis projects. In
 addition, by replicating the conditions of the Physionet challenge, results can
@@ -698,6 +721,7 @@ results. This is considered in
 Section~\ref{Resample}.\\
 Another key issue is the difference between the databases used by participants of the
 Physionet challenge, and the available data that was acquired for this project.
+% TODO: Update to reflect use of quality labels that have now been found
 For unknown reasons, information such as patient labels and signal quality
 labels used for training many of the challenge participant's
 models have not been made available publicly and so could not be
@@ -708,48 +732,215 @@ also had a significant impact on evaluation. An alternative method for
 evaluating using only the data provided has been proposed in
 Section~\ref{Eval}.\\
 Finally, an issue is highlighted by Bobillo with regards to database
-$e$~\citeyearpar{Bobillo2016}. The recording of normal and pathological signals using
+$e$~\parencite{Bobillo2016}. The recording of normal and pathological signals using
 separate devices is likely to cause issues and is discussed in
 Section~\ref{Eval}
 
 \section{Design}
-The system aims to provide robust heart abnormality detection for PCG signals,
-such that use of the system could reliably recommend further medical attention
-when neccesary.
-\subsection{Preprocessing}
-\subsubsection{Resampling}\label{Resample}
-Solution ref~\parencite[p.278]{Muller2016}
+This project aims to provide robust heart abnormality detection for PCG
+signals, such that use of the system could reliably recommend further medical
+attention when neccesary. It is clear from previous research that machine
+learning methods for classification have shown the most promise in this area,
+and that ensemble methods have been largely sucesful in improving
+classification accuracy of base classifiers~\parencite{Homsi2017, Potes2016}.
+However, one such method that has recently shown significant success and is not
+present in recent literature is the stacking
+meta-classifier~\parencite[p.498]{Tobergte2013a}. The presented system was
+therefore designed to explore the potential for this classification method in
+the context of PCG signal classification. This section details the four key
+components developed to form the final system: signal preprocessing
+(Section~\ref{preprocessing}), audio feature extraction (Section~\ref{featEx}),
+classification (Section~\ref{class}) and optimisation (Section~\ref{optimise}).
+
+% TODO: Create flow diagram Preprocessing -> Feature extraction ->
+% Model optimisation -> Performance evaluation
+
+\subsection{Preprocessing}\label{preprocessing}
+It quickly became apparent that, due to significant variations in the available
+data (as a result of noise, variations in recording equipment etc...), that the
+effective preprocessing of such data would be a critical factor when designing
+the system. This section details the most significant preprocessing steps taken
+in order to both minimize noise, and extract the basic structure of the signal.
+
+\subsubsection{Downsampling}
+A common method employed to simultaneously reduce computation time and remove
+extraneous information is to decimate the input signal by an integer factor.
+According to shannon sampling theorem, a digital signal can only represent
+frequency content up to half the sample rate of the signal (the nyquist
+rate)~\parencite[p.140]{Kadis1999}
+Therefore, by removing every $n$th sample, high frequency content can be
+removed whilst lowering the number of samples that must be processed in
+subsequent operations. An anti-aliasing filter must also be applied to the
+signal in order to filter harmonic distortion generated by the process.
+As it is commonly stated in the literature that little relevant information in
+PCG signal is found above 400Hz, all signals were resampled to 1KHz giving a
+500Hz cutoff frequency, using a 8th order zero-phase Chebyshev type I filter.
+
+\subsubsection{Resampling dataset}\label{Resample}
+A common issue with data collected from the real world is the imbalance of
+classes in data. As noted by Liu et. al~\parencite{Liu2016}, this is the case
+with the available dataset, as there are less pathological signals than healthy
+signals.  This presents an issue with classification tasks, as imbalance can
+have a negative impact on classification of the minor
+class~\parencite{Longadge2013}. In this context, this would potentially have a
+significant impact on classification accuracy for abnormal samples, so must be
+handled appropriately.
+Two common methods for approaching this are bootstrap resampling (sampling with
+replacement) and jacknife resampling (sampling without replacement). Both
+methods have been used accross previous literature, however, jacknife
+resampling was chosen for this project. This was to avoid overfitting the
+classification model as a result of
+the multiple identical samples generated using the bootstrap method. It is
+noted that this method does result in a significant loss of information,
+reducing the dataset size from 3240 samples to 944.
+
 \subsubsection{Signal Segmentation}
+% TODO: Insert segmentation diagram
 Choice of springer algorithm allows for direct comparison with Physionet
 entries
 - lack of time to hand correct segmentations
 
-\subsection{Features}
+\subsubsection{Scaling and Imputing}
+particularly when using methods
+that are sensitive to such as SVMs described in section
 
-Augmentation of features using 2nd order polynomial features
-- Dangers of overfitting with higher order features
-\subsubsection{Wavelet Decomposition}
+\subsection{Feature Extraction}\label{featEx}
+
+\subsubsection{Time-domain features}
+
+\subsubsection{FFT-based features}
+MFCC features
+
+\subsubsection{Wavelet decomposition features}
 % TODO: Insert wavelet diagram here
-\subsubsection{Feature selection/reduction}
-PCA/KPCA
-Sequential forward feature selection
-\subsection{Classification Models}
-Individual model structures used in optimization
-\subsubsection{Signal quality classification}\label{Quality}
-\subsubsection{Selection/Optimization}
-Particle Swarm Optimization
+
+\subsection{Stacking Classifier with Cross-Validation}\label{class}
+This meta-learning approach
+has shown significantly success, with robust performance across a variety of classification
+tasks~\parencite[p.498]{Tobergte2013a}.For this reason it was chosen
+% TODO:Insert stacking classifier diagram
+
+\subsection{Base Classifiers}
+
+\subsubsection{SVM}
+
+\subsubsection{Logistic Regression}
+
+\subsubsection{Naive-Bayes}
+
+% TODO: Replace this section
+% \subsubsection{Signal quality classification}\label{Quality}
+
+\subsection{Model Optimization}\label{optimise}
+
+\subsubsection{Sequential Feature Selection}
+
+\subsubsection{Particle Swarm Hyperparameter Optimisation}
+Would ideally be placed inside feature selection
+
+
+\subsection{Model Performance Metrics}\label{metrics}
+% TODO: Insert cross validation diagram from data science handbook
+Group cross-validation
+$k$-fold cross validation
 
 \section{Implementation}
+This section details the implementation challenges posed by the experiment and describes how the project addresses them.
+focus on using open source libraries throughout the project to avoid
+`reinventing the wheel'. Integration of external libraries
+Use of Python - quick development, wide variet of third party libraries to
+allow for rapid prototyping
+
+Interface
+- Implementation of simple CLI for quick control of system parameters
+- High computational cost - Multiprocessing, logging issues
+Data Manipulation
+- Pandas and Numpy for basic handeling and manipulation of data
+- Splitting of data using sklearn
+Implementation of features
+- Joining of existing segmentation script and python code
+- pyWavelets for wavelet features
+- librosa for MFCCs
+Implementation of machine learning classifiers
+- Use of sklearn for base classifiers
+- Addition of stacking classifier using mlxtend
+- Saving of features and models to pickles, allowing for direct running of
+intermediate section of system and for development and portability of generated models
+Implementation of optimisatons
+- Optunity for Hyperparameter optimization
+- Mlxtend for SFS
+
+
+
+
 \section{Evaluation}\label{Eval}
-Group cross-validation
 Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
 challenge
-Comparison with T-Pot
 \section{Further Work}\label{FurtherWork}
 Handle silent sections of audio such as those highlighted by Goda et.\
-al~\citeyearpar{Goda2016}
+al~\parencite{Goda2016}
+% TODO: Consider talking about resampling using Homsi2016 method
 
+\appendix
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+\subsection{Table of Features}
+\subsection{Commandline Interface}
+\begin{lstlisting}[numbers=none]
+usage: main.py [-h] [--features-fname OUTFNAME] [--segment] [--optimize]
+               [--eval EVAL] [--select-features SELECT_FEATURES] [--backward]
+               [--parameters_fname OUTFNAME] [--fs_fname OUTFNAME]
+               [--no-parallel] [--reanalyse] [--verbose]
+               [--resample-mix RESAMPLE_MIX] [--keep-logs]
+               TESTDIR OUTDIR
+
+Script for the classification of PCG data.
+
+positional arguments:
+  TESTDIR               Directory of test data to train the system
+  OUTDIR                Directory to store output analyses
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --features-fname OUTFNAME, -o OUTFNAME
+                        Specify the name of the file to save generated
+                        features to for future use
+  --segment             Run Matlab segmentation script to create segmentation
+                        analysis
+  --optimize            Run optimization algorithm to find best model and
+                        parameters for classifier
+  --eval EVAL, -e EVAL  Number of evaluation to pass to the particle swarm
+                        optimization
+  --select-features SELECT_FEATURES
+                        Run feature selection algorithm to find best features
+                        for model, either selecting or reducing features by
+                        the integer specified. This depends on use of
+                        --backward flag, to determine forward or backward
+                        feature selection. (a value of 0 skips feature
+                        selection entirely, using previously generated
+                        features if available. A value less than 0 uses all
+                        available features.)
+  --backward, -b        Runs backward feature selection as opposed to default
+                        forward selection.
+  --parameters_fname OUTFNAME
+                        Specify the name of the file to save generated
+                        features to for future use
+  --fs_fname OUTFNAME   Specify the name of the file to save generated feature
+                        selection model to for future use
+  --no-parallel, -p     Disable processing in parallel. (Will likely decrease
+                        performance but may aid in debugging)
+  --reanalyse           Force regeneration of database features
+  --verbose, -v         Specifies level of verbosity in output. For example:
+                        '-vvvvv' will output all information. '-v' will output
+                        minimal information.
+  --resample-mix RESAMPLE_MIX, -r RESAMPLE_MIX
+                        Mix between bootstrap and jacknife resampling used to
+                        balance the dataset (0=just jacknife, 1=just bootsrap)
+  --keep-logs           Keep previously generated logs that aren't overwritten
+                        by current process
+\end{lstlisting}
 
 
 \pagebreak{}

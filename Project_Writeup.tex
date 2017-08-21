@@ -115,7 +115,7 @@
 \lstdefinestyle{mystyle}{
    keywords={},
     numberstyle=\tiny,
-    basicstyle=\scriptsize,
+    basicstyle=\footnotesize,
     breakatwhitespace=false,
     breaklines=true,
     captionpos=b,
@@ -1053,31 +1053,101 @@ hypothesis function is defined as:
     h_\theta(x)=\frac{1}{1-e^{-\theta^{T}x}}
 \end{equation}
 Where:\\
-$x$ is a feature vector
-$y$ is a weight vector 
+$x$ is a feature vector\\
+$y$ is a class label vector \\
+$\theta$ is a weight vector \\
 A cost function can then be defined as:
 \begin{equation}
-    J(\theta)=\argmin\limits_\theta\frac{1}{2m}\sum\limits_i^{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2+
+    J(\theta)=\argmin\limits_\theta\frac{1}{2m}\sum\limits_{i=1}^m\Big(h_\theta(x^{(i)})-y^{(i)}\Big)^2+\text{Regularization}(\theta)
 \end{equation}
 
-
+\begin{align}
+    &\text{Regularization}{(\theta)}_\text{L1}=\lambda\sum\limits_{j=1}^n\mid\theta_i\mid\\
+    &\text{Regularization}{(\theta)}_\text{L2}=\lambda\sum\limits_{j=1}^n\theta_i^2
+\end{align}
+Where:
+$\lambda$ is the regularization parameter used to help prevent overfitting\\
+By minimizing the cost function, classification predictions can then be made
+using the hypothesis function~\parencite{Ng2012}.\\
+Logistic regression was chosen as the meta-classifier primarily due to it's
+simplicity and performance in testing. Choice of meta-classifier is a potential
+area for improvement and it is noted that a range of meta-classifiers have been
+proposed for different tasks that utilise
+stacking~\parencite[p.29]{Sesmero2015}. Further work in this area could
+potentially provide improved results.
 
 % TODO: Replace this section
 % \subsubsection{Signal quality classification}\label{Quality}
 
 \subsection{Model Optimization}\label{optimise}
+As discussed in previous section, two of the most important aspects that affect
+the performance of a classification system are it's models, and the input
+features. A combination of relevant features and well tuned models is therefore
+likely to provide an accurate classification system. However, it is not always
+immdiately clear which values to choose for parameters, or features to use as
+input. This is especially true when given such a wide selection of models to
+choose from, and high such dimensional feature spaces, as are used in the
+proposed method. To address this issue, two automatic optimisation approaches
+were implemented with the aim of maximising the accuracy of the proposed
+system. 
 
 \subsubsection{Sequential Feature Selection}\label{SFS}
-A wrapper method
+It was recognised that the extraction of such large numbers of features in the
+proposed system would likely result in a large amount of redundent information.
+There are two commonly used methods for addressing this problem: feature
+reduction and feature selection. Feature reduction involves reducing features
+to a lower dimensionality using techniques such as PCA. Conversely, feature
+selection involves selectively removing features entirely via methods such as
+Sequential Floating Selection (SFFS). Both aim to reduce the amount of redundant
+information in features by removing or reducing features that are expected not
+to benefit the model. As a selection of models were to be used, each
+potentially handeling dimensionality differently (SVMs in particular), it was
+decided that feature selection would be most appropriate for this application.\\
+
+Through experimentation, the chosen method was SFFS. This method is an adaption
+of tradition sequential forward selection, that also uses sequential backward
+selection to allow for subsequent removal of added features when neccesary.
+SFFS is an iterative wrapper method that adds features and retrains the chosen
+model sequentially, choosing features that increase the accuracy of the model
+output (using 3-fold cross validation to avoid overfitting). Final models used
+as few as 40 features, increasing both accuracy of classifications and
+computation time of models significantly. For further details on SFFS please
+refer to~\parencite[p.3]{Ferri1994}
 
 \subsubsection{Particle Swarm Hyperparameter Optimisation}
-Would ideally be placed inside feature selection
+The particle swarm optimization algorithm is an iterative meta-heuristic algorithm that
+aims to find the set of parameters that maximises a given function. Given a
+$n$ dimensional parameter space, the algorithm randomly initialises sets of
+`particles' representing random combinations of parameters. As the algorithm
+progresses particle travel through the parameter space, updating their
+position based on their velocity, best historical score and the best historical
+score of the swarm. As the algorithm iterates, particles will converge on local
+optima, producing potential solutions. The best score is chosen after the final
+iteration as the best parameter selection.
+
+\begin{lstlisting}[escapeinside={(*}{*)}]
+Do
+    //For all particles...
+    For (*$i$*)=1 to Population Size
+    // If the current function score is better than the historical function score for the current particle, store new position
+    if (*$f(\overrightarrow{x}_i)>f(\overrightarrow{p}_i)\text{ then }\overrightarrow{p}_i = \overrightarrow{x}_i$*)
+        // Store best position of all particles in neighbourhood
+        (*$\overrightarrow{p}_g=\text{max}(\overrightarrow{p}_{\text{neighbors}})$*)
+            // For each dimension in the parameter space...
+            For (*$d=1$*) to Dimension
+                // Update velocities
+                (*$v_{id}=v_{id}+\phi_1(p_{id}-x_{id}+\phi_2(p_{gd}-x_{id})$*)
+                (*$v_{id}=\text{sign}(v_{id})\cdot min$*)
+\end{lstlisting}
 Given the abundance of
 machine learning algorithms readily available, it can be difficult to select
 the best model quickly, with 
+Use of meta-heuristic algorithms such as particle swarm optimisation are
+increasingly being used for model selection~\parencite{Sesmero2015}
 
+Would ideally be placed inside feature selection
 
-\subsection{Model Performance Evaluation}\label{metrics}
+\subsection{Model Performance Evaluation Method}\label{metrics}
 % TODO: Insert cross validation diagram from data science handbook
 ~\ref{ChallengeEnt}
 Group cross-validation
@@ -1134,6 +1204,8 @@ al~\parencite{Goda2016}
 \renewcommand{\thesubsection}{\Alph{subsection}}
 \subsection{Table of Features}\label{appendixA}
 \subsection{Commandline Interface}
+\singlespacing
+\lstset{basicstyle=\scriptsize, style=mystyle}
 \begin{lstlisting}[numbers=none]
 usage: main.py [-h] [--features-fname OUTFNAME] [--segment] [--optimize]
                [--eval EVAL] [--select-features SELECT_FEATURES] [--backward]

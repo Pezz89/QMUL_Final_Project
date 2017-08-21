@@ -1041,8 +1041,8 @@ to large datasets, with many dimensions~\parencite[p.300]{Zhang2004}. It was
 thought that these benefits would make the classifier suitable for the proposed system, as the reatively high
 dimensionality of features and quantity of datapoints could then be classified
 quickly to obtain initial results. Despite the inclussion of more complex
-models, this model remained one of the selected base classifiers for the final
-model. 
+models, this model was chosen via automatic selection for the final model.
+Refer to section~\ref{PSOp} for further details.
 
 \subsubsection{Logistic Regression}
 Logistic regression is a regression model that aims to fit as hyperplane to
@@ -1114,7 +1114,7 @@ as few as 40 features, increasing both accuracy of classifications and
 computation time of models significantly. For further details on SFFS please
 refer to~\parencite[p.3]{Ferri1994}
 
-\subsubsection{Particle Swarm Hyperparameter Optimisation}
+\subsubsection{Particle Swarm Hyperparameter Optimisation}\label{PSOp}
 The particle swarm optimization algorithm is an iterative meta-heuristic algorithm that
 aims to find the set of parameters that maximises a given function. Given a
 $n$ dimensional parameter space, the algorithm randomly initialises sets of
@@ -1123,35 +1123,63 @@ progresses particle travel through the parameter space, updating their
 position based on their velocity, best historical score and the best historical
 score of the swarm. As the algorithm iterates, particles will converge on local
 optima, producing potential solutions. The best score is chosen after the final
-iteration as the best parameter selection.
+iteration as the best parameter selection. Annotated pseudocode for this
+algorithm is shown in code block~\ref{PSCode}~\parencite{Clerc2002}
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
+\onehalfspacing
+\begin{lstlisting}[escapeinside={(*}{*)}, label={PSCode}, caption={Particle
+Swarm Optimization Pseudocode}]
 Do
     //For all particles...
     For (*$i$*)=1 to Population Size
-    // If the current function score is better than the historical function score for the current particle, store new position
-    if (*$f(\overrightarrow{x}_i)>f(\overrightarrow{p}_i)\text{ then }\overrightarrow{p}_i = \overrightarrow{x}_i$*)
-        // Store best position of all particles in neighbourhood
-        (*$\overrightarrow{p}_g=\text{max}(\overrightarrow{p}_{\text{neighbors}})$*)
-            // For each dimension in the parameter space...
-            For (*$d=1$*) to Dimension
-                // Update velocities
-                (*$v_{id}=v_{id}+\phi_1(p_{id}-x_{id}+\phi_2(p_{gd}-x_{id})$*)
-                (*$v_{id}=\text{sign}(v_{id})\cdot min$*)
+        // If the current function score is better than the historical
+        // function score for the current particle, store new position
+        if (*$f(\overrightarrow{x}_i)>f(\overrightarrow{p}_i)\text{ then }\overrightarrow{p}_i = \overrightarrow{x}_i$*)
+            // Store best position of all particles in neighbourhood
+            (*$\overrightarrow{p}_g=\text{max}(\overrightarrow{p}_{\text{neighbors}})$*)
+                // For each dimension in the parameter space...
+                For (*$d=1$*) to Dimension
+                    // Update velocities
+                    (*$v_{id}=v_{id}+\phi_1(p_{id}-x_{id}+\phi_2(p_{gd}-x_{id})$*)
+                    // Ensure particle velocity is within limit
+                    (*$v_{id}=\text{sign}(v_{id})\cdot \text{min}(\text{abs}(v)_{id}, v_{\text{max}}))$*)
+                    // Update particle position
+                    (*$x_{id}=x_{id}+v_{id}$*)
+                Next (*$d$*)
+    Next (*$i$*)
+Until termination criterion is met
 \end{lstlisting}
-Given the abundance of
-machine learning algorithms readily available, it can be difficult to select
-the best model quickly, with 
-Use of meta-heuristic algorithms such as particle swarm optimisation are
-increasingly being used for model selection~\parencite{Sesmero2015}
+\doublespacing
 
-Would ideally be placed inside feature selection
+The use of this algorithm allowed for the efficient optimisation of all parameters
+relating to the stacking classifier, and it's base classifiers, resulting in a
+finely tuned classification model that would not have been produceable using
+traditional trial and error methods.\\
+During the initial design phase, it was found that the abundance of machine
+learning algorithms available make selection of the optimal model a difficult,
+requiring in depth knowlege of a range of machine learning techniques. A novel
+approach used by recent stacking classifier applications has been in the use of
+meta-heuristic algorithm to select models automatically, in addition to tuning
+parameters. By thinking of the base classifiers as hyperparameters themselves,
+models can be swapped in and tuned automatically by the particle swarm
+algorithm to provide a locally optimal selection of base classifiers for the
+model~\parencite{Sesmero2015}. This technique was used to pick the 3 final
+models described in section~\ref{class} from a selection of 8 models. This
+dynamic selection of models was seen to be one of the key contributors to the
+overall success of the agorithm.
 
 \subsection{Model Performance Evaluation Method}\label{metrics}
+Splitting of data into training and hidden test set
+Evaluation of intermediate models generated by both the SFFS and Particle Swarm
+algorithms.
+Final Evaluation of optimised model on test set, and on the full database using
+Leave-one-out cross validation and 10-fold cross validation
 % TODO: Insert cross validation diagram from data science handbook
 ~\ref{ChallengeEnt}
 Group cross-validation
 $k$-fold cross validation
+Final evaluation
+- 
 
 \section{Implementation}
 This section details the implementation challenges posed by the experiment and describes how the project addresses them.
@@ -1188,6 +1216,7 @@ Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
 challenge
 Could be used as cloud based system
+Discussion on reasons for final selection of models
 Features were selected for their individual relevance to classification
 problem, Naive Bayes treats features individually. Could explain why it
 performed well
@@ -1196,6 +1225,8 @@ captured by SVMs
 \section{Further Work}\label{FurtherWork}
 Handle silent sections of audio such as those highlighted by Goda et.\
 al~\parencite{Goda2016}
+
+Particle swarm Would ideally be placed inside feature selection
 % TODO: Consider talking about resampling using Homsi2016 method
 
 \appendix
@@ -1259,6 +1290,7 @@ optional arguments:
   --keep-logs           Keep previously generated logs that aren't overwritten
                         by current process
 \end{lstlisting}
+\doublespacing
 
 
 \pagebreak{}

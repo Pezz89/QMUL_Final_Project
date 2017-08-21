@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 ################################################################################
@@ -17,7 +18,7 @@ from tabulate import tabulate
 ################################################################################
 # Scikit-Learn imports
 ################################################################################
-from sklearn.model_selection import cross_val_score, GroupKFold, train_test_split, StratifiedKFold, GroupShuffleSplit, StratifiedShuffleSplit, LeaveOneGroupOut
+from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, StratifiedShuffleSplit, LeaveOneGroupOut
 from sklearn.metrics.scorer import make_scorer
 from sklearn import preprocessing
 from sklearn.externals import joblib
@@ -301,8 +302,9 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
 
 
     # Score model on hidden test set using custom Physionet metric
-    finalScore = physionetScorer(model, test_features, test_classifications)
+    physionetScorer(model, test_features, test_classifications)
     results = physionetScorer.get_results()
+    finalScore = results['score'][0]
     sens = results['sensitivity'][0]
     spec = results['specificity'][0]
 
@@ -317,16 +319,33 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     logging.info("--------------------------------------------------------------------------------------------")
 
     logo = LeaveOneGroupOut()
-    skf = StratifiedKFold(n_splits=10, random_state=42)
+    skf = RepeatedStratifiedKFold(n_splits=10, random_state=42, n_repeats=10)
 
     # Evaluate model using leav-one-out and startified 10-fold cross-validation
-    logo_scores = cross_val_score(model, features, classifications, groups, physionetScorer2, logo)
-    results = physionetScorer2.get_results().copy()
-    logo_sens = results['sensitivity']
-    logo_sens = np.append(logo_sens, np.mean(logo_sens))
-    logo_spec = results['specificity']
-    logo_spec = np.append(logo_spec, np.mean(logo_spec))
-    logo_scores = np.append(logo_scores, np.mean(logo_scores))
+    for i in xrange(10):
+        cross_val_score(model, features, classifications, groups, physionetScorer2, logo)
+    logo_results = physionetScorer2.get_results().copy()
+
+    logo_scores = np.array(logo_results['score']).reshape((10, 6)).mean(axis=0)
+    logo_scores_std = np.array(logo_results['score']).reshape((10, 6)).std(axis=0)
+    logo_scores_mean = np.mean(logo_scores)
+    logo_scores_stdd = np.std(logo_scores)
+    logo_scores = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(logo_scores, logo_scores_std)]
+    logo_scores.append(u"{:.4f}±{:.4f}".format(logo_scores_mean, logo_scores_stdd))
+
+    logo_sens = np.array(logo_results['sensitivity']).reshape((10, 6)).mean(axis=0)
+    logo_sens_std = np.array(logo_results['sensitivity']).reshape((10, 6)).std(axis=0)
+    logo_sens_mean = np.mean(logo_sens)
+    logo_sens_stdd = np.std(logo_sens)
+    logo_sens = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(logo_sens, logo_sens_std)]
+    logo_sens.append(u"{:.4f}±{:.4f}".format(logo_sens_mean, logo_sens_stdd))
+
+    logo_spec = np.array(logo_results['specificity']).reshape((10, 6)).mean(axis=0)
+    logo_spec_std = np.array(logo_results['specificity']).reshape((10, 6)).std(axis=0)
+    logo_spec_mean = np.mean(logo_spec)
+    logo_spec_stdd = np.std(logo_spec)
+    logo_spec = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(logo_spec, logo_spec_std)]
+    logo_spec.append(u"{:.4f}±{:.4f}".format(logo_spec_mean, logo_spec_stdd))
 
 
     # Pretty print results to logger
@@ -344,13 +363,31 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     for line in logo_table.split('\n'):
         logging.info(line.ljust(92))
 
-    skf_scores = cross_val_score(model, features, classifications, groups, physionetScorer3, skf)
+    logging.debug("Running 10 repeats of 10-fold stratified cross-validation...".ljust(92))
+    cross_val_score(model, features, classifications, groups, physionetScorer3, skf)
     skf_results = physionetScorer3.get_results().copy()
-    skf_sens = skf_results['sensitivity']
-    skf_sens = np.append(skf_sens, np.mean(skf_sens))
-    skf_spec = skf_results['specificity']
-    skf_spec = np.append(skf_spec, np.mean(skf_spec))
-    skf_scores = np.append(skf_scores, np.mean(skf_scores))
+
+    skf_scores = np.array(skf_results['score']).reshape((10, 10)).mean(axis=0)
+    logging.info("Stratified K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
+    skf_scores_std = np.array(skf_results['score']).reshape((10, 10)).std(axis=0)
+    skf_scores_mean = np.mean(skf_scores)
+    skf_scores_stdd = np.std(skf_scores)
+    skf_scores = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(skf_scores, skf_scores_std)]
+    skf_scores.append(u"{:.4f}±{:.4f}".format(skf_scores_mean, skf_scores_stdd))
+
+    skf_sens = np.array(skf_results['sensitivity']).reshape((10, 10)).mean(axis=0)
+    skf_sens_std = np.array(skf_results['sensitivity']).reshape((10, 10)).std(axis=0)
+    skf_sens_mean = np.mean(skf_sens)
+    skf_sens_stdd = np.std(skf_sens)
+    skf_sens = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(skf_sens, skf_sens_std)]
+    skf_sens.append(u"{:.4f}±{:.4f}".format(skf_sens_mean, skf_sens_stdd))
+
+    skf_spec = np.array(skf_results['specificity']).reshape((10, 10)).mean(axis=0)
+    skf_spec_std = np.array(skf_results['specificity']).reshape((10, 10)).std(axis=0)
+    skf_spec_mean = np.mean(skf_spec)
+    skf_spec_stdd = np.std(skf_spec)
+    skf_spec = [u"{0:.4f}±{1:.4f}".format(x, y) for x, y in zip(skf_spec, skf_spec_std)]
+    skf_spec.append(u"{:.4f}±{:.4f}".format(skf_spec_mean, skf_spec_stdd))
 
     table_header = list(np.arange(1, 11))
     table_header.append('Mean')
@@ -361,7 +398,6 @@ def scoreOptimizedModel(features, classifications, groups, train_features, test_
     row3 = list(skf_sens)
     row3.insert(0, 'Sensitivity')
     skf_table = tabulate([row1, row2, row3], headers=table_header, tablefmt='grid', floatfmt=".4f")
-    logging.info("Stratified K-fold cross-validation score:    {}".format(np.mean(skf_scores)).ljust(92))
     for line in skf_table.split('\n'):
         logging.info(line.ljust(92))
 
@@ -386,7 +422,7 @@ def group_train_test_split(features, classifications, groups):
         g_group = groups[groups == i]
 
         try:
-            train_inds, test_inds = gss.split(g_feat, g_class, g_group).next()
+            train_inds, test_inds = gss.split(g_feat, g_class['class']).next()
         except ValueError:
             raise ValueError("A database in the dataset has too few samples, at least 3 should be provided per sub-database")
 

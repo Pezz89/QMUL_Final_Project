@@ -201,6 +201,8 @@ def main():
     # a combination of jacknife and bootstrap resampling based on user input
     features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     # Filter any eroneous values from features
+    # -inf occurs as a result of log(0)
+    # TODO: fix these value in feature generation on per-feature basis
     features = features.replace(-np.inf, 0)
     features = features.replace(np.inf, np.nan)
 

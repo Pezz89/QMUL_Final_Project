@@ -33,6 +33,8 @@
 \graphicspath{{./resources/}}
 \addbibresource{~/Documents/library.bib}
 
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 % Fix for medeley's rubbish underscore handeling in generated bib files
 \DeclareSourcemap{
     \maps{
@@ -487,7 +489,7 @@ Reed et.~al \citeyearpar{Reed2004}             & ---                            
 \end{landscape}
 \restoregeometry
 
-\subsubsection{Physionet challenge entries}
+\subsubsection{Physionet challenge entries}\label{ChallengeEnt}
 \doublespacing
 The 2016 Physionet/CinC Challenge aimed to encourage development of heart
 abnormality detection algorithms by providing a large open database of PCG
@@ -943,26 +945,122 @@ stenosis~\parencite{Brown2008}.\\
 For the proposed system, a 5 level DWT using debauchies-4 mother wavelet was
 used for decomposition and reconstruction. Statistical features such as entropy
 were then calculated, both on the reconstructed signal and directly on
-coefficients to attain a total of 48 features.
+coefficients to attain a total of 48 features.~\parencite{Homsi2016}
 % TODO: Insert wavelet diagram here
 
 \subsubsection{Feature Scaling and Imputing}
-particularly when using methods
-that are sensitive to such as SVMs described in section
+A common problem when working with multiple features is the difference in scale
+Dbetween features. This problem can cause many machine learning algorithms to place
+bias on larger scale features and can significantly impact the time taken for
+certain algorithms to converge. This is particularly significant when applying
+algorithms sensitive to feature scale such as SVMs (described in
+Section~\ref{SVM}). To address this, a Min-Max scaler was applied
+to training and test sets prior to training models. This scales all values to within a
+0--1 range producing a set of features on a common scale.\\
+It is also common to encounter missing values in features. these can occur as a
+result of $\log(0)$ or division by 0 calculations, amongst other edge cases. A
+standard method for handeling these values is to apply an imputer, replacing
+values with the mean of the feature vector.~\parencite{VanderPlas2017}
 
 \subsection{Stacking Classifier with Cross-Validation}\label{class}
-This meta-learning approach
-has shown significantly success, with robust performance across a variety of classification
-tasks~\parencite[p.498]{Tobergte2013a}.For this reason it was chosen
+The stacking classifier is an ensemble classifier, that uses the results of
+multiple base classifiers as input to a 2nd level meta-classifier, used to
+generate a final predicition. $k$-fold cross validation is used accross base
+classifiers, training on $k-1$ folds of input data, and applying to the
+remaining hold out set. The results of these predictions from each base
+classifier are combined and used to train the 2nd level classifier which
+produces the final preditions.\\
+Given it's considerable performance accross a range of tasks, it was expected
+that this classification model could be applied effectively to produce an
+alternative method for abnormality detection than those presented in previous
+literature.
 % TODO:Insert stacking classifier diagram
 
 \subsection{Base Classifiers}
+Clearly, an important consideration when using any ensemble method is the
+selection of the base classifiers. In order for any ensemble method to perform
+well, it must be constructed using a selection of classifiers that individually
+provide useful models for the data~\parencite[p.484]{Tobergte2013a}.  The final
+optimized model consisted of 3 base models. A wide variety of models were
+considered for use as base and meta models. These included models such as Tree
+based, $k$-Nearest Neighbor, and AdaBoost classifiers. Selection of these
+models was based on a novel approach using hyperparameter optimization as
+discussed in Section~\ref{optimise}. The following sections detail the final
+selection used; A combination of SVM and Naive-Bayes classifiers, with a
+Logistic Regression meta classifier.
 
-\subsubsection{SVM}
-
-\subsubsection{Logistic Regression}
+\subsubsection{SVM}\label{SVM}
+The SVM classifier aims to fit a hyperplane to data that maximises the
+separability between classes. This results in a model that has been shown to
+generalise well in many cases, as maximising separability between classes is
+also likely to increase the margin for error in separation of classes. This
+type of classifier is also able to generate hyperplanes in non-linear space,
+using a techniques known as `kernal tricks'. This works by mapping linear data
+to a higher dimension, allowing non-linearly seperable classes to be separated
+by the same method. The details of the SVM and Kernal-SVM are involved and
+outside the scope of this report. Further details can be found
+in~\parencite[p.187]{Tobergte2013a}.\\
+% TODO: Create Hyperplane plot
+SVMs have been prevalent in previous literature, shown to be effective in
+separation of a variety of heart conditions~\parencite{Ari2010} The use of
+kernals to map parameters to higher dimensions is a key advantage of this
+model, allowing for non-linear relationships that are likely to be present in
+the large variety of features to be well represented in classification. Choice
+of kernals, and relevant hyperparameters is detailed in Section~\ref{optimise}.
 
 \subsubsection{Naive-Bayes}
+Commonly used in text classification problems, where there is typically a
+high-dimensional feature space, Naive Bayes classification uses Bayes rule to
+determine the probability of classification, given a vector of features. This
+is calculated as:
+\begin{equation}
+    P(y\mid x_1,\ldots,x_n)=\frac{P(y)\prod\limits_{i=1}^{N}P(x_i\mid y)}{P(x_1,\ldots,x_n)}
+\end{equation}
+The implementation used assumes a gaussian distribution for all features,
+calculating the probability of a feature as:
+\begin{equation}
+    P(x_i\mid y)=\frac{1}{\sqrt{2\pi
+    \sigma_y^2}}\exp\bigg(-\frac{(x_i-\mu_y)^2}{2\sigma^2_y}\bigg)
+\end{equation}
+Where:
+$\mu$ is the mean of the distribution
+$\sigma^2$ is the varaince
+Using Maximum Liklihood estimation to estimate $\sigma$ and $\mu$ given the
+feature vector, a classification for new features can then be calculated as:
+\begin{equation}
+    \hat{y}=\argmax\limits_y P(y)\prod\limits_{i=1}^nP(x_i\mid y)
+\end{equation}
+Where:\\
+$x$ is the feature vector to be classified\\
+$\hat{y}$ is the estimated classification\\
+
+Despite their computational simplicity, Naive Bayes classifiers have been shown
+to produce highly accurate classifications models. The assumption that each feature is
+completely independant allows for extremely fast classification and scalability
+to large datasets, with many dimensions~\parencite[p.300]{Zhang2004}. It was
+thought that these benefits would make the classifier suitable for the proposed system, as the reatively high
+dimensionality of features and quantity of datapoints could then be classified
+quickly to obtain initial results. Despite the inclussion of more complex
+models, this model remained one of the selected base classifiers for the final
+model. 
+
+\subsubsection{Logistic Regression}
+Logistic regression is a regression model that aims to fit as hyperplane to
+data points by minimizing a cost function using weighted features.
+By applying weights to feature vectors then applying a sigmoid function, a
+hypothesis function is defined as:
+\begin{equation}
+    h_\theta(x)=\frac{1}{1-e^{-\theta^{T}x}}
+\end{equation}
+Where:\\
+$x$ is a feature vector
+$y$ is a weight vector 
+A cost function can then be defined as:
+\begin{equation}
+    J(\theta)=\argmin\limits_\theta\frac{1}{2m}\sum\limits_i^{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2+
+\end{equation}
+
+
 
 % TODO: Replace this section
 % \subsubsection{Signal quality classification}\label{Quality}
@@ -974,10 +1072,14 @@ A wrapper method
 
 \subsubsection{Particle Swarm Hyperparameter Optimisation}
 Would ideally be placed inside feature selection
+Given the abundance of
+machine learning algorithms readily available, it can be difficult to select
+the best model quickly, with 
 
 
-\subsection{Model Performance Metrics}\label{metrics}
+\subsection{Model Performance Evaluation}\label{metrics}
 % TODO: Insert cross validation diagram from data science handbook
+~\ref{ChallengeEnt}
 Group cross-validation
 $k$-fold cross validation
 
@@ -987,6 +1089,7 @@ focus on using open source libraries throughout the project to avoid
 `reinventing the wheel'. Integration of external libraries
 Use of Python - quick development, wide variet of third party libraries to
 allow for rapid prototyping
+
 
 Interface
 - Implementation of simple CLI for quick control of system parameters
@@ -999,8 +1102,8 @@ Implementation of features
 - pyWavelets for wavelet features
 - librosa for MFCCs
 Implementation of machine learning classifiers
-- Use of sklearn for base classifiers
-- Addition of stacking classifier using mlxtend
+- Use of sklearn for base classifiers, use of pipelines
+- Addition of stacking classifier using mlxtend - use of probabilities
 - Saving of features and models to pickles, allowing for direct running of
 intermediate section of system and for development and portability of generated models
 Implementation of optimisatons
@@ -1014,6 +1117,12 @@ Implementation of optimisatons
 Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
 challenge
+Could be used as cloud based system
+Features were selected for their individual relevance to classification
+problem, Naive Bayes treats features individually. Could explain why it
+performed well
+Relationships between features likely with features such as wavelets, perhaps
+captured by SVMs
 \section{Further Work}\label{FurtherWork}
 Handle silent sections of audio such as those highlighted by Goda et.\
 al~\parencite{Goda2016}

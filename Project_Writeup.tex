@@ -6,6 +6,8 @@
 \usepackage{url}
 \usepackage{float}
 \usepackage{caption}
+\usepackage{multicol}
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
 %\restylefloat{table}
 \usepackage[table]{xcolor}
 \usepackage{multirow}
@@ -513,7 +515,7 @@ et.\ al in Section~\ref{Segmentation}. Participants were then tasked with the
 creation of a classification algorithm that could robustly discriminate between
 healthy and unhealthy heart sound samples. The challenge recieved 348 entries
 in total, each of which was scored on a hidden test database
-using a Modified accuracy measure ($MAcc$) as defined by Clifford et.
+using a Modified accuracy measure ($Acc$) as defined by Clifford et.
 al~\parencite{Clifford2016}:
 \begin{table}[htbp]
 \centering
@@ -543,12 +545,12 @@ $Wn_1 = \frac{\text{Clean normal recordings}}{\text{Total normal recordings}}$  
 \end{tabular}
 \end{table}
 
-Modified sensitivity ($Se$), specificity ($Sp$) and overall accuracy ($MAcc$) are then calculated as:
+Modified sensitivity ($Se$), specificity ($Sp$) and overall accuracy ($Acc$) are then calculated as:
 
 \begin{align*}
     &Se=Wa_1\frac{Aa_1}{Aa_1+Aq_1+An_1}+Wa_2\frac{Aa_2+Aq_2}{Aa_2+Aq_2+An_2} \\
     &Sp=Wn_1\frac{Nn_1}{Na_1+Nq_1+Nn_1}+Wn_2\frac{Nn_2+Nq_2}{Na_2+Nq_2+Nn_2} \\
-    &MAcc=\frac{Se+Sp}{2}
+    &Acc=\frac{Se+Sp}{2}
 \end{align*}
 
 This section summarises some of the key works presented for the challenge,
@@ -1451,7 +1453,7 @@ functionality and Panda's HDF5 export methods, to create fully portable models.
 In order to accurately place the system in the context of current research,
 evaluation metrics were needed to perform automatic testing of the system. 
 Metrics were implemented as described in Section~\ref{metrics} using a custom
-multi-scorer object that  was adapted to allow for the calculation of the 3
+multi-scorer object that was adapted to allow for the calculation of the 3
 metrics: sensitivity, specificity and score. Using this object in conjunction
 with a selection of Scikit-learns cross-validation objects provided a mechanism
 for quickly evaluating models in an equivelant fashion to those presented in
@@ -1462,7 +1464,125 @@ methods.\\
 Finally, results were formatted into tables and logged to provide instant
 feedback to the user on the performance of the current model.
 
-\section{Evaluation}\label{Eval}
+\section{Results and discussion}\label{Eval}
+The system was evaluated using 3 primary scoring methods:
+\begin{itemize}
+    \item Score on hidden test set
+    \item Leave-one-out database cross-validation
+    \item 10-fold stratified cross-validation
+\end{itemize}
+
+The final optimised model was generated using 43 selected features, as detailed
+in table~\ref{}, parameter optimisation was run with 1000 parameter
+evaluations, resulting in 50 iterations using 20 particles. Final parameters
+for the chosen algorithms are detailed in table~\ref{}.\\
+The final scores produced for this model, evaluated using the full dataset can
+be found in Table~\ref{TestSet} (Hidden test set), Table~\ref{LOGO} (Leave-one-out) and
+Table~\ref{KFCV} (Stratified cross-validation).
+
+\begin{table}[H]
+\centering
+\caption{Hidden test-set scoring}
+\label{TestSet}
+\begin{tabular}{@{}lll@{}}
+\toprule
+$Acc$  & $Se$    & $Sp$    \\ \midrule
+80.31\% & 83.15\% & 77.47\% \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\doublespacing
+\caption{Leave-one-out scores}
+\label{LOGO}
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCC}
+\toprule
+       & A                 & B                 & C                 & D                 & E                 & F                 & Mean              \\ \midrule
+$Acc$ & $0.5395\pm0.0104$ & $0.4896\pm0.0129$ & $0.5673\pm0.0298$ & $0.5173\pm0.0223$ & $0.5869\pm0.0300$ & $0.5492\pm0.0140$ & $0.5416\pm0.0318$ \\
+$Se$   & $0.7281\pm0.0164$ & $0.8664\pm0.0240$ & $0.6775\pm0.0208$ & $0.7865\pm0.0218$ & $0.5397\pm0.0459$ & $0.7387\pm0.0493$ & $0.7228\pm0.1005$ \\
+$Sp$   & $0.3509\pm0.0264$ & $0.1127\pm0.012$  & $0.4571\pm0.0571$ & $0.2481\pm0.0416$ & $0.6340\pm0.0387$ & $0.3596\pm0.0464$ & $0.3604\pm0.1624$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+\begin{table}[H]
+\caption{10-fold cross-validation score}
+\doublespacing
+\label{KFCV}
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCCCCCC}
+\toprule
+       & 1                 & 2                 & 3                 & 4                 & 5                 & 6                 & 7                 & 8                 & 9                 & 10                & Mean              \\ \midrule
+$Acc$ & $0.7969\pm0.0246$ & $0.8049\pm0.0244$ & $0.8043\pm0.0153$ & $0.8111\pm0.0295$ & $0.8095\pm0.0261$ & $0.7999\pm0.0208$ & $0.8061\pm0.0299$ & $0.8150\pm0.0198$ & $0.8140\pm0.0245$ & $0.7928\pm0.0224$ & $0.8055\pm0.0069$ \\
+$Se$   & $0.8121\pm0.0420$ & $0.8164\pm0.0360$ & $0.8193\pm0.0302$ & $0.8184\pm0.0634$ & $0.8158\pm0.0484$ & $0.8061\pm0.0438$ & $0.8325\pm0.0546$ & $0.8421\pm0.0321$ & $0.8246\pm0.0474$ & $0.7798\pm0.0302$ & $0.8167\pm0.0157$ \\
+$Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0.0280$ & $0.8033\pm0.0226$ & $0.7937\pm0.0214$ & $0.7798\pm0.0229$ & $0.7878\pm0.0206$ & $0.8035\pm0.0219$ & $0.8059\pm0.0228$ & $0.7942\pm0.0091$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+% Make lists without bullets and compact spacing
+\renewenvironment{itemize}{
+  \begin{list}{}{
+    \setlength{\leftmargin}{1.5em}
+    \setlength{\itemsep}{0.25em}
+    \setlength{\parskip}{0pt}
+    \setlength{\parsep}{0.25em}
+  }
+}{
+  \end{list}
+}
+\setlist[enumerate]{itemsep=0.25em}
+\singlespacing
+\begin{multicols}{6}
+    \small
+\begin{itemize}
+    \item AvrA5diaShan 
+    \item AvrA5s1Shan 
+    \item AvrA5s2Shan 
+    \item s2MFCC0 
+    \item AvrD1s2Shan 
+    \item s2MFCC12 
+    \item s2MFCC4 
+    \item s2MFCC6 
+    \item s2MFCC9 
+    \item s2Max 
+    \item s2Mean 
+    \item AvrD4s2Shan 
+    \item AvrD5s2Shan 
+    \item s2ZeroX 
+    \item sd\_RR 
+    \item TPTs1 
+    \item s2Dur 
+    \item sysMFCC2 
+    \item sysMax 
+    \item sysSampEnt 
+    \item sysShanEngy 
+    \item sysSkew 
+    \item sysVar 
+    \item diaMFCC11 
+    \item diaMFCC12 
+    \item diaMFCC6 
+    \item diaSampEnt 
+    \item diaShanEngy 
+    \item diaVar 
+    \item diaZeroX 
+    \item heartRate 
+    \item m\_RR 
+    \item m\_Ratio\_DiaRR 
+    \item mean\_IntS1 
+    \item mean\_IntSys 
+    \item s1Dur 
+    \item s1MFCC11 
+    \item s1MFCC4 
+    \item s1Max 
+    \item s1Mean 
+    \item s1ShanEngy 
+    \item s1Var 
+    \item s1ZeroX
+\end{itemize}
+\end{multicols}
+
 Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
 challenge
@@ -1474,6 +1594,7 @@ performed well
 Relationships between features likely with features such as wavelets, perhaps
 captured by SVMs
 Discuss issues with database e
+
 
 \section{Further Work}\label{FurtherWork}
 Further research to be done into resampling - inclusion as hyperparameter in

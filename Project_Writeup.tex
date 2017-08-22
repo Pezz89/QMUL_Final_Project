@@ -177,7 +177,7 @@ Classification of Heart Abnormalities} \par}\\
 
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
-I'd like to thank anyone and everyone...
+I'd like to thank John Thompson - What a babe...
 \end{abstract}
 
 \tableofcontents
@@ -596,14 +596,14 @@ the test set for the challenge at 86.02\%.\\
 Zabihi et al.\ took an alternative approach by choosing not to segment PCG data
 in the pre-processing stage~\parencite{Zabihi2016}. This was with the intention
 of reducing computational complexity of the resulting algorithm. In addition,
-the proposed method utilizes a wrapper sequential forward feature selection
-(SFS) and Linear Predictive Coefficients (LPC) for the reduction of features
-used for classification. This benefits the system by removing correlated and
-irrelevant features, thus reducing computational complexity and removing
-irellevant noise from feature vectors prior to training.  Final classifications
-are determined through cascaded ensembles of ANNs. The signal is first
-classified as either of high or low sound quality, and then as normal or
-abnormal. The system achieved a final score of 85.9\% on the hidden test set.\\
+the proposed method utilizes a sequential forward feature selection (SFS) and
+Linear Predictive Coefficients (LPC) for the reduction of features used for
+classification. This benefits the system by removing correlated and irrelevant
+features, thus reducing computational complexity and removing irellevant noise
+from feature vectors prior to training.  Final classifications are determined
+through cascaded ensembles of ANNs. The signal is first classified as either of
+high or low sound quality, and then as normal or abnormal. The system achieved
+a final score of 85.9\% on the hidden test set.\\
 
 Plesinger et al.\ opted to develop a new form of machine learning algorithm
 based on probability assesment~\parencite{Plesinger2017}. In this method,
@@ -1129,8 +1129,11 @@ SFFS is an iterative wrapper method that adds features and re-trains the chosen
 model sequentially, choosing features that increase the accuracy of the model
 output (using 3-fold cross validation to avoid overfitting). Final models used
 as few as 40 features, increasing both accuracy of classifications and
-computation time of models significantly. For further details on SFFS please
-refer to~\parencite[p.3]{Ferri1994}
+computation time of models significantly.\\
+It should be understood that this method does not guarantee a globally optimal
+set of features. An exhaustive feature selection algorithm is capable of this
+but this would inccur significant computational cost. For further details on
+SFFS please refer to~\parencite[p.3]{Ferri1994}
 
 \subsubsection{Particle Swarm Hyperparameter Optimisation}\label{PSOp}
 The particle swarm optimisation algorithm is an iterative meta-heuristic algorithm that
@@ -1184,7 +1187,11 @@ algorithm to provide a locally optimal selection of base classifiers for the
 model~\parencite{Sesmero2015}. This technique was used to pick the 3 final
 models described in section~\ref{class} from a selection of 8 models. This
 dynamic selection of models was seen to be one of the key contributors to the
-overall success of the agorithm.
+overall success of the agorithm. As with the chosen feature selection
+algorithm, this method of optimisation is not guaranteed to provide a globally
+optimal solution. It was thought that for the proposed system a locally optimal
+system would suffice, particularly given the highly complex parameter space
+used in implementation. This is discussed in detail in Section~\ref{ModOp}.
 
 \subsection{Model Performance Evaluation Method}\label{metrics}
 In order to fully understand the performance of the system (and to evaluate the
@@ -1258,7 +1265,7 @@ This section describes the tools used in the realisation of the
 proposed system, the practical issues encountered throught the
 implementation process and the development strategy taken to address and avoid
 such issues. Rationale is given for decisions made throughout
-production of the proposed system and any issues with curent implementation are
+production of the proposed system and any known issues with the curent implementation are
 outlined.
 
 \subsection{Development Strategy}
@@ -1272,7 +1279,7 @@ readily available packages and libraries, make the language a good choice for
 the fast, flexible development approach taken throughout this project.\\
 
 The most significant objective from the outset of the project was to provide a
-system that could classify pathological systems with a degree of accuracy that
+system that could classify pathological signals with a degree of accuracy that
 was compareable to the current state of research in the field of PCG analysis.
 Given this focus and that the performance of the final product was initially
 unknown, it was recognised that the design of the project would need to adapt
@@ -1297,34 +1304,163 @@ throughout the project alongside other packages detailed in the following
 sections.
 
 \subsection{System overview}
-The proposed system can be broken down into a number of key components, each of
-which performs a specific task, interacting with other components to produce
-the final result. The main components are the user interface, feature
-generation module, classification and optimisation module and evaluation
-module. Implementation of each is detailed in the following sections.
+The proposed system can be broken down into 4 key components: the user
+interface, feature generation module, classification module and optimisation
+module and evaluation module. The overall architecture of the system follows a
+common design pattern for machine learning based systems; Taking a set of input
+data, augamenting to produce associated data, extracting patterns from said
+data and evaluating to understand the effects of various implementation
+choices. The reason for this maintain focus on the central innovations of the
+project which are thought to be in the implementation of models and the
+analysis of input data.
 
-\subsubsection{User interface}
-- Implementation of simple CLI for quick control of system parameters
-- High computational cost - Multiprocessing, logging issues
+\subsubsection{User interface and project framework}
+As a project focused on producing a functional proof of concept for a specific
+problem, this project was not aimed at producing a user-facing application. For
+this reason, interactions with the system are based primarily around a simple,
+well documented commandline interface (CLI) that allows a user to specify
+relavent parameters through use of CLI flags (CLI output flags are detailed in
+Appendix~\ref{appendixB}). This gives the user relevant
+control over optional parameters that are situation specific (such as
+multiprocessing, specifying locations to save data etc\ldots) through an interface that is both easy to maintain throughout
+development and intuitive for a user familiar with command line applications.
+Relevent information is then presented to the user as the program progresses
+through the use of standard output and file based logging systems. Providing
+informative feedback to the user was essential, both during development for
+debugging prosesses, and to provide an understanding of the programs progress,
+particularly in long-running iterative processes used for optimisation.\\
+A file based logging system was developed using Python's built-in logging
+module to allow for the monitoring of threaded processes. This allowed for
+detailed monitoring of the systems progress, even when running multiple
+operation concurently.\\
+
+A significant issues that developed as the project grew in size and complexity
+was the running time. As more complex methods were implemented for feature
+extraction and model optimisation, the time taken to process the relatively
+large dataset grew considerably. Primarily using Python's object pickling
+functionality, Methods were implemented to handle the creation and maintenance
+of intermediate feature and parameter files, allowing the program to load
+previously generated data. This helped in cutting  computation times of
+subsequent runs significantly. This also provided a convenient facility for
+storing models, in a portable fashion for transfer between computers, for
+example.
+
 \subsubsection{Features extraction}
-- Data Manipulation
-- - Pandas and Numpy for basic handeling and manipulation of data
-- - Splitting of data using sklearn
-- Joining of existing segmentation script and python code
-- pyWavelets for wavelet features
-- librosa for MFCCs
-\subsubsection{Classification model generation}
-- Use of sklearn for base classifiers, use of pipelines
-- Addition of stacking classifier using mlxtend - use of probabilities
-- Saving of features and models to pickles, allowing for direct running of
-intermediate section of system and for development and portability of generated models
-Implementation of optimisatons
-\paragraph{Model optimisation}
-- Optunity for Hyperparameter optimisation
-- Mlxtend for SFS
+As a fundamental component of the classification system, the feature extraction
+method required careful planning and development to realise the extraction of
+the large number of features. As a feature of particular importance, the
+integration of the MATLAB segmentation algorithm was a key part of the feature
+extraction method. Given a premade MATLAB implementation, the most problematic
+step was the integration of this code seemlessly with the largely incompatible
+Python framework. This was achieved through use of Python's Subprocess module,
+allowing for the code to be called through an external unix process. The nature
+of this implementation limits the compatability of the system to unix only
+systems. However, given the nature of the project, this is not considered an
+issue.\\
 
+Having extracted segmentation data, methods for the efficient calculation and
+storage of other features were considered. It was recognised that in order to
+maintain such a large number of features, an organised and efficient data
+format would be needed. The popular Pandas DataFrame library was chosen for
+this task. Built on the NumPy array object, DataFrames provide a labeled data
+structure, ideal for storing large quantities of labeled data. As the DataFrame
+is based on the Numpy array it is able to combine the powerful matrix
+operations of Numpy with intuitive database queries commonly seen in languages
+such as SQL. This data structure also allows for symplistic storing and loading
+of DataFrames through built-in interfaces to the HDF5 filesystem, simplifying
+the storage of large quantities of intermediate data.\\
+A minor issue that was found during development was the lack of compatability
+between DataFrames and Scikit-Learn (described in Section~\ref{Sklearn}). This
+simply required careful handling of operations between these APIs in order to
+avoid unintentional mishandeling of data.\\
 
+As mentioned previously, the calculation of features often required many
+mathematical operations to be performed on vectors. The use of Numpy array-like
+containers simplified this operation, allowing many features to be calculated
+in a single line of code. Standard operations were sufficient for a number of
+the features. However, mathematically complex features such as MFCCs and
+wavelet transforms required dedicated processing libraries. The opensource
+pyWavelets and Librosa project were used for initial generation of MFCCs and
+the DWT respectively~\parencite{pyWave, Mcfee2015}. Further processing such as
+segmentation, entropy analysis etc\ldots is calculated to produce the final
+features. For a details of all features please refer to
+Appendix~\ref{appendixA}.\\
 
+Given the large number of operation required for feature extraction, a large
+amount of time needed to compute features was an unavoidable consequence of
+the design. To help alleviate this issue, processing of feaures was
+parallelized, using each sample as an individual job. The speedup incurred
+through parellization is inherently dependant on the system running the
+program, however, this significantly reduced the computation time of features.
+A modified implementation of Python's multiprocessing module was used for task
+management.
+
+\subsubsection{Classification model generation}\label{Sklearn}
+The Scikit-learn machine learning package is a popular choice for
+implementation of machine learning algorithms in
+Python.~\parencite{Pedregosa2011} As a result, it is well maintained and
+benefits from a number of smaller projects that are designed to be compatible
+with it's API. Such projects include Mlxtend, designed to expand Scikit-learns
+range of features with more essoteric models and tools~\parencite{Raschka2016,}
+and Imbalance-learn, which addresses the lack of sample balancing
+transformations in Scikit-learn~\parencite{Lemaitre2017}. The project's aim to
+provide a standard interface to each of it's algorithms also aids in the quick
+prototyping of many machine learning algorithms on the features generated.
+During the initial stages of development, this allowed for models to be tested
+quickly to gain a rudimentary understanding of the performance of models. From
+this, it was possible to explore more complex models and ultimately resulted in
+the use of Mlxtend's Stacking ensemble classifier.\\
+
+As the size of the classification codebase grew, so did the number of chained
+operations in the clasification process. Scikit-learn's Pipeline utility was
+used to maintain correct handeling of these process chains, allowing for models
+to be easily formed of multiple transforms and classifiers in a manageable
+manner. This gained paticular significance with the implementation of model
+optimisation methods, as discussed in the following section.
+
+\paragraph{Model selection/optimisation}\label{ModOp}
+The decision to use an ensemble classifier also presented a complication,
+through the need to choose multiple complimentary base classifiers. A further
+issue was in the growing number of parameters that would need to be tuned to
+obtain optimal results from each of the chosen base classifiers. The adaption
+of a particle swarm optimisation algorithm was found to be an effective
+solution to both of these problems~\parencite{Claesen2014}. Using model
+pipelines to encapsulate all transformations and classifiers into a single
+object, it was possible to construct a dictionary of multiple potential
+Scikit-learn models for each base classifier.  Implementation of a wrapper
+function around the full stacking classifier then allowed classifier pipelines
+to be treated as hyperparameters, which could be optimized on a training set
+alongside all active parameters for each base classifier. This resulted in the
+simultaneous selection and optimization of model combinations and
+hyperparameters.\\
+
+Mlxtend's implementation of SFFS was also implemented to apply feature reduction to
+the dataset. This was initially implemented as part of the processing pipeline,
+resulting in feature reduction being applied on every iteration of parameter
+optimisation. This initially provided a score for each model based on the
+selection of it's optimal parameters. However, as models grew in complexity,
+the growing computational complexity resulted in this method becoming infeasible.
+This was adressed by re-implementing the feature selection algorithm after
+optimisation on the full dataset. The reduction in performance from this is not
+thought to be significant.\\
+
+As with parameters, models were saved using a combination of Python's picling
+functionality and Panda's HDF5 export methods, to create fully portable models.
+
+\subsubsection{Automatic system evaluation}
+In order to accurately place the system in the context of current research,
+evaluation metrics were needed to perform automatic testing of the system. 
+Metrics were implemented as described in Section~\ref{metrics} using a custom
+multi-scorer object that  was adapted to allow for the calculation of the 3
+metrics: sensitivity, specificity and score. Using this object in conjunction
+with a selection of Scikit-learns cross-validation objects provided a mechanism
+for quickly evaluating models in an equivelant fashion to those presented in
+the literature. In addition, a simple test train split was implemented allowing
+for the use of a hold-out dataset. Performance on this dataset was evaluated
+directly using the custom scoring functions and Scikit-learn's model scoring
+methods.\\
+Finally, results were formatted into tables and logged to provide instant
+feedback to the user on the performance of the current model.
 
 \section{Evaluation}\label{Eval}
 Weighted specificity and weighted Accuracy measures
@@ -1338,7 +1474,10 @@ performed well
 Relationships between features likely with features such as wavelets, perhaps
 captured by SVMs
 Discuss issues with database e
+
 \section{Further Work}\label{FurtherWork}
+Further research to be done into resampling - inclusion as hyperparameter in
+optimization
 Handle silent sections of audio such as those highlighted by Goda et.\
 al~\parencite{Goda2016}
 Synthesis of synthetic PCG signals
@@ -1350,7 +1489,7 @@ Particle swarm Would ideally be placed inside feature selection
 \addcontentsline{toc}{section}{Appendices}
 \renewcommand{\thesubsection}{\Alph{subsection}}
 \subsection{Table of Features}\label{appendixA}
-\subsection{Commandline Interface}
+\subsection{Commandline Interface}\label{appendixB}
 \singlespacing
 \lstset{basicstyle=\scriptsize, style=mystyle}
 \begin{lstlisting}[numbers=none]
@@ -1407,8 +1546,6 @@ optional arguments:
                         by current process
 \end{lstlisting}
 \doublespacing
-
-
 \pagebreak{}
 \printbibliography{}
 

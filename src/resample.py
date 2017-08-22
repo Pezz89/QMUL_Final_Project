@@ -11,7 +11,10 @@ def groupResample(features, classification, mix=0.5):
     groups = generateGroups(features)
     resampledFeatures = []
     resampledClassifications = []
-    groupCount = np.max(groups)+1
+    try:
+        groupCount = np.max(groups)+1
+    except:
+        raise ValueError("No sample features were generated/loaded from file...")
 
     clusters = []
     for i in xrange(groupCount):

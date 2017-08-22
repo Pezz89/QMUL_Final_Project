@@ -215,7 +215,7 @@ def main():
     train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
     # Resample generated features and classifications to balance dataset, using
     # a combination of jacknife and bootstrap resampling based on user input
-    train_features, train_classifications = groupResample(train_features, train_classifications, mix=args.resample_mix)
+    #train_features, train_classifications = groupResample(train_features, train_classifications, mix=args.resample_mix)
 
     if args.optimize:
         # Optimize model parameters using particle swarm optimization

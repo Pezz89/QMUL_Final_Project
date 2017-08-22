@@ -536,6 +536,7 @@ def generateFeatures(dataFilepaths, output_dir, filename=None, parallelize=True,
     if filename:
         pathops.dir_must_exist(output_dir)
         outputFile = os.path.join(output_dir, filename)
+
         if not reanalyse:
             try:
                 logger.debug("Attempting to load previously generated features from file: {0}".format(os.path.relpath(outputFile)))
@@ -553,6 +554,8 @@ def generateFeatures(dataFilepaths, output_dir, filename=None, parallelize=True,
     args = []
     # Find all files that are in the current dataset that have not been
     # processed previously
+    if not dataFilepaths:
+        raise ValueError("No files found in dataset")
     for pcgData in dataFilepaths:
         if pcgData['name'] not in features.index:
             args.append((pcgData['name'],pcgData['audio'],pcgData['seg']))

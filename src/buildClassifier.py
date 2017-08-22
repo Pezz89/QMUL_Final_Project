@@ -13,16 +13,16 @@ import sys
 import multiprocessing
 import six
 import textwrap
+import warnings
 from tabulate import tabulate
 
 ################################################################################
 # Scikit-Learn imports
 ################################################################################
-from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, StratifiedShuffleSplit, LeaveOneGroupOut
+from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, StratifiedKFold, StratifiedShuffleSplit, LeaveOneGroupOut
 from sklearn.metrics.scorer import make_scorer
 from sklearn import preprocessing
 from sklearn.externals import joblib
-from sklearn.pipeline import Pipeline
 
 # Potential classifier models
 
@@ -45,6 +45,13 @@ from mlxtend.classifier import StackingCVClassifier
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 
 ################################################################################
+# Resampling library
+################################################################################
+from imblearn.pipeline import make_pipeline
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import ClusterCentroids
+
+################################################################################
 # Particle swarm optimization library
 ################################################################################
 import optunity
@@ -62,6 +69,9 @@ from multiscorer import MultiScorer
 
 
 logger = logging.getLogger(__name__)
+logging.getLogger("imblearn").setLevel(logging.CRITICAL)
+
+warnings.filterwarnings("ignore", category=UserWarning, module='imblearn')
 # Generate random seeds to ensure reproducible performance
 random_state = np.random.RandomState(42)
 np.random.seed(42)
@@ -155,8 +165,8 @@ def buildModel(
     # Create sklearn pipe using an imputer to handle Nan values, a scaler for
     # ensuring all values are in the range of 0-1 and the final stacking
     # classifier
-    pipe_components = [("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr, use_probas=True))]
-    pipe = Pipeline(pipe_components)
+    #pipe_components = [("resampler", SMOTE()), ("imputer", preprocessing.Imputer()), ("scaler", preprocessing.MinMaxScaler()), ("model", StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr, use_probas=True))]
+    pipe = make_pipeline(ClusterCentroids(), preprocessing.Imputer(), preprocessing.MinMaxScaler(), StackingCVClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr, use_probas=True))
 
     return pipe
 

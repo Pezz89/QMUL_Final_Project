@@ -792,17 +792,21 @@ A common issue with data collected from the real world is the imbalance of
 classes in data. As noted by Liu et al.~\parencite{Liu2016}, this is the case
 with the available dataset, as there are less pathological signals than healthy
 signals.  This presents an issue with classification tasks, as imbalance can
-have a negative impact on classification of the minor
-class~\parencite{Longadge2013}. In this context, this would potentially impact
-classification accuracy for abnormal samples, so must be handled appropriately.
-Two common methods for approaching this are bootstrap resampling (sampling with
-replacement) and jacknife resampling (sampling without replacement). Both
-methods have been used accross previous literature. However, jacknife
-resampling was chosen for this project in an effort to avoid overfitting the
-classification model as a result of the multiple identical samples generated
-using the bootstrap method. It is noted that this method does result in a
-significant loss of information, reducing the dataset size from 3240 samples to
-944.
+have a negative impact on classification of the minor class. In this context,
+class imbalance could potentially impact classification accuracy for abnormal
+samples, so must be handled appropriately. This issue can be approached using a
+number of methods. Sophisticated oversampling methods such as SMOTE (Synthetic
+Minority oversampling Technique) offer one solution. SMOTE generates synthetic
+samples using interpolation and adds these to the data set to balance the
+classes, without using direct copies of existing data. However, oversampling
+techniques such as this can increase overfitting of models, and don't always
+offer reasonable improvement in performance~\parencite{Longadge2013}.
+Undersampling is the most common method used, typically by randomly removing
+samples from the major class. This has the obvious disadvantage of reducing
+data available for training. However, an improved method using $k$-Means
+clustering has been shown to be effective in previous cardiovascular
+classifications problems~\parencite{Rahman2013}. This method was seen to be the
+best choice for the proposed system.
 
 \subsubsection{Signal Segmentation}
 %TODO: Generate segmentation plot

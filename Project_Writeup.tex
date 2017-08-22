@@ -746,6 +746,8 @@ $e$~\parencite{Bobillo2016}. The recording of normal and pathological signals us
 separate devices is likely to cause issues and is discussed in
 Section~\ref{Eval}
 
+%BEGIN NEW MATERIAL
+
 \section{Design}
 This project aims to provide robust heart abnormality detection for PCG
 signals, such that use of the system could reliably recommend further medical
@@ -825,8 +827,8 @@ submitted to the challenge. Results produced by the proposed system will
 generally not be coloured by the differences in quality of segmentation
 algorithms, allowing for more direct comparison of classification methods.
 However, it is noted that despite the high performance of the algorithm, errors
-in segmentation will still occur that may have a negative impact on feature
-quality. As methods proposed by previous literature such as hand correction by
+in segmentation will still occur, that may have a negative impact on feature
+quality. As methods proposed by previous literature, such as hand correction by
 a professional~\parencite[p.2203]{Liu2016} are not feasible in this context,
 and considering the low number of erroneous results produced by the
 algorithm~\parencite[p.2]{Goda2016} it was decided that these errors would not
@@ -859,21 +861,22 @@ Features such as:
     \item A selection of envelope based features for each heart sound
 \end{itemize}
 
-18 feature provided by the Physionet challenge focused on timings between
+18 features provided by the Physionet challenge focused on timings between
 segments of the heart cycles. It was thought that these features would be
 useful in capturing irregularities caused by conditions such as arrhythmias,
 atrial septal defect and other conditions that are likely to affect relative
-timing of heart sounds, such as Mitral valve prolapse or regurgitation.
+timing of heart sounds.
 Many conditions that can be detected by traditional auscultation are
 characterised by an increase in loudness of the S1 and/or S2 heart
 sounds~\parencite{Brown2008}. This suggests that features relating to human
 perception of loudness may aid in the detection of such conditions.  Simple
 envelope based features such as RMS, peak loudness and the Shannon energy
-envelope (Equation~\ref{ShanEQ}, popular in previous literature, were extracted
-for this reason~\parencite[p.73-77]{Lerch2012}. In addition, statistical
-features such as sample entropy and skewness (Equation ~\ref{SkewEQ}) were used
-to evaluate the distribution of samples for each heart sound, these were
-selected to provide a representation of the temporal ``shape'' of each sound.
+envelope (Equation~\ref{ShanEQ}) that proved popular in previous literature,
+were extracted for this reason~\parencite[p.73-77]{Lerch2012}. In addition,
+statistical features such as sample entropy and skewness (Equation
+~\ref{SkewEQ}) were used to evaluate the distribution of samples for each heart
+sound, these were selected to provide a representation of the temporal
+``shape'' of each sound.
 
 \begin{equation}\label{ShanEQ}
     SE = \frac{-1}{N}\sum\limits_{n=0}^N x(n)^2\cdot \log{x(n)^2}
@@ -892,12 +895,12 @@ It was recognised that a time domain representation alone was unlikely to
 provide a sufficient representation for discerning a wide variety of
 conditions. Using a time-frequency representation to characterise the spectral
 components of the signal has proven effective in the majority of literature.
-The classic method for producing a spectral representation of a signal is the
-Fourier transform (as defined in Equation~\ref{FFTEQ}) over a sliding window of size
-$N$. By decomposing the signal into a series of sine and cosine
-waves, a representation of the signal across a range of frequency bands is
-produced. This can be used for further analysis of heart sounds
-based on their spectral characteristics.
+The classic method for producing a spectral representation of a signal is to
+apply the Discrete Fourier Transform (DFT) (as defined in Equation~\ref{FFTEQ})
+over a sliding window of size $N$. By decomposing the signal into a series of
+sine and cosine waves, a representation of the signal's spectral content across
+a range of frequency bands is produced. This can be used for further analysis
+of heart sounds based on their spectral characteristics.
 \begin{equation}\label{FFTEQ}
 X(k)=\sum\limits_{n=0}^{N}x(n)e^{\frac{-j2\pi kn}{N}}
 \end{equation}
@@ -912,7 +915,7 @@ signal's spectral shape. MFCCs are calculated by first applying $N$ (a
 user-defined parameter) triangular filter banks, spaced using the mel scale to
 the magnitude spectrum. Applying a discrete cosine transform to the log of the
 filterbank outputs provides the final set of coefficients (for further details,
-please refer to~\parencite{Lerch2012}). This representation
+please refer to~\parencite{Lerch2012}). This analysis
 creates a perceptually relevant representation of spectral shape, in effect
 mimicking the way in which humans might perceive the spectral shape of heart
 sounds. The reasoning for this is that, as the aim is to provide a system with
@@ -921,7 +924,7 @@ what a human percieves may prove effective at distinguishing conditions in the
 way that a human does. This has shown to be effective in previous literature,
 with multiple systems utilising perceptual features with
 success~\parencite{Ortiz2016, Rubin2016, Quiceno-Manrique2010a}. 13 MFCCs were
-calculated for each heart sound and averaged per sample to provide 13 features
+calculated for each heart sound and averaged to provide 13 features
 per sample.\\
 %TODO: Generate MFCC spectum
 
@@ -947,10 +950,10 @@ time-frequency representation to fourier methods. The fundamental concept of
 the wavelet transform is to represent an input signal as a set of scaled and
 shifted finite oscillations. By comparing the signal with each scale of wavelet
 at all points in time, a set of $N\times A$ (Where $A$ is the number of scales)
-coefficients are generated that represent the scale and position needed for
+coefficients are generated. These define the scale and position needed for
 each wavelet in order to fully reconstruct the signal (For further details,
-refer to~\parencite{Polikar1994}) The benefit of this transform is that it is
-well localized in both time and frequency. This allows for accurate
+refer to~\parencite{Polikar1994}). The benefit of this transform is that it is
+well localized in both time and frequency domains. This allows for accurate
 representation of transient events such as clicks and snaps that are
 characteristic of heart conditions such as Mitral valve prolapse or
 stenosis~\parencite{Brown2008}.\\
@@ -962,44 +965,44 @@ coefficients to attain a total of 48 features.~\parencite{Homsi2016}
 
 \subsubsection{Feature Scaling and Imputing}
 A common problem when working with multiple features is the difference in scale
-Dbetween features. This problem can cause many machine learning algorithms to place
+between features. This problem can cause many machine learning algorithms to place
 bias on larger scale features and can significantly impact the time taken for
 certain algorithms to converge. This is particularly significant when applying
 algorithms sensitive to feature scale such as SVMs (described in
 Section~\ref{SVM}). To address this, a Min-Max scaler was applied
 to training and test sets prior to training models. This scales all values to within a
 0--1 range producing a set of features on a common scale.\\
-It is also common to encounter missing values in features. these can occur as a
+It is also common to encounter missing values in features. These can occur as a
 result of $\log(0)$ or division by 0 calculations, amongst other edge cases. A
 standard method for handeling these values is to apply an imputer, replacing
-values with the mean of the feature vector.~\parencite{VanderPlas2017}
+values with the mean of the feature vector~\parencite{VanderPlas2017}.
 
 \subsection{Stacking Classifier with Cross-Validation}\label{class}
 The stacking classifier is an ensemble classifier, that uses the results of
-multiple base classifiers as input to a 2nd level meta-classifier, used to
-generate a final predicition. $k$-fold cross validation is used accross base
-classifiers, training on $k-1$ folds of input data, and applying to the
-remaining hold out set. The results of these predictions from each base
-classifier are combined and used to train the 2nd level classifier which
-produces the final preditions.\\
-Given it's considerable performance accross a range of tasks, it was expected
-that this classification model could be applied effectively to produce an
-alternative method for abnormality detection than those presented in previous
-literature.
+multiple base classifiers as input to a 2nd level meta-classifier, which in
+turn is used to generate a final predicition. $k$-fold cross validation is used
+accross base classifiers, training on $k-1$ folds of input data, and applying
+to the remaining validation set. The results of these predictions from each
+base classifier are combined and used to train the 2nd level classifier which
+produces the final preditions based on the probabilities and predictions
+provided.\\ 
+Given it's proven accurate performance accross a range of tasks, it was
+expected that this classification model could be applied effectively to produce
+an alternative method for abnormality detection than those presented in
+previous literature.
 % TODO:Insert stacking classifier diagram
 
 \subsubsection{Base Classifiers}
 Clearly, an important consideration when using any ensemble method is the
 selection of the base classifiers. In order for any ensemble method to perform
 well, it must be constructed using a selection of classifiers that individually
-provide useful models for the data~\parencite[p.484]{Tobergte2013a}.  The final
-optimized model consisted of 3 base models. A wide variety of models were
-considered for use as base and meta models. These included models such as Tree
-based, $k$-Nearest Neighbor, and AdaBoost classifiers. Selection of these
-models was based on a novel approach using hyperparameter optimization as
-discussed in Section~\ref{optimise}. The following sections detail the final
-selection used; A combination of SVM and Naive-Bayes classifiers, with a
-Logistic Regression meta classifier.
+provide useful models for the data~\parencite[p.484]{Tobergte2013a}.   A wide
+variety of models were considered for use as base and meta models including
+models such as Tree based, $k$-Nearest Neighbor, and AdaBoost classifiers.
+Selection of these models was based on a novel approach using hyperparameter
+optimisation as discussed in Section~\ref{optimise}. The following sections
+detail the 3 final models selected by the optimisation algorithm; A combination
+of SVM and Naive-Bayes classifiers, with a Logistic Regression meta classifier.
 
 \paragraph{SVM}\label{SVM}
 The SVM classifier aims to fit a hyperplane to data that maximises the
@@ -1009,8 +1012,8 @@ also likely to increase the margin for error in separation of classes. This
 type of classifier is also able to generate hyperplanes in non-linear space,
 using a techniques known as `kernal tricks'. This works by mapping linear data
 to a higher dimension, allowing non-linearly seperable classes to be separated
-by the same method. The details of the SVM and Kernal-SVM are involved and
-outside the scope of this report. Further details can be found
+by the same method. The details of the SVM and Kernal-SVM are complex and
+outside the scope of this report. Further information can be found
 in~\parencite[p.187]{Tobergte2013a}.\\
 % TODO: Create Hyperplane plot
 SVMs have been prevalent in previous literature, shown to be effective in
@@ -1018,7 +1021,7 @@ separation of a variety of heart conditions~\parencite{Ari2010} The use of
 kernals to map parameters to higher dimensions is a key advantage of this
 model, allowing for non-linear relationships that are likely to be present in
 the large variety of features to be well represented in classification. Choice
-of kernals, and relevant hyperparameters is detailed in Section~\ref{optimise}.
+of kernals, and relevant hyperparameters is detailed in Section~\ref{PSOp}.
 
 \paragraph{Naive-Bayes}
 Commonly used in text classification problems, where there is typically a
@@ -1034,9 +1037,9 @@ calculating the probability of a feature as:
     P(x_i\mid y)=\frac{1}{\sqrt{2\pi
     \sigma_y^2}}\exp\bigg(-\frac{(x_i-\mu_y)^2}{2\sigma^2_y}\bigg)
 \end{equation}
-Where:
-$\mu$ is the mean of the distribution
-$\sigma^2$ is the varaince
+Where:\\
+$\mu$ is the mean of the distribution\\
+$\sigma^2$ is the variance\\
 Using Maximum Liklihood estimation to estimate $\sigma$ and $\mu$ given the
 feature vector, a classification for new features can then be calculated as:
 \begin{equation}
@@ -1052,7 +1055,7 @@ completely independant allows for extremely fast classification and scalability
 to large datasets, with many dimensions~\parencite[p.300]{Zhang2004}. It was
 thought that these benefits would make the classifier suitable for the proposed system, as the reatively high
 dimensionality of features and quantity of datapoints could then be classified
-quickly to obtain initial results. Despite the inclussion of more complex
+quickly, to obtain initial results. Despite the inclussion of more complex
 models, this model was chosen via automatic selection for the final model.
 Refer to section~\ref{PSOp} for further details.
 
@@ -1082,25 +1085,27 @@ $\lambda$ is the regularization parameter used to help prevent overfitting\\
 By minimizing the cost function, classification predictions can then be made
 using the hypothesis function~\parencite{Ng2012}.\\
 Logistic regression was chosen as the meta-classifier primarily due to it's
-simplicity and performance in testing. Choice of meta-classifier is a potential
-area for improvement and it is noted that a range of meta-classifiers have been
-proposed for different tasks that utilise
+simplicity and performance in testing. It is thought that this algorithm
+performed particularly well as output from base classifiers was linearly
+seperable and relatively simple (in comparison to input features). The choice of
+meta-classifier is a potential area for improvement and it is noted that a
+range of meta-classifiers have been proposed for different tasks that utilise
 stacking~\parencite[p.29]{Sesmero2015}. Further work in this area could
 potentially provide improved results.
 
 % TODO: Replace this section
 % \subsubsection{Signal quality classification}\label{Quality}
 
-\subsection{Model Optimization}\label{optimise}
-As discussed in previous section, two of the most important aspects that affect
+\subsection{Model Optimisation}\label{optimise}
+As discussed in previous sections, two of the most important aspects that affect
 the performance of a classification system are it's models, and the input
 features. A combination of relevant features and well tuned models is therefore
 likely to provide an accurate classification system. However, it is not always
-immdiately clear which values to choose for parameters, or features to use as
-input. This is especially true when given such a wide selection of models to
-choose from, and high such dimensional feature spaces, as are used in the
-proposed method. To address this issue, two automatic optimisation approaches
-were implemented with the aim of maximising the accuracy of the proposed
+immdiately clear which values to choose for parameters, or which features to use as
+inputs. This is especially true when given such a wide selection of models to
+choose from, and such high dimensional feature spaces, as are used in the
+proposed system. To address this issue, two automatic optimisation approaches
+were implemented, with the aim of maximising the accuracy of the proposed
 system. 
 
 \subsubsection{Sequential Feature Selection}\label{SFS}
@@ -1110,16 +1115,17 @@ There are two commonly used methods for addressing this problem: feature
 reduction and feature selection. Feature reduction involves reducing features
 to a lower dimensionality using techniques such as PCA. Conversely, feature
 selection involves selectively removing features entirely via methods such as
-Sequential Floating Selection (SFFS). Both aim to reduce the amount of redundant
-information in features by removing or reducing features that are expected not
-to benefit the model. As a selection of models were to be used, each
+Sequential Floating Selection (SFFS). Both aim to reduce the amount of
+redundant information in features by removing or reducing features that are not
+expected to benefit the model. As a selection of models were to be used, each
 potentially handeling dimensionality differently (SVMs in particular), it was
-decided that feature selection would be most appropriate for this application.\\
+decided that feature selection would be most appropriate for this
+application.\\
 
 Through experimentation, the chosen method was SFFS. This method is an adaption
 of tradition sequential forward selection, that also uses sequential backward
 selection to allow for subsequent removal of added features when neccesary.
-SFFS is an iterative wrapper method that adds features and retrains the chosen
+SFFS is an iterative wrapper method that adds features and re-trains the chosen
 model sequentially, choosing features that increase the accuracy of the model
 output (using 3-fold cross validation to avoid overfitting). Final models used
 as few as 40 features, increasing both accuracy of classifications and
@@ -1127,7 +1133,7 @@ computation time of models significantly. For further details on SFFS please
 refer to~\parencite[p.3]{Ferri1994}
 
 \subsubsection{Particle Swarm Hyperparameter Optimisation}\label{PSOp}
-The particle swarm optimization algorithm is an iterative meta-heuristic algorithm that
+The particle swarm optimisation algorithm is an iterative meta-heuristic algorithm that
 aims to find the set of parameters that maximises a given function. Given a
 $n$ dimensional parameter space, the algorithm randomly initialises sets of
 `particles' representing random combinations of parameters. As the algorithm
@@ -1140,7 +1146,7 @@ algorithm is shown in code block~\ref{PSCode}~\parencite{Clerc2002}
 
 \onehalfspacing
 \begin{lstlisting}[escapeinside={(*}{*)}, label={PSCode}, caption={Particle
-Swarm Optimization Pseudocode}]
+Swarm Optimisation Pseudocode}]
 Do
     //For all particles...
     For (*$i$*)=1 to Population Size
@@ -1164,9 +1170,9 @@ Until termination criterion is met
 \doublespacing
 
 The use of this algorithm allowed for the efficient optimisation of all parameters
-relating to the stacking classifier, and it's base classifiers, resulting in a
+relating to the stacking classifier and it's base classifiers, resulting in a
 finely tuned classification model that would not have been produceable using
-traditional trial and error methods.\\
+traditional trial and error methods to search for optimal parameters.\\
 During the initial design phase, it was found that the abundance of machine
 learning algorithms available make selection of the optimal model a difficult,
 requiring in depth knowlege of a range of machine learning techniques. A novel
@@ -1184,7 +1190,7 @@ overall success of the agorithm.
 In order to fully understand the performance of the system (and to evaluate the
 impact of design decisions throughout development), a group of scoring methods
 were implemented to test the system's performance in a selection of scenarios.
-The aim was to provide reliable metrics that would highlight the systems
+The aim was to provide reliable metrics that would highlight the system's
 strength and weaknesses and to provide quantifyable measures with which to
 compare the system to the range of alternative methods proposed in the
 literature.\\
@@ -1194,7 +1200,7 @@ separate hold-out dataset. By reserving a selection of samples from accross the
 databases, a trained model could then be scored on this dataset for accuracy, sensitivity and
 specifcity (metrics described in Section~\ref{ChallengeEnt}) to determine the
 system's performance on an unseen set of samples. This method is widely used to
-provide a basic understanding of a model's ability to generalise to new data, A
+provide a basic understanding of a model's ability to generalise to new data, a
 crucial requirement of the system. Data was split using a grouped stratified shuffle
 split, grouping by database. This ensured an equal number of randomly selected
 classes were taken from each database to produce training and test sets. This
@@ -1211,12 +1217,14 @@ the full dataset into multiple folds, and training models on each, metrics can
 be calculated on each fold, and an average can be taken to provide a measure of
 the system's performance over all folds. 10-fold cross validation, stratified
 by class, was chosen for evaluation of the system. This provides an insight
-into the performance of the algorithm accross the dataset.\\
-It is highlighted by Homsi et.\ al, that a large amount of variance may be observed
-accross folds~\parencite[p.1637]{Homsi2017}. Homsi et.\ al attribute this to the
+into the performance of the algorithm accross the dataset. This is a common
+method used by all paricipants of the Physionet chalenge and is commonly found
+in prior literature.\\
+It is highlighted by Homsi et.\ al, that a large amount of variance may be
+observed accross folds~\parencite[p.1637]{Homsi2017}. This is attributed to the
 variations accross databases, making generalisation difficult. To account for
 this, it is suggested that cross-validation is repeated multiple times and
-average to provide a more accurate measurement of performance accross folds.
+averaged to provide a more accurate measurement of performance accross folds.
 For the proposed system, cross validation was repreated 10 times for each fold
 and averaged to produce the final results. Standard-deviation is also
 calculated accross these iterations to illustrate the possible prevelance of
@@ -1228,7 +1236,9 @@ accuracies in standard cross-validation, but performed significantly worse when
 testing on unseen databases~\parencite{Homsi2017, Bobillo2016}. For this
 reason, leave-one-out cross-validation was used to form a better understanding
 of the system's ability to generalise to unseen data from different sources. On
-each fold, a single database is removed, training on all other databases.\\
+each fold, a single database is removed, training on all other databases. This
+is a useful method as it can be used to determine the level to which
+information extracted from databases is representative of other databases.\\
 
 The evaluation of models using cross-validation was not limited to final
 evaluation. Evaluation of intermediate models generated by both the SFFS and Particle Swarm
@@ -1242,39 +1252,75 @@ Discussion on the performance of the proposed system using these methods can be
 found in Section~\ref{Eval}.
 % TODO: Insert cross validation diagram from data science handbook
 
+% END NEW MATERIAL
 \section{Implementation}
 This section describes the tools used in the realisation of the
-proposed system and the practical issues encountered throught the
-implementation process. Rationale is given for decisions made throughout
+proposed system, the practical issues encountered throught the
+implementation process and the development strategy taken to address and avoid
+such issues. Rationale is given for decisions made throughout
 production of the proposed system and any issues with curent implementation are
 outlined.
 
-\subsection{System Structure}
-From the outset, the project aimed to 
+\subsection{Development Strategy}
+Early in the design process it became apparent that in order for this project
+to produce reasonable results, it would need to utilise a number of complex
+algorithms to handle the various non-trivial problems that were encountered
+throughout development. Python was chosen as the most suitable language for the
+implementation of the system. High level language features such as dynamic
+types and automatic garbage collection, combined with the large variety of
+readily available packages and libraries, make the language a good choice for
+the fast, flexible development approach taken throughout this project.\\
 
-focus on using open source libraries throughout the project to avoid
-`reinventing the wheel'. Integration of external libraries
-Use of Python - quick development, wide variet of third party libraries to
-allow for rapid prototyping
+The most significant objective from the outset of the project was to provide a
+system that could classify pathological systems with a degree of accuracy that
+was compareable to the current state of research in the field of PCG analysis.
+Given this focus and that the performance of the final product was initially
+unknown, it was recognised that the design of the project would need to adapt
+as the project progressed, implementing and testing high level concepts to
+iteratively improve performance of the system. For this reason a high level
+view of production was taken, choosing to focus on the overall system
+architecture, rather than spending great amounts of time on on any one specific
+element of the project (as any component of the project could be
+removed/replaced entirely, if this facillitated the improvement of results).\\
 
+With this design ethos in mind, it was decided that external packages and
+libraries would be used/adapted wherever neccesary to avoid spending large
+amount of time developing proprietary implementations of proven concepts. By
+not `reinventing the wheel', it would be possible to rapidly prototype and
+evaluate high level concepts, such as the variety of machine learning and
+optimisation algorithms detailed in previous sections, quickly and effectively.
+Due to it's active developer community, a wide range of scientific computing
+and machine learning algorithms are available, such as
+NumPy~\parencite{VanDerWalt2011}, SciPy~\parencite{Millman2011} and
+Scikit-Learn~\parencite{Pedregosa2011}, each of which was used extensively
+throughout the project alongside other packages detailed in the following
+sections.
 
-Interface
+\subsection{System overview}
+The proposed system can be broken down into a number of key components, each of
+which performs a specific task, interacting with other components to produce
+the final result. The main components are the user interface, feature
+generation module, classification and optimisation module and evaluation
+module. Implementation of each is detailed in the following sections.
+
+\subsubsection{User interface}
 - Implementation of simple CLI for quick control of system parameters
 - High computational cost - Multiprocessing, logging issues
-Data Manipulation
-- Pandas and Numpy for basic handeling and manipulation of data
-- Splitting of data using sklearn
-Implementation of features
+\subsubsection{Features extraction}
+- Data Manipulation
+- - Pandas and Numpy for basic handeling and manipulation of data
+- - Splitting of data using sklearn
 - Joining of existing segmentation script and python code
 - pyWavelets for wavelet features
 - librosa for MFCCs
-Implementation of machine learning classifiers
+\subsubsection{Classification model generation}
 - Use of sklearn for base classifiers, use of pipelines
 - Addition of stacking classifier using mlxtend - use of probabilities
 - Saving of features and models to pickles, allowing for direct running of
 intermediate section of system and for development and portability of generated models
 Implementation of optimisatons
-- Optunity for Hyperparameter optimization
+\paragraph{Model optimisation}
+- Optunity for Hyperparameter optimisation
 - Mlxtend for SFS
 
 

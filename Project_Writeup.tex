@@ -1465,14 +1465,16 @@ Finally, results were formatted into tables and logged to provide instant
 feedback to the user on the performance of the current model.
 
 \section{Results and discussion}\label{Eval}
-The system was evaluated using 3 primary scoring methods:
+The system was evaluated using 3 primary scoring methods (as described in
+Section~\ref{metrics}).
 \begin{itemize}
     \item Score on hidden test set
     \item Leave-one-out database cross-validation
     \item 10-fold stratified cross-validation
 \end{itemize}
 
-The final optimised model was generated using a total of 43 selected features. Parameter optimisation was run with 1000 parameter
+The final optimised model was generated using a total of 43 selected features
+out of a possible 188. Parameter optimisation was run with 1000 parameter
 evaluations, resulting in 50 iterations using 20 particles. Final parameters
 and selected features 
 for the chosen algorithms are detailed in table~\ref{OpParam}.\\
@@ -1497,7 +1499,7 @@ $Acc$  & $Se$    & $Sp$    \\ \midrule
 \caption{Leave-one-out scores}
 \label{LOGO}
 \footnotesize
-All scores are an average of 10 iterations
+All scores are an average of 10 iterations $\pm$ standard-deviation
 \scriptsize
 \centering
 \begin{tabulary}{\linewidth}{LCCCCCCC}
@@ -1512,7 +1514,7 @@ $Sp$   & $0.3509\pm0.0264$ & $0.1127\pm0.012$  & $0.4571\pm0.0571$ & $0.2481\pm0
 \begin{table}[H]
 \caption{10-fold cross-validation score}
 \footnotesize
-All scores are an average of 10 iterations
+All scores are an average of 10 iterations $\pm$ standard-deviation
 \doublespacing
 \label{KFCV}
 \scriptsize
@@ -1603,26 +1605,39 @@ C: 4.2507         & C: 4.9452             &                    & C: 14.3611     
 \end{multicols}
 \end{table}
 
-
+Due to the standard approach taken for scoring entries to the physionet
+challenge, mimicked in this project, it was possible to directly compare results
+to those of entries to the challenge. This provides a thorough understanding of
+the performance of the proposed system in relation to others. Results are also
+compared to some successful algorithms prior to the challenge, in order to
+understand the performance of the system in a wider context of heart sound
+analysis.
 
 Leave-one-out cross-validation results are compareable to those of the highest
-scoring algorithms in the challenge, however they are still low scores.~\parencite{Homsi2017, Bobillo2016}
+scoring algorithms in the challenge, however they are still low
+scores.~\parencite{Homsi2017, Bobillo2016} Higher scores in 10-fold cross
+validation than those of Leave-one-out cross-validation suggests that the
+algorithm is highly susceptible to degraded results as a consequence of signal
+qualities varying from those of the training set.\\
+Leave-one-out on balanced database - database scores aren't affected by class
+imbalance. However this significantly reduces data used to score on which will
+also have an impact on scores~\ref{appendixC}
 
-10-fold cross-validation scores are at worst, around 12\% less than those of
-the highest scoring models.~\parencite{Zabihi2016}
+10-fold cross-validation scores are between, 6 and 12\% less than those of
+the highest scoring models~\parencite{Zabihi2016, Homsi2017, Kay2017}. Scores
+of around 90\% 10-fold cross-validation are roughly equal to scores achieved by
+some of the most succesful algorithms prior to the challenge (however these
+methods were evaluated on different datasets, so are not as directly
+compareable)~\parencite{Ari2010, Maglogiannis2009}.\\
 
-Hidden test set is the only score based on predictions where no samples had
-previously been seen by the algorithm during optimisation. A similar score to
-that off 10-fold cross validation suggests that chosen features and
-hyperparameters generalise well to unseen data. If scores in cross validation
-had been significantly higher than that of the hidden test set, it would
-suggest that the model is tuning parameters and features in a way that only
-benefits the score of the training set.
+The hidden test set score is the only score based on predictions where no
+samples had previously been seen by the algorithm during optimisation. A
+similar score to that off 10-fold cross validation suggests that chosen
+features and hyperparameters generalise well to unseen data. If scores in cross
+validation had been significantly higher than that of the hidden test set, it
+would suggest that the model is tuning parameters and features in a way that
+only benefits the score of the training set.\\
 
-higher scores in 10-fold cross validation than those of Leave-one-out
-cross-validation suggests that the algorithm is highly susceptible to degraded
-results as a consequence of signal qualities varying from those of the training
-set.
 
 Computational cost was not considered, unlike other entries to the physionet
 challenge
@@ -1636,9 +1651,6 @@ captured by SVMs
 Discuss issues with database e
 
 
-Due to the standard approach taken for scoring entries to the physionet
-challenge, mimicked in this project, it was possible to directly compare results
-to those of entries to the challenge. This aims to provide an understanding of 
 
 \section{Further Work}\label{FurtherWork}
 Further research to be done into resampling - inclusion as hyperparameter in
@@ -1769,6 +1781,53 @@ optional arguments:
 \end{lstlisting}
 \doublespacing
 \pagebreak{}
+
+\subsection{Balanced dataset test results}\label{appendixC}
+Results of testing database using a resampled, balanced dataset.\\
+Dataset was resampled by database, using jacknife resampling (Sampling without
+replacement) and consisted of a total of 944 samples.
+\begin{table}[H]
+\centering
+\caption{Hidden test-set scoring}
+\begin{tabular}{@{}lll@{}}
+\toprule
+$Acc$  & $Se$    & $Sp$    \\ \midrule
+80.77\% & 79.41\% & 82.14\% \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\doublespacing
+\caption{Leave-one-out scores}
+\footnotesize
+All scores are an average of 10 iterations $\pm$ standard-deviation
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCC}
+\toprule
+       & A                 & B                 & C                 & D                 & E                 & F                 & Mean              \\ \midrule
+$Acc$ & $0.5784\pm0.0153$ & $0.6062\pm0.0131$ & $0.8737\pm0.0131$ & $0.5939\pm0.0302$ & $0.7022\pm0.0136$ & $0.6130\pm0.0189$ & $0.6613\pm0.1029$ \\
+$Se$   & $0.4984\pm0.0225$ & $0.8816\pm0.0000$ & $0.7475\pm0.0261$ & $0.6692\pm0.0319$ & $0.6417\pm0.0227$ & $0.7290\pm0.0636$ & $0.6946\pm0.1161$ \\
+$Sp$   & $0.6585\pm0.0342$ & $0.3309\pm0.0262$  & $1.0000\pm0.0000$ & $0.5185\pm0.0741$ & $0.7628\pm0.0134$ & $0.4971\pm0.0509$ & $0.6280\pm0.2141$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+\begin{table}[H]
+\caption{10-fold cross-validation score}
+\footnotesize
+All scores are an average of 10 iterations $\pm$ standard-deviation
+\doublespacing
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCCCCCC}
+\toprule
+       & 1                 & 2                 & 3                 & 4                 & 5                 & 6                 & 7                 & 8                 & 9                 & 10                & Mean              \\ \midrule
+$Acc$ & $0.7961\pm0.0364$ & $0.8187\pm0.0384$ & $0.8108\pm0.0238$ & $0.8019\pm0.0316$ & $0.8103\pm0.0326$ & $0.8217\pm0.0417$ & $0.7845\pm0.0593$ & $0.8053\pm0.0262$ & $0.8023\pm0.0148$ & $0.8105\pm0.0312$ & $0.8062\pm0.0103$ \\
+$Se$   & $0.8121\pm0.0420$ & $0.8164\pm0.0360$ & $0.8193\pm0.0302$ & $0.8184\pm0.0634$ & $0.8158\pm0.0484$ & $0.8061\pm0.0438$ & $0.8325\pm0.0546$ & $0.8421\pm0.0321$ & $0.8246\pm0.0474$ & $0.7798\pm0.0302$ & $0.8167\pm0.0157$ \\
+$Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0.0280$ & $0.8033\pm0.0226$ & $0.7937\pm0.0214$ & $0.7798\pm0.0229$ & $0.7878\pm0.0206$ & $0.8035\pm0.0219$ & $0.8059\pm0.0228$ & $0.7942\pm0.0091$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+\pagebreak
 \printbibliography{}
 
 \end{document}

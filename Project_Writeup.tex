@@ -126,9 +126,9 @@
 \lstdefinestyle{mystyle}{
    keywords={},
     numberstyle=\tiny,
-    basicstyle=\footnotesize,
+    basicstyle=\scriptsize,
     breakatwhitespace=false,
-    breaklines=true,
+    breaklines=false,
     captionpos=b,
     keepspaces=true,
     numbers=left,
@@ -987,7 +987,7 @@ accross base classifiers, training on $k-1$ folds of input data, and applying
 to the remaining validation set. The results of these predictions from each
 base classifier are combined and used to train the 2nd level classifier which
 produces the final preditions based on the probabilities and predictions
-provided.\\ 
+provided.\\
 Given it's proven accurate performance accross a range of tasks, it was
 expected that this classification model could be applied effectively to produce
 an alternative method for abnormality detection than those presented in
@@ -1108,7 +1108,7 @@ inputs. This is especially true when given such a wide selection of models to
 choose from, and such high dimensional feature spaces, as are used in the
 proposed system. To address this issue, two automatic optimisation approaches
 were implemented, with the aim of maximising the accuracy of the proposed
-system. 
+system.
 
 \subsubsection{Sequential Feature Selection}\label{SFS}
 It was recognised that the extraction of such large numbers of features in the
@@ -1451,7 +1451,7 @@ functionality and Panda's HDF5 export methods, to create fully portable models.
 
 \subsubsection{Automatic system evaluation}
 In order to accurately place the system in the context of current research,
-evaluation metrics were needed to perform automatic testing of the system. 
+evaluation metrics were needed to perform automatic testing of the system.
 Metrics were implemented as described in Section~\ref{metrics} using a custom
 multi-scorer object that was adapted to allow for the calculation of the 3
 metrics: sensitivity, specificity and score. Using this object in conjunction
@@ -1472,13 +1472,14 @@ The system was evaluated using 3 primary scoring methods:
     \item 10-fold stratified cross-validation
 \end{itemize}
 
-The final optimised model was generated using 43 selected features, as detailed
-in table~\ref{}, parameter optimisation was run with 1000 parameter
+The final optimised model was generated using a total of 43 selected features. Parameter optimisation was run with 1000 parameter
 evaluations, resulting in 50 iterations using 20 particles. Final parameters
-for the chosen algorithms are detailed in table~\ref{}.\\
+and selected features 
+for the chosen algorithms are detailed in table~\ref{OpParam}.\\
 The final scores produced for this model, evaluated using the full dataset can
-be found in Table~\ref{TestSet} (Hidden test set), Table~\ref{LOGO} (Leave-one-out) and
-Table~\ref{KFCV} (Stratified cross-validation).
+be found in Table~\ref{TestSet} (Hidden test set scores), Table~\ref{LOGO}
+(Leave-one-out scores) and
+Table~\ref{KFCV} (Stratified cross-validation scores).
 
 \begin{table}[H]
 \centering
@@ -1533,55 +1534,70 @@ $Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0
   \end{list}
 }
 \setlist[enumerate]{itemsep=0.25em}
+
+
+\begin{table}[H]
+\centering
+\caption{Optimised model parameters and selected features}
+\scriptsize
+\label{OpParam}
+\begin{tabulary}{\linewidth}{LLLL}
+\toprule
+Base Classifier A & Base Classifier B     & Base Classifier C  & Meta Classifier            \\ \midrule
+Model: Linear SVM & Model: RBF Kernel SVM & Model: Naive-Bayes & Model: Logistic Regression \\
+C: 4.2507         & C: 4.9452             &                    & C: 14.3611                 \\
+                  & Gamma: 0.4558         &                    & Penalty: L2                \\ \bottomrule
+\end{tabulary}
 \singlespacing
-\begin{multicols}{6}
-    \small
+\begin{multicols}{5}
+    \scriptsize
 \begin{itemize}
-    \item AvrA5diaShan 
-    \item AvrA5s1Shan 
-    \item AvrA5s2Shan 
-    \item s2MFCC0 
-    \item AvrD1s2Shan 
-    \item s2MFCC12 
-    \item s2MFCC4 
-    \item s2MFCC6 
-    \item s2MFCC9 
-    \item s2Max 
-    \item s2Mean 
-    \item AvrD4s2Shan 
-    \item AvrD5s2Shan 
-    \item s2ZeroX 
-    \item sd\_RR 
-    \item TPTs1 
-    \item s2Dur 
-    \item sysMFCC2 
-    \item sysMax 
-    \item sysSampEnt 
-    \item sysShanEngy 
-    \item sysSkew 
-    \item sysVar 
-    \item diaMFCC11 
-    \item diaMFCC12 
-    \item diaMFCC6 
-    \item diaSampEnt 
-    \item diaShanEngy 
-    \item diaVar 
-    \item diaZeroX 
-    \item heartRate 
-    \item m\_RR 
-    \item m\_Ratio\_DiaRR 
-    \item mean\_IntS1 
-    \item mean\_IntSys 
-    \item s1Dur 
-    \item s1MFCC11 
-    \item s1MFCC4 
-    \item s1Max 
-    \item s1Mean 
-    \item s1ShanEngy 
-    \item s1Var 
+    \item AvrA5diaShan
+    \item AvrA5s1Shan
+    \item AvrA5s2Shan
+    \item s2MFCC0
+    \item AvrD1s2Shan
+    \item s2MFCC12
+    \item s2MFCC4
+    \item s2MFCC6
+    \item s2MFCC9
+    \item s2Max
+    \item s2Mean
+    \item AvrD4s2Shan
+    \item AvrD5s2Shan
+    \item s2ZeroX
+    \item sd\_RR
+    \item TPTs1
+    \item s2Dur
+    \item sysMFCC2
+    \item sysMax
+    \item sysSampEnt
+    \item sysShanEngy
+    \item sysSkew
+    \item sysVar
+    \item diaMFCC11
+    \item diaMFCC12
+    \item diaMFCC6
+    \item diaSampEnt
+    \item diaShanEngy
+    \item diaVar
+    \item diaZeroX
+    \item heartRate
+    \item m\_RR
+    \item m\_Ratio\_DiaRR
+    \item mean\_IntS1
+    \item mean\_IntSys
+    \item s1Dur
+    \item s1MFCC11
+    \item s1MFCC4
+    \item s1Max
+    \item s1Mean
+    \item s1ShanEngy
+    \item s1Var
     \item s1ZeroX
 \end{itemize}
 \end{multicols}
+\end{table}
 
 Weighted specificity and weighted Accuracy measures
 Computational cost was not considered, unlike other entries to the physionet
@@ -1609,13 +1625,62 @@ Particle swarm Would ideally be placed inside feature selection
 \section*{Appendices}
 \addcontentsline{toc}{section}{Appendices}
 \renewcommand{\thesubsection}{\Alph{subsection}}
+
 \subsection{Table of Features}\label{appendixA}
+\begin{table}[H]
+\centering
+\caption{My caption}
+\doublespacing
+\label{my-label}
+\tiny
+\begin{tabulary}{\linewidth}{LLLLL}
+\toprule
+Tag               & Feature Name                                    & Description                                                                          & Ref. \\ \midrule
+heartRate         & Heart Rate                                      & The number of beats per minute (BPM)                                                 &      \\
+m\_RR             & Mean RR Interval                                & Average length of heart cycles                                                       &      \\
+sd\_RR            & Std-dev RR Interval                             & Standard deviation of heart cycles                                                   &      \\
+mean\_Int*        & Mean Segment Interval                           & Average length of segment                                                            &      \\
+sd\_Int*          & Std-dev Segment Interval                        & Standard deviation of segment                                                        &      \\
+R\_SysRR          & Systolic-RR Ratio                               & Ratio of Systolic interval to RR interval                                            &      \\
+R\_DiaRR          & Diastolic-RR Ratio                              & Ratio of Diastolic interval to RR interval                                           &      \\
+R\_SysDia         & Ratio of Systolic-RR/Diastolic-RR Ratios        & Ratio of above ratios                                                                &      \\
+*ZeroX            & Zero-crossing                                   & Zero-crossing rate of a segment                                                      &      \\
+*RMS              & Root Mean Square                                & The Root Mean Square of a segment                                                    &      \\
+*ShanEngy         & Shannon Energy                                  & The Averaged Shannon Energy Envelope of a segment                                    &      \\
+*Dur              & Duration                                        & The duration of a segment                                                            &      \\
+*Max              & Max                                             & The peak value of an absolute segment                                                &      \\
+*Mean             & Mean                                            & The mean value of a segment                                                          &      \\
+*Skew             & Skewness                                        & The temporal skewness of a segment                                                   &      \\
+*Kurt             & Kurtosis                                        & The temporal kurosis of a segment                                                    &      \\
+*Var              & Variance                                        & The variance of a segment                                                            &      \\
+*SampEnt          & Sample Entropy                                  & The sample entropy of a segment                                                      &      \\
+*ShanEnt          & Shannon Entropy                                 & The Shannon Entropy of a segment                                                     &      \\
+TPT*              & Total Power (time)                              & The total power of a segment in the time domain                                      &      \\
+TPF*              & Total Power (frequency)                         & The total power of a segment in the frequency domain                                 &      \\
+*Flat             & Spectral Flatness                               & The flatness of a segment's frequency spectrum                                       &      \\
+*Cent             & Spectral Centroid                               & The centroid of a segment's frequency spectrum                                       &      \\
+*Spread           & Spectral Spread                                 & The spread of a segment's frequency spectrum                                         &      \\
+*MFCC\{$n$\}      & Mel-frequency Cepstrum Coefficients             & MFCC coefficient number $n$, where $n = \{1, \ldots, 13\}$                           &      \\
+m\_Ratio\_SysRR   & Mean RR/Systole interval ratio                  & Mean value of the interval ratios between systole and RR in each heart beat          &      \\
+sd\_Ratio\_SysRR  & Std-dev RR/Systole interval ratio               & Std-dev value of the interval ratios between systole and RR in each heart beat       &      \\
+m\_Ratio\_DiaRR   & Mean RR/Diastole interval ratio                 & Mean value of the interval ratios between diastole and RR in each heart beat         &      \\
+sd\_Ratio\_DiaRR  & Std-dev RR/Diastole interval ratio              & Std-dev value of the interval ratios between diastole and RR in each heart beat      &      \\
+m\_Ratio\_SysDia  & Mean Systole/Diastole interval ratio            & Mean value of the interval ratios between systole and diastole in each heart beat    &      \\
+sd\_Ratio\_SysDia & Std-dev Systole/Diastole interval ratio         & Std-dev value of the interval ratios between systole and diastole in each heart beat &      \\
+D[1-5]Shan        & Detail coefficient shannon entropy              & Shannon entropy of DWT detail coefficient 1-5                                        &      \\
+A5Shan            & Approximation coefficient shannon entropy       & Shannon entropy of DWT approximation coefficient 1-5                                 &      \\
+\mbox{TotD[1-5]*Shan}    & Total detail coefficient shannon entropy        & Total Shannon entropy of DWT detail coefficient 1-5 across signal                    &      \\
+TotA5*Shan        & Total approximation coefficient shannon entropy & Total Shannon entropy of DWT approximation coefficient 1-5 across signal             &      \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+
 \subsection{Commandline Interface}\label{appendixB}
 \singlespacing
-\lstset{basicstyle=\scriptsize, style=mystyle}
+\lstset{basicstyle=\tiny, style=mystyle}
 \begin{lstlisting}[numbers=none]
 usage: main.py [-h] [--features-fname OUTFNAME] [--segment] [--optimize]
-               [--eval EVAL] [--select-features SELECT_FEATURES] [--backward]
+               [--eval EVAL] [--select-features SELECT\_FEATURES] [--backward]
                [--parameters_fname OUTFNAME] [--fs_fname OUTFNAME]
                [--no-parallel] [--reanalyse] [--verbose]
                [--resample-mix RESAMPLE_MIX] [--keep-logs]
@@ -1629,16 +1694,16 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --features-fname OUTFNAME, -o OUTFNAME
+  --features-fname, -o
                         Specify the name of the file to save generated
                         features to for future use
   --segment             Run Matlab segmentation script to create segmentation
                         analysis
   --optimize            Run optimization algorithm to find best model and
                         parameters for classifier
-  --eval EVAL, -e EVAL  Number of evaluation to pass to the particle swarm
+  --eval, -e            Number of evaluation to pass to the particle swarm
                         optimization
-  --select-features SELECT_FEATURES
+  --select-features
                         Run feature selection algorithm to find best features
                         for model, either selecting or reducing features by
                         the integer specified. This depends on use of
@@ -1649,10 +1714,10 @@ optional arguments:
                         available features.)
   --backward, -b        Runs backward feature selection as opposed to default
                         forward selection.
-  --parameters_fname OUTFNAME
+  --parameters_fname
                         Specify the name of the file to save generated
                         features to for future use
-  --fs_fname OUTFNAME   Specify the name of the file to save generated feature
+  --fs_fname            Specify the name of the file to save generated feature
                         selection model to for future use
   --no-parallel, -p     Disable processing in parallel. (Will likely decrease
                         performance but may aid in debugging)
@@ -1660,9 +1725,6 @@ optional arguments:
   --verbose, -v         Specifies level of verbosity in output. For example:
                         '-vvvvv' will output all information. '-v' will output
                         minimal information.
-  --resample-mix RESAMPLE_MIX, -r RESAMPLE_MIX
-                        Mix between bootstrap and jacknife resampling used to
-                        balance the dataset (0=just jacknife, 1=just bootsrap)
   --keep-logs           Keep previously generated logs that aren't overwritten
                         by current process
 \end{lstlisting}

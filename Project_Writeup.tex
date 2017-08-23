@@ -1476,7 +1476,7 @@ The final optimised model was generated using a total of 43 selected features. P
 evaluations, resulting in 50 iterations using 20 particles. Final parameters
 and selected features 
 for the chosen algorithms are detailed in table~\ref{OpParam}.\\
-The final scores produced for this model, evaluated using the full dataset can
+The final scores produced for this model, evaluated using the full dataset, can
 be found in Table~\ref{TestSet} (Hidden test set scores), Table~\ref{LOGO}
 (Leave-one-out scores) and
 Table~\ref{KFCV} (Stratified cross-validation scores).
@@ -1496,6 +1496,8 @@ $Acc$  & $Se$    & $Sp$    \\ \midrule
 \doublespacing
 \caption{Leave-one-out scores}
 \label{LOGO}
+\footnotesize
+All scores are an average of 10 iterations
 \scriptsize
 \centering
 \begin{tabulary}{\linewidth}{LCCCCCCC}
@@ -1509,6 +1511,8 @@ $Sp$   & $0.3509\pm0.0264$ & $0.1127\pm0.012$  & $0.4571\pm0.0571$ & $0.2481\pm0
 
 \begin{table}[H]
 \caption{10-fold cross-validation score}
+\footnotesize
+All scores are an average of 10 iterations
 \doublespacing
 \label{KFCV}
 \scriptsize
@@ -1599,11 +1603,31 @@ C: 4.2507         & C: 4.9452             &                    & C: 14.3611     
 \end{multicols}
 \end{table}
 
-Weighted specificity and weighted Accuracy measures
+
+
+Leave-one-out cross-validation results are compareable to those of the highest
+scoring algorithms in the challenge, however they are still low scores.~\parencite{Homsi2017, Bobillo2016}
+
+10-fold cross-validation scores are at worst, around 12\% less than those of
+the highest scoring models.~\parencite{Zabihi2016}
+
+Hidden test set is the only score based on predictions where no samples had
+previously been seen by the algorithm during optimisation. A similar score to
+that off 10-fold cross validation suggests that chosen features and
+hyperparameters generalise well to unseen data. If scores in cross validation
+had been significantly higher than that of the hidden test set, it would
+suggest that the model is tuning parameters and features in a way that only
+benefits the score of the training set.
+
+higher scores in 10-fold cross validation than those of Leave-one-out
+cross-validation suggests that the algorithm is highly susceptible to degraded
+results as a consequence of signal qualities varying from those of the training
+set.
+
 Computational cost was not considered, unlike other entries to the physionet
 challenge
 Could be used as cloud based system
-Discussion on reasons for final selection of models
+Discussion on final selection of models
 Features were selected for their individual relevance to classification
 problem, Naive Bayes treats features individually. Could explain why it
 performed well
@@ -1612,6 +1636,10 @@ captured by SVMs
 Discuss issues with database e
 
 
+Due to the standard approach taken for scoring entries to the physionet
+challenge, mimicked in this project, it was possible to directly compare results
+to those of entries to the challenge. This aims to provide an understanding of 
+
 \section{Further Work}\label{FurtherWork}
 Further research to be done into resampling - inclusion as hyperparameter in
 optimization
@@ -1619,6 +1647,10 @@ Handle silent sections of audio such as those highlighted by Goda et.\
 al~\parencite{Goda2016}
 Synthesis of synthetic PCG signals
 Particle swarm Would ideally be placed inside feature selection
+
+MFCC features were overly symplistic, using coefficients diectly. Further
+analysis of these features as demonstrated in other
+algorithms~\parencite{Zabihi2016} may improve there impact on results.
 % TODO: Consider talking about resampling using Homsi2016 method
 
 \appendix
@@ -1629,50 +1661,57 @@ Particle swarm Would ideally be placed inside feature selection
 \subsection{Table of Features}\label{appendixA}
 \begin{table}[H]
 \centering
-\caption{My caption}
-\doublespacing
-\label{my-label}
+\caption{Description of features}
+\scriptsize
+Feature sources include:~\parencite{Homsi2016, Schmidt2015, Liang1998,
+Lerch2012}\\
+
+`*' --- denotes feature is applied to S1, systolic, S2 and diastolic segments
+respectively.
+\onehalfspacing
 \tiny
+\label{my-label}
 \begin{tabulary}{\linewidth}{LLLLL}
-\toprule
-Tag               & Feature Name                                    & Description                                                                          & Ref. \\ \midrule
-heartRate         & Heart Rate                                      & The number of beats per minute (BPM)                                                 &      \\
-m\_RR             & Mean RR Interval                                & Average length of heart cycles                                                       &      \\
-sd\_RR            & Std-dev RR Interval                             & Standard deviation of heart cycles                                                   &      \\
-mean\_Int*        & Mean Segment Interval                           & Average length of segment                                                            &      \\
-sd\_Int*          & Std-dev Segment Interval                        & Standard deviation of segment                                                        &      \\
-R\_SysRR          & Systolic-RR Ratio                               & Ratio of Systolic interval to RR interval                                            &      \\
-R\_DiaRR          & Diastolic-RR Ratio                              & Ratio of Diastolic interval to RR interval                                           &      \\
-R\_SysDia         & Ratio of Systolic-RR/Diastolic-RR Ratios        & Ratio of above ratios                                                                &      \\
-*ZeroX            & Zero-crossing                                   & Zero-crossing rate of a segment                                                      &      \\
-*RMS              & Root Mean Square                                & The Root Mean Square of a segment                                                    &      \\
-*ShanEngy         & Shannon Energy                                  & The Averaged Shannon Energy Envelope of a segment                                    &      \\
-*Dur              & Duration                                        & The duration of a segment                                                            &      \\
-*Max              & Max                                             & The peak value of an absolute segment                                                &      \\
-*Mean             & Mean                                            & The mean value of a segment                                                          &      \\
-*Skew             & Skewness                                        & The temporal skewness of a segment                                                   &      \\
-*Kurt             & Kurtosis                                        & The temporal kurosis of a segment                                                    &      \\
-*Var              & Variance                                        & The variance of a segment                                                            &      \\
-*SampEnt          & Sample Entropy                                  & The sample entropy of a segment                                                      &      \\
-*ShanEnt          & Shannon Entropy                                 & The Shannon Entropy of a segment                                                     &      \\
-TPT*              & Total Power (time)                              & The total power of a segment in the time domain                                      &      \\
-TPF*              & Total Power (frequency)                         & The total power of a segment in the frequency domain                                 &      \\
-*Flat             & Spectral Flatness                               & The flatness of a segment's frequency spectrum                                       &      \\
-*Cent             & Spectral Centroid                               & The centroid of a segment's frequency spectrum                                       &      \\
-*Spread           & Spectral Spread                                 & The spread of a segment's frequency spectrum                                         &      \\
-*MFCC\{$n$\}      & Mel-frequency Cepstrum Coefficients             & MFCC coefficient number $n$, where $n = \{1, \ldots, 13\}$                           &      \\
-m\_Ratio\_SysRR   & Mean RR/Systole interval ratio                  & Mean value of the interval ratios between systole and RR in each heart beat          &      \\
-sd\_Ratio\_SysRR  & Std-dev RR/Systole interval ratio               & Std-dev value of the interval ratios between systole and RR in each heart beat       &      \\
-m\_Ratio\_DiaRR   & Mean RR/Diastole interval ratio                 & Mean value of the interval ratios between diastole and RR in each heart beat         &      \\
-sd\_Ratio\_DiaRR  & Std-dev RR/Diastole interval ratio              & Std-dev value of the interval ratios between diastole and RR in each heart beat      &      \\
-m\_Ratio\_SysDia  & Mean Systole/Diastole interval ratio            & Mean value of the interval ratios between systole and diastole in each heart beat    &      \\
-sd\_Ratio\_SysDia & Std-dev Systole/Diastole interval ratio         & Std-dev value of the interval ratios between systole and diastole in each heart beat &      \\
-D[1-5]Shan        & Detail coefficient shannon entropy              & Shannon entropy of DWT detail coefficient 1-5                                        &      \\
-A5Shan            & Approximation coefficient shannon entropy       & Shannon entropy of DWT approximation coefficient 1-5                                 &      \\
-\mbox{TotD[1-5]*Shan}    & Total detail coefficient shannon entropy        & Total Shannon entropy of DWT detail coefficient 1-5 across signal                    &      \\
-TotA5*Shan        & Total approximation coefficient shannon entropy & Total Shannon entropy of DWT approximation coefficient 1-5 across signal             &      \\ \bottomrule
+\hline
+Tag                        & Feature Name                                    & Description                                                                          \\ \hline
+heartRate                  & Heart Rate                                      & The number of beats per minute (BPM)                                                 \\
+m\_RR                      & Mean RR Interval                                & Average length of heart cycles                                                       \\
+sd\_RR                     & Std-dev RR Interval                             & Standard deviation of heart cycles                                                   \\
+mean\_Int*                 & Mean Segment Interval                           & Average length of segment                                                            \\
+sd\_Int*                   & Std-dev Segment Interval                        & Standard deviation of segment                                                        \\
+R\_SysRR                   & Systolic-RR Ratio                               & Ratio of Systolic interval to RR interval                                            \\
+R\_DiaRR                   & Diastolic-RR Ratio                              & Ratio of Diastolic interval to RR interval                                           \\
+R\_SysDia                  & Ratio of Systolic-RR/Diastolic-RR Ratios        & Ratio of above ratios                                                                \\
+*ZeroX                     & Zero-crossing                                   & Zero-crossing rate of a segment                                                      \\
+*RMS                       & Root Mean Square                                & The Root Mean Square of a segment                                                    \\
+*ShanEngy                  & Shannon Energy                                  & The Averaged Shannon Energy Envelope of a segment                                    \\
+*Dur                       & Duration                                        & The duration of a segment                                                            \\
+*Max                       & Max                                             & The peak value of an absolute segment                                                \\
+*Mean                      & Mean                                            & The mean value of a segment                                                          \\
+*Skew                      & Skewness                                        & The temporal skewness of a segment                                                   \\
+*Kurt                      & Kurtosis                                        & The temporal kurosis of a segment                                                    \\
+*Var                       & Variance                                        & The variance of a segment                                                            \\
+*SampEnt                   & Sample Entropy                                  & The sample entropy of a segment                                                      \\
+*ShanEnt                   & Shannon Entropy                                 & The Shannon Entropy of a segment                                                     \\
+TPT*                       & Total Power (time)                              & The total power of a segment in the time domain                                      \\
+TPF*                       & Total Power (frequency)                         & The total power of a segment in the frequency domain                                 \\
+*Flat                      & Spectral Flatness                               & The flatness of a segment's frequency spectrum                                       \\
+*Cent                      & Spectral Centroid                               & The centroid of a segment's frequency spectrum                                       \\
+*Spread                    & Spectral Spread                                 & The spread of a segment's frequency spectrum                                         \\
+*MFCC\textbackslash\{$n$\} & Mel-frequency Cepstrum Coefficients             & MFCC coefficient number $n$, where $n = \{1, \ldots, 13\}$                           \\
+m\_Ratio\_SysRR            & Mean RR/Systole interval ratio                  & Mean value of the interval ratios between systole and RR in each heart beat          \\
+sd\_Ratio\_SysRR           & Std-dev RR/Systole interval ratio               & Std-dev value of the interval ratios between systole and RR in each heart beat       \\
+m\_Ratio\_DiaRR            & Mean RR/Diastole interval ratio                 & Mean value of the interval ratios between diastole and RR in each heart beat         \\
+sd\_Ratio\_DiaRR           & Std-dev RR/Diastole interval ratio              & Std-dev value of the interval ratios between diastole and RR in each heart beat      \\
+m\_Ratio\_SysDia           & Mean Systole/Diastole interval ratio            & Mean value of the interval ratios between systole and diastole in each heart beat    \\
+sd\_Ratio\_SysDia          & Std-dev Systole/Diastole interval ratio         & Std-dev value of the interval ratios between systole and diastole in each heart beat \\
+D{[}1-5{]}Shan             & Detail coefficient shannon entropy              & Shannon entropy of DWT detail coefficient 1-5                                        \\
+A5Shan                     & Approximation coefficient shannon entropy       & Shannon entropy of DWT approximation coefficient 1-5                                 \\
+TotD{[}1-5{]}*Shan         & Total detail coefficient shannon entropy        & Total Shannon entropy of DWT detail coefficient 1-5 across signal                    \\
+TotA5*Shan                 & Total approximation coefficient shannon entropy & Total Shannon entropy of DWT approximation coefficient 1-5 across signal             \\ \hline
 \end{tabulary}
 \end{table}
+\pagebreak
 
 
 \subsection{Commandline Interface}\label{appendixB}

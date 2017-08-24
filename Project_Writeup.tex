@@ -5,6 +5,7 @@
 \DeclareLanguageMapping{british}{british-apa}
 \usepackage{url}
 \usepackage{float}
+\usepackage{ragged2e}
 \usepackage{caption}
 \usepackage{multicol}
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
@@ -203,7 +204,7 @@ fundamental method for detecting heart valve disorders for over a century.
 However, auscultation is a skill that requires training and can only usually be
 performed by a medical professional, such as a GP. As a result, manual
 auscultation is significantly susceptible to human error~\parencite{Hanna2002}.
-Automation of this method using technology may be provide a solution, and
+Automation of this method using technology may provide a solution, and
 recent research has shown promise in this area. A large amount of research has
 focused on analysis of Electrocardiogram (ECG) signals.  Although useful for
 detecting pathologies, ECG equipment is expensive and requires a trained
@@ -221,7 +222,7 @@ earlier diagnosis of conditions that may have otherwise been overlooked, this
 technology could have a significant impact on reducing mortality rates as a
 result of heart conditions.
 
-\section{Related Work}
+\section{Related work}
 There are currently a wide variety of methods employed for the analysis and
 classification of PCG signals. Current methods can typically be divided into 3
 areas, each of which are combined to create a full classification system. These
@@ -230,7 +231,7 @@ extraction/classification. The performance and evaluation of complete systems
 are also discussed in section~\ref{Classification}
 
 
-\subsection{Signal Preprocessing}
+\subsection{Signal preprocessing}
 There are a large number of factors that lead to variation in quality of PCG
 recordings: stethoscope type, make and model, its microphone/sensors, the
 position used to record (i.e.\ lower left sternal border, apex, pulmonic area,
@@ -267,7 +268,7 @@ decomposition~\parencite[p.93]{Ari2008}. This may be used for analysis of
 transient events such as murmurs, that may consist of higher frequency
 components than normal heart sounds.
 
-\subsection{Signal Segmentation}\label{Segmentation}
+\subsection{Signal segmentation}\label{Segmentation}
 Algorithms for the segmentation of PCG data aim to extract the structure of the
 signal over time. This is a key stage in the analysis of PCG signals, as the
 structure of the signal and relationships between the fundamental heart sounds
@@ -341,13 +342,13 @@ These features form vectors for training the HMM. Results of 98.6\%
 sensitivity, 96.9\% positive predictivity for S1 sounds and 98.3\% sensitivity,
 96.5\% positive predictivity for S2 sounds is reported.
 The issue of state duration was further addressed by Schmidt et.\ al through use
-of a duration-dependent hidden Markov (DHMM)~\parencite{Schmidt2015}. The
+of a Duration-dependent Hidden Markov Model (DHMM)~\parencite{Schmidt2015}. The
 DHMM is a modified HMM that considers the duration of the current state when
 calculating the probability of transition to another state. This modification
 scored a reported sensitivity of 98.8\% and a positive predictivity of
 98.6\%.\\
 Building on previous work using HMMs, Springer et al.\ presented a segmentation
-algorithm by using hidden semi-markov models (HSMMs) in combination with
+algorithm by using Hidden Semi-Markov Models (HSMMs) in combination with
 logistic regression~\parencite{Springer2016}. Use of Hidden semi markov model
 allows for a priori information on the duration of the current state to be used
 in probability calculation of the subsequent state. In this case, the knowledge
@@ -395,7 +396,7 @@ $Ac = \text{Accuracy}, Se = \text{Sensitivity}, P_+ = \text{Positive predictivit
 
 \doublespacing
 
-\subsection{Feature extraction/Classification models}\label{Classification}
+\subsection{Feature extraction/classification models}\label{Classification}
 
 A wide variety of methods exist for the extraction of statistical features and
 classification of PCG data. Most notably, the range of methods that were
@@ -671,8 +672,8 @@ identified as necessary for the success of the proposed project:
         classification would likely be performed in sub-optimal conditions. If
         this is not possible, noise could potentially be added to clean signals
         to simulate this.
-    \item Healthy signals must be able to be differentiated from a variety of
-        individual pathologies in order to provide a general abnormality
+    \item It must be possible to differentiate healthy signals from a variety of
+        individual pathologies, in order to provide a general abnormality
         detection algorithm. This should be reflected in the database through
         inclusion of a variety of signals representing different pathological
         heart conditions.
@@ -688,7 +689,7 @@ Two viable options were then considered based on the above criteria:
     by Almasi et al.~\parencite{Almasi2011}
 \end{enumerate}
 
-Generation of synthetic data was considered as few well-formed alternative
+Generation of synthetic data was considered, as few well-formed alternative
 databases exist, other than the Physionet challenge data. The database curated
 for the Physionet challenge was selected for this project, as it fulfilled the
 criteria sufficiently and posed less of a risk in terms of signal quality, due
@@ -697,37 +698,37 @@ of PCG data remains an interesting possibility for improving evaluation of
 classification systems and could be considered for the generation of additional
 samples in future work.
 
-\subsection{Database Summary}
+\subsection{Database summary}
 The selected database is significantly larger and contains a wider variety of
 signal conditions than any database used for previous research (as detailed in
 table~\ref{PriorWorkTable}). It is released as an open-source resource and is
-documented in significant detail by Liu et al.~\parencite{Liu2016}. The lack
-of any alternative databases, comparable in size or variety of content, perhaps
+documented in significant detail by Liu et al.~\parencite{Liu2016}. The lack of
+any alternative databases, comparable in size or variety of content, perhaps
 makes this resource the current standard for PCG analysis projects. In
 addition, by replicating the conditions of the Physionet challenge, results can
-also be directly compared with those of the challenge participant's, with the
-aim of understanding how the proposed algorithm compares to the current state
-of PCG analysis.
+be directly compared with those of the challenge participant's, with the aim of
+understanding how the proposed algorithm compares to the current state of PCG
+analysis.
 
 \begin{itemize}
     \item The database consists of 6 sub-databases, labelled $a$ to $f$.
     \item These sub-databases have been sourced from a variety of professionals,
         over the course of a decade.
-    \item A total of 3,126 recordings are included, created using varying equipment.
+    \item A total of 3,240 recordings are included, created using varying equipment.
     \item 2575 recordings are labelled as normal, 665 are labelled as abnormal.
     \item All samples have been resampled to 2KHz
-    \item Samples were recorded in a range of environments, both clinical and
-        non-clinical.
+    \item Samples were recorded in a range of both clinical and
+        non-clinical environments.
     \item Many recordings are corrupted with environmental noise, such as
         microphone friction, breathing, talking etc\ldots
     \item Sections of silence are present in some recordings, most
-        significantly in database $e$
+        significantly in database $e$.
 \end{itemize}
 
 \subsection{Considerations}\label{DBCons}
 There are a number of issues with the acquired database that have been
 highlighted, both through previous literature and through development of the
-project. These have been considered throughout development and evaluation of
+proposed system. These have been considered throughout development and evaluation of
 the project.\\
 A significant issue highlighted by Liu et al.\ is the large number of normal
 recordings compared to pathological recordings. This creates a clear class
@@ -738,18 +739,18 @@ Another key issue is the difference between the databases used by participants o
 Physionet challenge, and the available data that was acquired for this project.
 For unknown reasons, information such as patient labels used for training many
 of the challenge participant's models have not been made publicly available and
-so could not be used in this project.\\
+so could not be used for training of the proposed system.\\
 The lack of access to the hidden test set used for evaluating challenge entries
 also had a significant impact on evaluation. An alternative method for
 evaluating using only the data provided has been proposed in
-Section~\ref{Eval}.\\
+Section~\ref{metrics}.\\
 Finally, an issue is highlighted by Bobillo with regards to database
 $e$~\parencite{Bobillo2016}. The recording of normal and pathological signals using
 separate devices is likely to cause issues and is discussed in
-Section~\ref{Eval}
+Section~\ref{Eval}.
 
 %BEGIN NEW MATERIAL
-
+\pagebreak
 \section{Design}
 This project aims to provide robust heart abnormality detection for PCG
 signals, such that use of the system could reliably recommend further medical
@@ -801,7 +802,7 @@ classification of the minor class. In this context, class imbalance could
 potentially impact classification accuracy for abnormal samples, so must be
 handled appropriately. This issue can be approached using a number of methods.
 Sophisticated oversampling methods such as SMOTE (Synthetic Minority
-oversampling Technique) offer one solution. SMOTE generates synthetic samples
+Oversampling Technique) offer one solution. SMOTE generates synthetic samples
 using interpolation and adds these to the data set to balance the classes,
 without using direct copies of existing data. However, oversampling techniques
 such as this can increase overfitting of models, and don't always offer
@@ -811,10 +812,17 @@ major class. This has the obvious disadvantage of reducing data available for
 training. However, an improved method using $k$-Means clustering has been shown
 to be effective in previous cardiovascular classifications
 problems~\parencite{Rahman2013}. This method was seen to be the best choice for
-the proposed system.
+the proposed system. This method is illustrated using a small generated
+2-dimesional dataset in Figure~\ref{cent}.
 
-\subsubsection{Signal Segmentation}
-%TODO: Generate segmentation plot
+\begin{figure}[H]
+    \caption[caption of centroid]{Example resampling of synthesised dataset using cluster centroids\footnotemark}
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{centroid}}
+    \label{cent}
+\end{figure}
+\footnotetext{This figure was adapted from: \url{http://contrib.scikit-learn.org/imbalanced-learn/stable/}}
+
+\subsubsection{Signal segmentation}
 With one notable exception~\parencite{Langley2016}, previous classification
 algorithms rely heavily on the ability to segment signals into the four
 fundamental heart sounds. This is a key prerequisite to the extraction of
@@ -835,10 +843,18 @@ quality. As methods proposed by previous literature, such as hand correction by
 a professional~\parencite[p.2203]{Liu2016} are not feasible in this context,
 and considering the low number of erroneous results produced by the
 algorithm~\parencite[p.2]{Goda2016} it was decided that these errors would not
-pose a significant problem.
+pose a significant problem. An illustration of PCG data segmentation can be
+seen in Figure~\ref{segs}.
+
+\begin{figure}[H]
+    \caption{Example segmentation of PCG data}
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{segs}}
+    \label{segs}
+\end{figure}
 
 
-\subsection{Feature Extraction}\label{featEx}
+
+\subsection{Feature extraction}\label{featEx}
 The extraction of feature vectors from data is a fundamental component of most
 machine learning based systems. The aim is to construct meaningful
 representations of the data that emphasize information relevant to the
@@ -954,19 +970,25 @@ the wavelet transform is to represent an input signal as a set of scaled and
 shifted finite oscillations. By comparing the signal with each scale of wavelet
 at all points in time, a set of $N\times A$ (Where $A$ is the number of scales)
 coefficients are generated. These define the scale and position needed for
-each wavelet in order to fully reconstruct the signal (For further details,
+each wavelet in order to fully reconstruct the signal (This is illustrated in Figure~\ref{wave}. For further details,
 refer to~\parencite{Polikar1994}). The benefit of this transform is that it is
 well localized in both time and frequency domains. This allows for accurate
 representation of transient events such as clicks and snaps that are
 characteristic of heart conditions such as Mitral valve prolapse or
 stenosis~\parencite{Brown2008}.\\
-For the proposed system, a 5 level DWT using debauchies-4 mother wavelet was
+For the proposed system, a 5 level DWT using daubechies wavelets-4 mother wavelet was
 used for decomposition and reconstruction. Statistical features such as entropy
 were then calculated, both on the reconstructed signal and directly on
 coefficients to attain a total of 48 features.~\parencite{Homsi2016}
 % TODO: Insert wavelet diagram here
 
-\subsubsection{Feature Scaling and Imputing}
+\begin{figure}[H]
+    \caption{Example 5 level daubechies 4 wavelet decomposition and reconstruction (normalised). Plots in descending order: D1, D2, \ldots, D5, A1}
+    \makebox[\textwidth]{\includegraphics[width=1.0\textwidth]{wavelet}}
+    \label{wave}
+\end{figure}
+
+\subsubsection{Feature scaling and imputing}
 A common problem when working with multiple features is the difference in scale
 between features. This problem can cause many machine learning algorithms to place
 bias on larger scale features and can significantly impact the time taken for
@@ -980,7 +1002,7 @@ result of $\log(0)$ or division by 0 calculations, amongst other edge cases. A
 standard method for handling these values is to apply an imputer, replacing
 values with the mean of the feature vector~\parencite{VanderPlas2017}.
 
-\subsection{Stacking Classifier with Cross-Validation}\label{class}
+\subsection{Stacking classifier with cross-validation}\label{class}
 The stacking classifier is an ensemble classifier, that uses the results of
 multiple base classifiers as input to a 2nd level meta-classifier, which in
 turn is used to generate a final prediction. $k$-fold cross validation is used
@@ -988,14 +1010,21 @@ across base classifiers, training on $k-1$ folds of input data, and applying
 to the remaining validation set. The results of these predictions from each
 base classifier are combined and used to train the 2nd level classifier which
 produces the final predictions based on the probabilities and predictions
-provided.\\
+provided. This is illustrated in figure~\ref{stack}\\
 Given it's proven accurate performance across a range of tasks, it was
 expected that this classification model could be applied effectively to produce
 an alternative method for abnormality detection than those presented in
 previous literature.
 % TODO:Insert stacking classifier diagram
 
-\subsubsection{Base Classifiers}
+\begin{figure}[H]
+    \caption[caption of stack]{Stacking classifier overview\footnotemark}
+    \makebox[\textwidth]{\includegraphics[width=0.5\textwidth]{stacking_cv_classification_overview}}
+    \label{stack}
+\end{figure}
+\footnotetext{Figure retrieved from:\url{http://rasbt.github.io/mlxtend/user_guide/classifier/StackingCVClassifier/}}
+
+\subsubsection{Base classifiers}
 Clearly, an important consideration when using any ensemble method is the
 selection of the base classifiers. In order for any ensemble method to perform
 well, it must be constructed using a selection of classifiers that individually
@@ -1061,7 +1090,7 @@ quickly, to obtain initial results. Despite the inclusion of more complex
 models, this model was chosen via automatic selection for the final model.
 Refer to section~\ref{PSOp} for further details.
 
-\paragraph{Logistic Regression}
+\paragraph{Logistic regression}
 Logistic regression is a regression model that aims to fit as hyperplane to
 data points by minimizing a cost function using weighted features.
 By applying weights to feature vectors then applying a sigmoid function, a
@@ -1074,15 +1103,12 @@ $x$ is a feature vector\\
 $y$ is a class label vector \\
 $\theta$ is a weight vector \\
 A cost function can then be defined as:
-\begin{equation}
-    J(\theta)=\argmin\limits_\theta\frac{1}{2m}\sum\limits_{i=1}^m\Big(h_\theta(x^{(i)})-y^{(i)}\Big)^2+\text{Regularization}(\theta)
-\end{equation}
-
 \begin{align}
+    &J(\theta)=\argmin\limits_\theta\frac{1}{2m}\sum\limits_{i=1}^m\Big(h_\theta(x^{(i)})-y^{(i)}\Big)^2+\text{Regularization}(\theta)\\
     &\text{Regularization}{(\theta)}_\text{L1}=\lambda\sum\limits_{j=1}^n\mid\theta_i\mid\\
     &\text{Regularization}{(\theta)}_\text{L2}=\lambda\sum\limits_{j=1}^n\theta_i^2
 \end{align}
-Where:
+Where:\\
 $\lambda$ is the regularization parameter used to help prevent overfitting\\
 By minimizing the cost function, classification predictions can then be made
 using the hypothesis function~\parencite{Ng2012}.\\
@@ -1095,7 +1121,7 @@ range of meta-classifiers have been proposed for different tasks that utilise
 stacking~\parencite[p.29]{Sesmero2015}. Further work in this area could
 potentially provide improved results.
 
-\subsection{Model Optimisation}\label{optimise}
+\subsection{Model optimisation}\label{optimise}
 As discussed in previous sections, two of the most important aspects that affect
 the performance of a classification system are it's models, and the input
 features. A combination of relevant features and well tuned models is therefore
@@ -1107,14 +1133,14 @@ proposed system. To address this issue, two automatic optimisation approaches
 were implemented, with the aim of maximising the accuracy of the proposed
 system.
 
-\subsubsection{Sequential Feature Selection}\label{SFS}
+\subsubsection{Sequential feature selection}\label{SFS}
 It was recognised that the extraction of such large numbers of features in the
 proposed system would likely result in a large amount of redundant information.
 There are two commonly used methods for addressing this problem: feature
 reduction and feature selection. Feature reduction involves reducing features
 to a lower dimensionality using techniques such as PCA. Conversely, feature
 selection involves selectively removing features entirely via methods such as
-Sequential Floating Selection (SFFS). Both aim to reduce the amount of
+Sequential Floating Forward Selection (SFFS). Both aim to reduce the amount of
 redundant information in features by removing or reducing features that are not
 expected to benefit the model. As a selection of models were to be used, each
 potentially handling dimensionality differently (SVMs in particular), it was
@@ -1134,19 +1160,18 @@ set of features. An exhaustive feature selection algorithm is capable of this
 but this would incur significant computational cost. For further details on
 SFFS please refer to~\parencite[p.3]{Ferri1994}
 
-\subsubsection{Particle Swarm Hyperparameter Optimisation}\label{PSOp}
+\subsubsection{Particle swarm optimisation}\label{PSOp}
 The particle swarm optimisation algorithm is an iterative meta-heuristic algorithm that
 aims to find the set of parameters that maximises a given function. Given a
 $n$ dimensional parameter space, the algorithm randomly initialises sets of
 `particles' representing random combinations of parameters. As the algorithm
-progresses particle travel through the parameter space, updating their
+progresses particles travel through the parameter space, updating their
 position based on their velocity, best historical score and the best historical
 score of the swarm. As the algorithm iterates, particles will converge on local
 optima, producing potential solutions. The best score is chosen after the final
 iteration as the best parameter selection. Annotated pseudocode for this
 algorithm is shown in code block~\ref{PSCode}~\parencite{Clerc2002}
 
-\pagebreak
 \onehalfspacing
 \begin{lstlisting}[escapeinside={(*}{*)}, label={PSCode}, caption={Particle
 Swarm Optimisation Pseudocode}]
@@ -1176,8 +1201,9 @@ The use of this algorithm allowed for the efficient optimisation of all
 parameters relating to the stacking classifier and it's base classifiers,
 resulting in a finely tuned classification model that would not have been
 producible using traditional trial and error methods to search for optimal
-parameters.\\ During the initial design phase, it was found that the abundance
-of machine learning algorithms available make selection of the optimal model a
+parameters.\\ 
+During the initial design phase, it was found that the abundance
+of machine learning algorithms available make selection of the optimal model
 difficult, requiring in depth knowledge of a range of machine learning
 techniques. A novel approach used by recent stacking classifier applications
 has been in the use of meta-heuristic algorithm to select models automatically,
@@ -1196,7 +1222,7 @@ optimal solution. It was thought that for the proposed system a locally optimal
 system would suffice, particularly given the highly complex parameter space
 used in implementation. This is discussed in detail in Section~\ref{ModOp}.
 
-\subsection{Model Performance Evaluation Method}\label{metrics}
+\subsection{Model performance evaluation method}\label{metrics}
 In order to fully understand the performance of the system (and to evaluate the
 impact of design decisions throughout development), a group of scoring methods
 were implemented to test the system's performance in a selection of scenarios.
@@ -1270,7 +1296,7 @@ such issues. Rationale is given for decisions made throughout
 production of the proposed system and any known issues with the current implementation are
 outlined.
 
-\subsection{Development Strategy}
+\subsection{Development strategy}
 Early in the design process it became apparent that in order for this project
 to produce reasonable results, it would need to utilise a number of complex
 algorithms to handle the various non-trivial problems that were encountered
@@ -1306,8 +1332,8 @@ throughout the project alongside other packages detailed in the following
 sections.
 
 \subsection{System overview}
-The proposed system can be broken down into 4 key components: the user
-interface, feature generation module, classification module and optimisation
+The proposed system can be broken down into 5 key components: the user
+interface, feature generation module, classification module, optimisation
 module and evaluation module. The overall architecture of the system follows a
 common design pattern for machine learning based systems; Taking a set of input
 data, augmenting to produce associated data, extracting patterns from said
@@ -1334,9 +1360,9 @@ particularly in long-running iterative processes used for optimisation.\\
 A file based logging system was developed using Python's built-in logging
 module to allow for the monitoring of threaded processes. This allowed for
 detailed monitoring of the systems progress, even when running multiple
-operation concurrently.\\
+operations concurrently.\\
 
-A significant issues that developed as the project grew in size and complexity
+A significant issue that developed as the project grew in size and complexity
 was the running time. As more complex methods were implemented for feature
 extraction and model optimisation, the time taken to process the relatively
 large dataset grew considerably. Primarily using Python's object pickling
@@ -1391,7 +1417,7 @@ Appendix~\ref{appendixA}.\\
 Given the large number of operation required for feature extraction, a large
 amount of time needed to compute features was an unavoidable consequence of
 the design. To help alleviate this issue, processing of features was
-parallelised, using each sample as an individual job. The speed-up incurred
+parallelised, using each sample as an individual job. The speed-up aquired
 through parellisation is inherently dependant on the system running the
 program, however, this significantly reduced the computation time of features.
 A modified implementation of Python's multiprocessing module was used for task
@@ -1479,9 +1505,9 @@ evaluations, resulting in 50 iterations using 20 particles. Final parameters
 and selected features 
 for the chosen algorithms are detailed in table~\ref{OpParam}.\\
 The final scores produced for this model, evaluated using the full dataset, can
-be found in Table~\ref{TestSet} (Hidden test set scores), Table~\ref{LOGO}
-(Leave-one-out scores) and
-Table~\ref{KFCV} (Stratified cross-validation scores).
+be found in Table~\ref{TestSet}. Scores for Leave-one-out cross-validation and
+10-fold cross-validation can be seen in Figure~\ref{fig1} and Figure~\ref{fig2}
+respectively. Details can be found in Appendix~\ref{appendixD}.
 
 \begin{table}[H]
 \centering
@@ -1492,40 +1518,6 @@ Table~\ref{KFCV} (Stratified cross-validation scores).
 $Acc$  & $Se$    & $Sp$    \\ \midrule
 80.31\% & 83.15\% & 77.47\% \\ \bottomrule
 \end{tabular}
-\end{table}
-
-\begin{table}[H]
-\doublespacing
-\caption{Leave-one-out scores}
-\label{LOGO}
-\footnotesize
-All scores are an average of 10 iterations $\pm$ standard-deviation
-\scriptsize
-\centering
-\begin{tabulary}{\linewidth}{LCCCCCCC}
-\toprule
-       & A                 & B                 & C                 & D                 & E                 & F                 & Mean              \\ \midrule
-$Acc$ & $0.5395\pm0.0104$ & $0.4896\pm0.0129$ & $0.5673\pm0.0298$ & $0.5173\pm0.0223$ & $0.5869\pm0.0300$ & $0.5492\pm0.0140$ & $0.5416\pm0.0318$ \\
-$Se$   & $0.7281\pm0.0164$ & $0.8664\pm0.0240$ & $0.6775\pm0.0208$ & $0.7865\pm0.0218$ & $0.5397\pm0.0459$ & $0.7387\pm0.0493$ & $0.7228\pm0.1005$ \\
-$Sp$   & $0.3509\pm0.0264$ & $0.1127\pm0.012$  & $0.4571\pm0.0571$ & $0.2481\pm0.0416$ & $0.6340\pm0.0387$ & $0.3596\pm0.0464$ & $0.3604\pm0.1624$ \\ \bottomrule
-\end{tabulary}
-\end{table}
-
-\begin{table}[H]
-\caption{10-fold cross-validation score}
-\footnotesize
-All scores are an average of 10 iterations $\pm$ standard-deviation
-\doublespacing
-\label{KFCV}
-\scriptsize
-\centering
-\begin{tabulary}{\linewidth}{LCCCCCCCCCCC}
-\toprule
-       & 1                 & 2                 & 3                 & 4                 & 5                 & 6                 & 7                 & 8                 & 9                 & 10                & Mean              \\ \midrule
-$Acc$ & $0.7969\pm0.0246$ & $0.8049\pm0.0244$ & $0.8043\pm0.0153$ & $0.8111\pm0.0295$ & $0.8095\pm0.0261$ & $0.7999\pm0.0208$ & $0.8061\pm0.0299$ & $0.8150\pm0.0198$ & $0.8140\pm0.0245$ & $0.7928\pm0.0224$ & $0.8055\pm0.0069$ \\
-$Se$   & $0.8121\pm0.0420$ & $0.8164\pm0.0360$ & $0.8193\pm0.0302$ & $0.8184\pm0.0634$ & $0.8158\pm0.0484$ & $0.8061\pm0.0438$ & $0.8325\pm0.0546$ & $0.8421\pm0.0321$ & $0.8246\pm0.0474$ & $0.7798\pm0.0302$ & $0.8167\pm0.0157$ \\
-$Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0.0280$ & $0.8033\pm0.0226$ & $0.7937\pm0.0214$ & $0.7798\pm0.0229$ & $0.7878\pm0.0206$ & $0.8035\pm0.0219$ & $0.8059\pm0.0228$ & $0.7942\pm0.0091$ \\ \bottomrule
-\end{tabulary}
 \end{table}
 
 % Make lists without bullets and compact spacing
@@ -1540,7 +1532,6 @@ $Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0
   \end{list}
 }
 \setlist[enumerate]{itemsep=0.25em}
-
 
 \begin{table}[H]
 \centering
@@ -1604,28 +1595,37 @@ C: 4.2507         & C: 4.9452             &                    & C: 14.3611     
 \end{itemize}
 \end{multicols}
 \end{table}
-
-Due to the mimicking of the approach taken for scoring entries to the physionet
-challenge, it was possible to directly compare results to challenge entries.
+\begin{figure}[H]
+    \caption{Leave-one-out cross-validation results (mean and std-dev)}
+    \makebox[\textwidth]{\includegraphics[width=1.1\textwidth]{logo}}
+    \label{fig1}
+\end{figure}
+\begin{figure}[H]
+    \caption{Stratified 10-fold cross-validation results (mean and std-dev)}
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{10_fold}}
+    \label{fig2}
+\end{figure}
+Due to the replication of the approach taken for scoring entries to the Physionet
+challenge, it is possible to directly compare results to challenge entries.
 This aims to provide a thorough understanding of the performance of the
 proposed system in relation to other approaches. The system is further compared
 to some successful algorithms prior to the challenge in the subsequent section,
 in order to understand the performance of the system in a wider context of
 heart sound analysis.\\
 
-The most directly comparable results are to those presented by participant,
-used during the training of their algorithms. Many participants used similar
-cross-validation scores to determine the performance of their algorithm before
-testing on the final hidden dataset, and these provide a key insight into the
-performance with regard to a variety of aspects.\\
+The most directly comparable results are to those presented by challenge
+participants, used during the training of their algorithms. Many participants
+used similar cross-validation scores to determine the performance of their
+algorithm before testing on the final hidden dataset, and these provide a key
+insight into the performance with regard to a variety of aspects.\\
 
 Results obtained using the Leave-one-out cross-validation scoring are similar
 to those of the highest scoring algorithms in the
 challenge~\parencite{Homsi2017, Bobillo2016}. As a measure for performance on
 unseen data, this suggests that the proposed algorithm generalises to a similar
-degree. However, it is clear that algorithms score poorly in this area. This is
-the general consensus across many of the algorithms presented for the
-challenge and is a problem that requires further work. Higher scores in
+degree. However, it is clear that algorithms generally score poorly in this
+area. This is the general consensus across many of the algorithms presented for
+the challenge and is a problem that requires further work. Higher scores in
 10-fold cross validation than those of Leave-one-out cross-validation further
 suggest that the algorithm is highly susceptible to degraded results, most
 likely as a consequence of signal qualities varying from those of the training
@@ -1635,7 +1635,7 @@ database. The aim of this was to remove class imbalance across the training
 and test set, to gain an understanding of how the model performs on each class
 equally. Results of these tests can be viewed in Appendix~\ref{appendixC}. It
 was found that, although hidden test set and 10-fold cross-validation scores
-aren't affected by class imbalance, there is a significant increase the overall
+aren't affected by class imbalance, there is a significant increase in the overall
 leave-one-out cross-validation score from 54.16\% to 66.13\%. This is currently
 thought to be caused by the model not resampling by database during training.
 As resampling during training does not maintain the balance between datasets, a
@@ -1663,7 +1663,7 @@ cross-validation scores. This may also be true in the case of the proposed
 system as database $e$ has shown considerably higher specificity in results
 than those the other database, both in balanced and unbalanced datasets.
 Further would be needed to understand the extent of the effect that this has on
-the performance of the proposed system.
+the performance of the proposed system.\\
 
 The final 10-fold cross-validation score was found to be between, 2 and 12\%
 less than those of the highest scoring models~\parencite{Zabihi2016, Homsi2017,
@@ -1696,7 +1696,7 @@ widely considered for the challenge.
 
 \section{Discussion and further work}\label{FutureWork}
 The current implementation of the system has provided promising results,
-suggest that the combination of techniques is well suited to the task of
+suggesting that the combination of techniques is well suited to the task of
 abnormality detection. It is clear however, that further development of the
 system could improve results further. This section defines some of the
 recognised issues that could be addressed in each of the system's components,
@@ -1709,8 +1709,8 @@ original signal, pre-processing (and other components of the system) currently
 make little use of biomedical domain knowledge to aid in processing of the
 input data.  This is largely due to the author's lack of background in this
 area, prior to development of this project. An example of a project that has
-implemented this is the work by Goda et al.\ who, by recognising that humans
-can classify a heart sound with at least 5 seconds of audio, was able to
+implemented this is the work by Goda et al.\ who, by recognising that trained professionals
+can classify most heart conditions, given at least 5 seconds of audio, was able to
 further segment audio in 5 second overlapping segments, essentially providing
 additional atomic samples for training~\parencite{Goda2016}. It is thought that
 other such assumptions based on physiological understanding could be made in
@@ -1738,8 +1738,8 @@ For example, in the final selection of models, a linear SVM, RBF kernel SVM and
 Naive Bayes models were chosen by the system. From intuition it is thought that
 the reason these worked well is due to the complex combination of linear and
 non-linear relationships in the input features. As the RBF kernel is well
-suited to differentiating non linear patters, and the linear SVM is well suited
-for linear patters, these models would in theory compliment one another. This
+suited to differentiating non linear patterns, and the linear SVM is well suited
+for linear patterns, these models would in theory compliment one another. This
 is also true of the Naive-bayes model, which considers each feature in
 isolation from all others, contrasting the complex inter-feature relationships
 (such as those most likely present in the MFCC and wavelet coefficients, for
@@ -1798,12 +1798,6 @@ heart sound analysis.
 \begin{table}[H]
 \centering
 \caption{Description of features}
-\scriptsize
-Feature sources include:~\parencite{Homsi2016, Schmidt2015, Liang1998,
-Lerch2012}\\
-
-`*' --- denotes feature is applied to S1, systolic, S2 and diastolic segments
-respectively.
 \onehalfspacing
 \tiny
 \label{my-label}
@@ -1846,6 +1840,12 @@ A5Shan                     & Approximation coefficient shannon entropy       & S
 \mbox{TotD[1-5]*Shan}         & Total detail coefficient shannon entropy        & Total Shannon entropy of DWT detail coefficient 1-5 across signal                    \\
 TotA5*Shan                 & Total approximation coefficient shannon entropy & Total Shannon entropy of DWT approximation coefficient 1-5 across signal             \\ \hline
 \end{tabulary}
+\justifying
+\scriptsize
+Feature sources include:~\parencite{Homsi2016, Schmidt2015, Liang1998,
+Lerch2012}\\
+`*' --- denotes feature is applied to S1, systolic, S2 and diastolic segments
+respectively.
 \end{table}
 \pagebreak
 
@@ -1906,6 +1906,47 @@ optional arguments:
 \doublespacing
 \pagebreak{}
 
+\subsection{Final results}\label{appendixD}
+Results of of tests on final optimised model\\
+Leave-one-out scores are shown in Table~\ref{LOGO}\\
+Stratified cross-validation scores can be found in Table~\ref{KFCV}\\
+
+\begin{table}[H]
+\doublespacing
+\caption{Leave-one-out scores}
+\label{LOGO}
+\footnotesize
+All scores are an average of 10 iterations $\pm$ standard-deviation
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCC}
+\toprule
+       & A                 & B                 & C                 & D                 & E                 & F                 & Mean              \\ \midrule
+$Acc$ & $0.5395\pm0.0104$ & $0.4896\pm0.0129$ & $0.5673\pm0.0298$ & $0.5173\pm0.0223$ & $0.5869\pm0.0300$ & $0.5492\pm0.0140$ & $0.5416\pm0.0318$ \\
+$Se$   & $0.7281\pm0.0164$ & $0.8664\pm0.0240$ & $0.6775\pm0.0208$ & $0.7865\pm0.0218$ & $0.5397\pm0.0459$ & $0.7387\pm0.0493$ & $0.7228\pm0.1005$ \\
+$Sp$   & $0.3509\pm0.0264$ & $0.1127\pm0.012$  & $0.4571\pm0.0571$ & $0.2481\pm0.0416$ & $0.6340\pm0.0387$ & $0.3596\pm0.0464$ & $0.3604\pm0.1624$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+\begin{table}[H]
+\caption{10-fold cross-validation score}
+\footnotesize
+All scores are an average of 10 iterations $\pm$ standard-deviation
+\doublespacing
+\label{KFCV}
+\scriptsize
+\centering
+\begin{tabulary}{\linewidth}{LCCCCCCCCCCC}
+\toprule
+       & 1                 & 2                 & 3                 & 4                 & 5                 & 6                 & 7                 & 8                 & 9                 & 10                & Mean              \\ \midrule
+$Acc$ & $0.7969\pm0.0246$ & $0.8049\pm0.0244$ & $0.8043\pm0.0153$ & $0.8111\pm0.0295$ & $0.8095\pm0.0261$ & $0.7999\pm0.0208$ & $0.8061\pm0.0299$ & $0.8150\pm0.0198$ & $0.8140\pm0.0245$ & $0.7928\pm0.0224$ & $0.8055\pm0.0069$ \\
+$Se$   & $0.8121\pm0.0420$ & $0.8164\pm0.0360$ & $0.8193\pm0.0302$ & $0.8184\pm0.0634$ & $0.8158\pm0.0484$ & $0.8061\pm0.0438$ & $0.8325\pm0.0546$ & $0.8421\pm0.0321$ & $0.8246\pm0.0474$ & $0.7798\pm0.0302$ & $0.8167\pm0.0157$ \\
+$Sp$   & $0.7818\pm0.0293$ & $0.7935\pm0.0267$ & $0.7894\pm0.0208$ & $0.8037\pm0.0280$ & $0.8033\pm0.0226$ & $0.7937\pm0.0214$ & $0.7798\pm0.0229$ & $0.7878\pm0.0206$ & $0.8035\pm0.0219$ & $0.8059\pm0.0228$ & $0.7942\pm0.0091$ \\ \bottomrule
+\end{tabulary}
+\end{table}
+
+
+\pagebreak
 \subsection{Balanced dataset test results}\label{appendixC}
 Results of testing database using a resampled, balanced dataset.\\
 Dataset was resampled by database, using jacknife resampling (Sampling without

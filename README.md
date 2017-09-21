@@ -23,6 +23,7 @@ to the user's path and is accessible from the commandline)
 - G++ >= 4.9.X                  ([sudo] apt-get install g++-4.9 | brew install gcc@4.9)
 - Python 2.7.11                 ([sudo] apt-get install python | brew install python)
 - Pip (Python's package manager - not always included with python distribution)
+- multitail                     (Not essential, used for viewing logs)
 
 (It is likely that code will run on other versions than those stated, however
 this is not guaranteed)
@@ -57,7 +58,7 @@ The included scripts are:
 
 run_demo.sh
 Complete run of system from start to finish: Trains a model on the
-demo_dataset, optimizes for to evaluation, picks 3 features and scores
+demo_dataset, optimizes for 2 evaluations, picks 3 features and scores
 performance using metrics described in the report.
 
 run_optimized_model_demo.sh 
@@ -74,13 +75,13 @@ Train a model from scratch on the full dataset. This will take a considerable
 amount of time and requires significant computing power. This demonstrates the
 method used for development of the final algorithm.
 
+view_logs
+Opens log files created when running the program. It is advised that this is
+run during particle swarm optimisation, as this is when threaded logging occurs
+
 ./src/main.py --help
 The underlying interface used for training, optimization and scoring of models.
 Running the help flag displays a list of all arguments available to the user.
 This can be used for the generation of new models on any dataset (however, it
 is highly recommended that the full Physionet dataset is used for best results:
 https://physionet.org/physiobank/database/challenge/2016/)
-
-Although this script is fully functional, with documented argument parser, it
-was not intended for use by anyone other than the author. As such, errors as a
-result of unexpected user input are likely and may not be handled gracefully

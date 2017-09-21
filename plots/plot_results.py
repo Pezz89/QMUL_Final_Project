@@ -38,6 +38,7 @@ x = ['A', 'B', 'C', 'D', 'E', 'F']
 plt.xticks(np.arange(6), x)
 plt.title('Leave-one-out Specificity');
 plt.tight_layout()
+plt.show()
 
 ########################################################################
 fig = plt.figure() # create a plot figure
@@ -69,9 +70,8 @@ e = np.array([0.0293, 0.0267, 0.0208, 0.0280, 0.0226, 0.0214, 0.0229, 0.0206, 0.
 
 plt.errorbar(x, y, yerr=e, fmt='o', color='black', ecolor='darkgray', elinewidth=3, capsize=0)
 plt.xticks(x)
-plt.xticks(x)
+plt.xticks(np.arange(10), x)
 plt.tight_layout()
 
-plt.show()
 plt.title('10-fold Specificity');
 fig.set_size_inches(9*1.3, 3*1.3*3)

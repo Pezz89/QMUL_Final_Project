@@ -197,10 +197,9 @@ def main():
     # the 'features' DataFrame
     classifications = getClassifications(args.test_dir, features)
 
-    # Resample generated features and classifications to balance dataset, using
-    # a combination of jacknife and bootstrap resampling based on user input
-    features, classifications = groupResample(features, classifications, mix=args.resample_mix)
     # Filter any eroneous values from features
+    # -inf occurs as a result of log(0)
+    # TODO: fix these value in feature generation on per-feature basis
     features = features.replace(-np.inf, 0)
     features = features.replace(np.inf, np.nan)
 
@@ -214,6 +213,9 @@ def main():
 
     # Split features into training and test set by database
     train_features, test_features, train_classifications, test_classifications, train_groups, test_groups = group_train_test_split(features, classifications, groups)
+    # Resample generated features and classifications to balance dataset, using
+    # a combination of jacknife and bootstrap resampling based on user input
+    #train_features, train_classifications = groupResample(train_features, train_classifications, mix=args.resample_mix)
 
     if args.optimize:
         # Optimize model parameters using particle swarm optimization

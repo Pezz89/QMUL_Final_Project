@@ -1,6 +1,15 @@
-### Getting things set up.
+# PCG Signal Classifier
+A system is presented for the analysis and classification of pathological
+phonocardiogram signals. The project aims to provide a reliable and robust
+detection method to aid in the early detection of cardiovascular abnormalities.
+The project utilises a novel combination of feature extraction, heuristic
+optimisation and machine learning classification techniques to produce accurate
+results, demonstrating the clear potential for this methodology in the area of
+heart abnormality detection.
 
-## Prerequisite
+## Getting things set up
+
+### Prerequisite
 
 It is assumed that the following libraries, packages and programs are installed
 prior to following these instructions. These will most likely be already
@@ -19,7 +28,7 @@ to the user's path and is accessible from the commandline)
 this is not guaranteed)
 
 
-## Installation Instructions
+### Installation Instructions
 
 This installation guide was written using a clean install of Ubuntu 17.04,
 running on virtualbox 5.1.26.
@@ -35,7 +44,7 @@ MEX command is required for compilation of segmentation scripts
 If this is successful, the program should exit, stating the MEX command ran
 successfully.
 
-## Running the program
+### Running the program
 
 Scripts and a small demo dataset are provided to demonstrate the operation of the system.
 To allow for reasonable running time, the dataset has been reduced
